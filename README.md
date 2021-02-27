@@ -1,5 +1,17 @@
+# Flower Platform fork: process
+
+Branch `master-flower-platform` has changed the name in `package.json` to `@crispico/react-timeline-9000`. So that we can publish it in our local NPM repo.
+
+From time to time we merge from upstream (i.e. from https://github.com/BHP-DevHub/react-timeline-9000). If we merge from a tag (e.g. v1.1.5) => we'll use **v1.1.5**. If we merge from master which is not yet released, and last release was v1.1.5 => we'll use **v1.1.6-SNAPSHOT** (i.e. v1.1.6 in the making).
+
+New work is always done on new branches. E.g. `my-new-branch`. At the end of the work we squash everything into a single commit and perform a pull request towards upstream. We don't need to wait for their approval to merge in `master-flower-platform`. But if we do, we'll update the version. E.g. **v1.1.6-SNAPSHOT.0**, **...1**, **v1.1.6-SNAPSHOT.1**, etc. The 4th digit means how many "internal" / flower-platform releases we have made.
+
+New work should have a "triggering" GitHub issue on the upstream repo. So that when we deliver, we say: this is the fix for `#????`. The GitHub issue is both the spec and the doc. We should update it as we develop and enrich it w/ "Release notes" section as w/ our internal process. This way, when the PR is accepted, the associated task will be linked in the big "Change log" / "Release notes" section. And any user will be informed by the new features.
+
 # React Timeline 9000
+
 A performance focused timeline component in react
+
 ## Build Status
 [![Build Status](https://travis-ci.org/BHP-DevHub/react-timeline-9000.svg?branch=master)](https://travis-ci.org/BHP-DevHub/react-timeline-9000)
 [![CodeFactor](https://www.codefactor.io/repository/github/bhp-devhub/react-timeline-9000/badge)](https://www.codefactor.io/repository/github/bhp-devhub/react-timeline-9000)
