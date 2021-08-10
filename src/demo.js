@@ -37,7 +37,8 @@ export default class DemoTimeline extends Component {
       startDate,
       endDate,
       message: '',
-      timelineMode: TIMELINE_MODES.SELECT | TIMELINE_MODES.DRAG | TIMELINE_MODES.RESIZE
+      timelineMode: TIMELINE_MODES.SELECT | TIMELINE_MODES.DRAG | TIMELINE_MODES.RESIZE,
+      showVerticalGrid: true
     };
     this.reRender = this.reRender.bind(this);
     this.zoomIn = this.zoomIn.bind(this);
@@ -46,6 +47,7 @@ export default class DemoTimeline extends Component {
     this.toggleSelectable = this.toggleSelectable.bind(this);
     this.toggleDraggable = this.toggleDraggable.bind(this);
     this.toggleResizable = this.toggleResizable.bind(this);
+    this.toggleVerticalGrid = this.toggleVerticalGrid.bind(this);
   }
 
   componentWillMount() {
@@ -127,6 +129,12 @@ export default class DemoTimeline extends Component {
     let newMode = timelineMode ^ TIMELINE_MODES.RESIZE;
     this.setState({timelineMode: newMode, message: 'Timeline mode change: ' + timelineMode + ' -> ' + newMode});
   }
+
+  toggleVerticalGrid() {
+    const { showVerticalGrid } = this.state;
+    this.setState({ showVerticalGrid: !showVerticalGrid });
+  }
+
   handleItemClick = (e, key) => {
     const message = `Item Click ${key}`;
     const {selectedItems} = this.state;
@@ -246,7 +254,8 @@ export default class DemoTimeline extends Component {
       groups,
       message,
       useCustomRenderers,
-      timelineMode
+      timelineMode,
+      showVerticalGrid
     } = this.state;
     const rangeValue = [startDate, endDate];
 
@@ -335,6 +344,11 @@ export default class DemoTimeline extends Component {
                   Enable resizing
                 </Checkbox>
               </Form.Item>
+              <Form.Item>
+                <Checkbox onChange={this.toggleVerticalGrid} checked={showVerticalGrid}>
+                  Show vertical grid
+                </Checkbox>
+              </Form.Item>
             </Form>
             <div>
               <span>Debug: </span>
@@ -361,6 +375,7 @@ export default class DemoTimeline extends Component {
             itemRenderer={useCustomRenderers ? customItemRenderer : undefined}
             groupRenderer={useCustomRenderers ? customGroupRenderer : undefined}
             groupTitleRenderer={useCustomRenderers ? () => <div>Group title</div> : undefined}
+            showVerticalGrid={showVerticalGrid}
           />
         </Layout.Content>
       </Layout>

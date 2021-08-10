@@ -30,7 +30,9 @@ export default class Timebar extends React.Component {
    */
   componentWillReceiveProps(nextProps) {
     if (nextProps.top_resolution && nextProps.bottom_resolution) {
-      this.setState({resolution: {top: nextProps.top_resolution, bottom: nextProps.bottom_resolution}});
+      const resolution = {top: nextProps.top_resolution, bottom: nextProps.bottom_resolution};
+      this.setState({resolution: resolution});
+      this.props.setResolution(resolution);
     } else {
       this.guessResolution(nextProps.start, nextProps.end);
     }
@@ -48,20 +50,24 @@ export default class Timebar extends React.Component {
       end = this.props.end;
     }
     const durationMilliSecs = end.diff(start);
-    /// 1ms -> 1s
-    if (durationMilliSecs <= 1000) this.setState({resolution: {top: 'second', bottom: 'millisecond'}});
-    // 1s  -> 2m
-    else if (durationMilliSecs <= 60 * 2 * 1000) this.setState({resolution: {top: 'minute', bottom:  'second'}});
-    // 2m -> 2h
-    else if (durationMilliSecs <= 60 * 60 * 2 * 1000) this.setState({resolution: {top: 'hour', bottom: 'minute'}});
-    // 2h -> 3d
-    else if (durationMilliSecs <= 24 * 60 * 60 * 3 * 1000) this.setState({resolution: {top: 'day', bottom: 'hour'}});
-    // 1d -> 30d
-    else if (durationMilliSecs <= 30 * 24 * 60 * 60 * 1000) this.setState({resolution: {top: 'month', bottom: 'day'}});
-    //30d -> 1y
-    else if (durationMilliSecs <= 365 * 24 * 60 * 60 * 1000) this.setState({resolution: {top: 'year', bottom: 'month'}});
+
     // 1y ->
-    else this.setState({resolution: {top: 'year', bottom: 'year'}});
+    let resolution = {top: 'year', bottom: 'year'};
+    /// 1ms -> 1s
+    if (durationMilliSecs <= 1000) resolution = {top: 'second', bottom: 'millisecond'};
+    // 1s  -> 2m
+    else if (durationMilliSecs <= 60 * 2 * 1000) resolution = {top: 'minute', bottom:  'second'};
+    // 2m -> 2h
+    else if (durationMilliSecs <= 60 * 60 * 2 * 1000) resolution = {top: 'hour', bottom: 'minute'};
+    // 2h -> 3d
+    else if (durationMilliSecs <= 24 * 60 * 60 * 3 * 1000) resolution = {top: 'day', bottom: 'hour'};
+    // 1d -> 30d
+    else if (durationMilliSecs <= 30 * 24 * 60 * 60 * 1000) resolution = {top: 'month', bottom: 'day'};
+    //30d -> 1y
+    else if (durationMilliSecs <= 365 * 24 * 60 * 60 * 1000) resolution = {top: 'year', bottom: 'month'};
+
+    this.setState({resolution: resolution});
+    this.props.setResolution(resolution);
   }
 
   /**
@@ -259,6 +265,7 @@ Timebar.propTypes = {
   leftOffset: PropTypes.number,
   top_resolution: PropTypes.string,
   bottom_resolution: PropTypes.string,
+  setResolution: PropTypes.func,
   selectedRanges: PropTypes.arrayOf(PropTypes.object), // [start: moment ,end: moment (end)]
   timeFormats: PropTypes.object
 };

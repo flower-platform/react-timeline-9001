@@ -25,7 +25,7 @@ import Timebar from './components/timebar';
 import SelectBox from './components/selector';
 import {DefaultGroupRenderer, DefaultItemRenderer} from './components/renderers';
 import TimelineBody from './components/body';
-import Marker from './components/marker';
+import Markers from './components/markers';
 
 // startsWith polyfill for IE11 support
 import 'core-js/fn/string/starts-with';
@@ -63,6 +63,7 @@ export default class Timeline extends React.Component {
     snap: PropTypes.number, //like snapMinutes, but for seconds; couldn't get it any lower because the pixels are not calculated correctly
     snapMinutes: PropTypes.number,
     showCursorTime: PropTypes.bool,
+    showVerticalGrid: PropTypes.bool, // show vertical lines that mark the end of each timebar unit (bottom)
     cursorTimeFormat: PropTypes.string,
     componentId: PropTypes.string, // A unique key to identify the component. Only needed when 2 grids are mounted
     itemHeight: PropTypes.number,
@@ -158,6 +159,7 @@ export default class Timeline extends React.Component {
     this.throttledMouseMoveFunc = _.throttle(this.throttledMouseMoveFunc.bind(this), 20);
     this.mouseMoveFunc = this.mouseMoveFunc.bind(this);
     this.getCursor = this.getCursor.bind(this);
+    this.setTimebarResolution = this.setTimebarResolution.bind(this);
 
     const canSelect = Timeline.isBitSet(Timeline.TIMELINE_MODES.SELECT, this.props.timelineMode);
     const canDrag = Timeline.isBitSet(Timeline.TIMELINE_MODES.DRAG, this.props.timelineMode);
@@ -306,6 +308,7 @@ export default class Timeline extends React.Component {
   getTimelineWidth(totalWidth) {
     const {groupOffset} = this.props;
     if (totalWidth !== undefined) return totalWidth - groupOffset;
+    if (this._grid == undefined) return 0;
     return this._grid.props.width - groupOffset;
   }
 
@@ -852,6 +855,12 @@ export default class Timeline extends React.Component {
     this.throttledMouseMoveFunc(e);
   }
 
+  setTimebarResolution(resolution) {
+    // This property is needed for showing the vertical grid;
+    // compute the vertical line positions using the bottom timebar unit(resolution).
+    this.timebarResolution = resolution
+  }
+
   render() {
     const {
       onInteraction,
@@ -895,15 +904,6 @@ export default class Timeline extends React.Component {
       return Math.max(height - timebarHeight, 0);
     }
 
-    // Markers (only current time marker atm)
-    const markers = [];
-    if (showCursorTime && this.mouse_snapped_time) {
-      const cursorPix = getPixelAtTime(this.mouse_snapped_time, startDate, endDate, this.getTimelineWidth());
-      markers.push({
-        left: cursorPix + this.props.groupOffset,
-        key: 1,
-      });
-    }
     return (
       <div className={divCssClass}>
         <AutoSizer className="rct9k-autosizer" onResize={this.refreshGrid}>
@@ -918,11 +918,21 @@ export default class Timeline extends React.Component {
                 leftOffset={groupOffset}
                 selectedRanges={this.state.selection}
                 groupTitleRenderer={groupTitleRenderer}
+                setResolution={this.setTimebarResolution}
                 {...varTimebarProps}
               />
-              {markers.map(m => (
-                <Marker key={m.key} height={height} top={0} left={m.left} />
-              ))}
+              <Markers
+                showCursorTime={showCursorTime}
+                mouseSnappedTime={this.mouse_snapped_time}
+                showVerticalGrid={this.props.showVerticalGrid}
+                startDate={this.props.startDate}
+                endDate={this.props.endDate}
+                getTimelineWidth={this.getTimelineWidth}
+                timebarResolution={this.timebarResolution}
+                height={height}
+                leftOffset={groupOffset}
+                componentId={componentId}
+              />
               <TimelineBody
                 width={width}
                 columnWidth={columnWidth(width)}
