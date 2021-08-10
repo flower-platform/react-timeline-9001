@@ -26,9 +26,9 @@ export default class DemoTimeline extends Component {
   constructor(props) {
     super(props);
 
-    const startDate = moment('2018-08-31');
+    const startDate = moment().startOf('month');
     //const endDate = startDate.clone().add(4, 'days');
-    const endDate = moment('2018-09-30');
+    const endDate = moment().endOf('month');
     this.state = {
       selectedItems: [],
       rows: 100,
@@ -38,7 +38,8 @@ export default class DemoTimeline extends Component {
       endDate,
       message: '',
       timelineMode: TIMELINE_MODES.SELECT | TIMELINE_MODES.DRAG | TIMELINE_MODES.RESIZE,
-      showVerticalGrid: true
+      showVerticalGrid: true,
+      showNowIndicator: true
     };
     this.reRender = this.reRender.bind(this);
     this.zoomIn = this.zoomIn.bind(this);
@@ -48,6 +49,7 @@ export default class DemoTimeline extends Component {
     this.toggleDraggable = this.toggleDraggable.bind(this);
     this.toggleResizable = this.toggleResizable.bind(this);
     this.toggleVerticalGrid = this.toggleVerticalGrid.bind(this);
+    this.toggleNowIndicator = this.toggleNowIndicator.bind(this);
   }
 
   componentWillMount() {
@@ -133,6 +135,11 @@ export default class DemoTimeline extends Component {
   toggleVerticalGrid() {
     const { showVerticalGrid } = this.state;
     this.setState({ showVerticalGrid: !showVerticalGrid });
+  }
+
+  toggleNowIndicator() {
+    const { showNowIndicator } = this.state;
+    this.setState({ showNowIndicator: !showNowIndicator });
   }
 
   handleItemClick = (e, key) => {
@@ -255,7 +262,8 @@ export default class DemoTimeline extends Component {
       message,
       useCustomRenderers,
       timelineMode,
-      showVerticalGrid
+      showVerticalGrid,
+      showNowIndicator
     } = this.state;
     const rangeValue = [startDate, endDate];
 
@@ -349,6 +357,11 @@ export default class DemoTimeline extends Component {
                   Show vertical grid
                 </Checkbox>
               </Form.Item>
+              <Form.Item>
+                <Checkbox onChange={this.toggleNowIndicator} checked={showNowIndicator}>
+                  Show now indicator
+                </Checkbox>
+              </Form.Item>
             </Form>
             <div>
               <span>Debug: </span>
@@ -376,6 +389,7 @@ export default class DemoTimeline extends Component {
             groupRenderer={useCustomRenderers ? customGroupRenderer : undefined}
             groupTitleRenderer={useCustomRenderers ? () => <div>Group title</div> : undefined}
             showVerticalGrid={showVerticalGrid}
+            showNowIndicator={showNowIndicator}
           />
         </Layout.Content>
       </Layout>

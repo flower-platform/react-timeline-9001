@@ -64,6 +64,7 @@ export default class Timeline extends React.Component {
     snapMinutes: PropTypes.number,
     showCursorTime: PropTypes.bool,
     showVerticalGrid: PropTypes.bool, // show vertical lines that mark the end of each timebar unit (bottom)
+    showNowIndicator: PropTypes.bool, // show a vertical line for the current date and time ("now")
     cursorTimeFormat: PropTypes.string,
     componentId: PropTypes.string, // A unique key to identify the component. Only needed when 2 grids are mounted
     itemHeight: PropTypes.number,
@@ -927,11 +928,12 @@ export default class Timeline extends React.Component {
                 showVerticalGrid={this.props.showVerticalGrid}
                 startDate={this.props.startDate}
                 endDate={this.props.endDate}
-                getTimelineWidth={this.getTimelineWidth}
+                timelineWidth={this.getTimelineWidth(width)}
                 timebarResolution={this.timebarResolution}
                 height={height}
                 leftOffset={groupOffset}
                 componentId={componentId}
+                showNowIndicator={this.props.showNowIndicator}
               />
               <TimelineBody
                 width={width}

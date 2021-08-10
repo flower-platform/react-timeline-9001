@@ -3,6 +3,8 @@ import PropTypes from 'prop-types';
 import { getPixelAtTime } from '../utils/timeUtils';
 import Marker from './marker';
 
+import moment from 'moment';
+
 const VERTICAL_LINE_TYPE = 'vertical-line';
 const TIMELINE_VERTICAL_GRID = 'rct9k-marker-vertical-grid';
 
@@ -20,13 +22,21 @@ export default class Markers extends React.Component {
         return timebar.getBoundingClientRect().height;
     }
 
-    getVerticalGrid(width) {
-        if (width === 0) {
+    createMarker(markerMoment, key, top, className) {
+    	// get pixel position using timeline width, then add left offset (group offset)
+        let markerLeft = getPixelAtTime(markerMoment, this.props.startDate, this.props.endDate, this.props.timelineWidth);
+        return {
+            left: markerLeft + this.props.leftOffset,
+            key: key,
+            top: top,
+            className: className
+        };
+    }
+
+    getVerticalGrid(width, top) {
+        if (width <= 0) {
             return [];
         };
-
-        // show the vertical lines under the timebar
-        const top = this.getTimebarHeight();
 
         // get timebar unit measure and create marker lines
         const timebarUnitMeasure = this.props.timebarResolution.bottom;
@@ -36,14 +46,8 @@ export default class Markers extends React.Component {
 
         let markers = [];
         while (verticalLineMoment.isBefore(this.props.endDate)) {
-            let markerLeft = getPixelAtTime(verticalLineMoment, this.props.startDate, this.props.endDate, width);
-            let key = VERTICAL_LINE_TYPE + '-' + markerLeft;
-            markers.push({
-                left: markerLeft + this.props.leftOffset,
-                key: key,
-                top: top,
-                className: TIMELINE_VERTICAL_GRID
-            });
+            let marker = this.createMarker(verticalLineMoment, VERTICAL_LINE_TYPE + '-' + verticalLineMoment, top, TIMELINE_VERTICAL_GRID);
+            markers.push(marker);
 
             // increment by unit measure
             verticalLineMoment.startOf(timebarUnitMeasure);
@@ -56,12 +60,10 @@ export default class Markers extends React.Component {
         const {
             showCursorTime,
             showVerticalGrid,
-            getTimelineWidth,
+            showNowIndicator,
+            timelineWidth,
             height,
-            mouseSnappedTime,
-            startDate,
-            endDate,
-            leftOffset
+            mouseSnappedTime
         } = this.props;
 
         // Markers
@@ -69,20 +71,24 @@ export default class Markers extends React.Component {
 
         // show cursor time
         if (showCursorTime && mouseSnappedTime) {
-            const cursorPix = getPixelAtTime(mouseSnappedTime, startDate, endDate, getTimelineWidth());
-            markers.push({
-                left: cursorPix + leftOffset,
-                key: 1,
-                top: 0
-            });
+            markers.push(this.createMarker(mouseSnappedTime, 1, 0));
         }
+
+
+        // show the vertical lines and now indicator under the timebar
+        const top = this.getTimebarHeight();
 
         // show vertical grid
         if (showVerticalGrid) {
-            let verticalGrid = this.getVerticalGrid(getTimelineWidth());
+            let verticalGrid = this.getVerticalGrid(timelineWidth, top);
             if (verticalGrid.length > 0) {
                 markers.push(...verticalGrid);
             }
+        }
+
+        // show current time
+        if (showNowIndicator) {
+            markers.push(this.createMarker(moment(), 2, top));
         }
 
         return (<div>{
@@ -95,7 +101,7 @@ export default class Markers extends React.Component {
 
 Markers.propTypes = {
     leftOffset: PropTypes.number.isRequired,
-    getTimelineWidth: PropTypes.width,
+    timelineWidth: PropTypes.number,
     startDate: PropTypes.object.isRequired, //moment
     endDate: PropTypes.object.isRequired, //moment
     /* Properties only for cursor time */
@@ -105,5 +111,7 @@ Markers.propTypes = {
     showVerticalGrid: PropTypes.bool,
     timebarResolution: PropTypes.object,
     height: PropTypes.number,
-    componentId: PropTypes.string // A unique key to identify the component. Only needed when 2 grids are mounted.
+    componentId: PropTypes.string, // A unique key to identify the component. Only needed when 2 grids are mounted.
+    /* Properties only for now indicator */
+    showNowIndicator: PropTypes.bool
 }
