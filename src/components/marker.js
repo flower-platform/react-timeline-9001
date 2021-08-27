@@ -2,9 +2,9 @@ import React from 'react';
 import PropTypes from 'prop-types';
 
 const Marker = props => {
-  const {height, left, top, className} = props;
+  const {height, left, top, className, style} = props;
   const cssClass = "rct9k-marker-overlay " + className;
-  return <div className={cssClass} style={{height, left, top}} />;
+  return <div className={cssClass} style={{...style, height, left, top}} />;
 };
 
 Marker.propTypes = {

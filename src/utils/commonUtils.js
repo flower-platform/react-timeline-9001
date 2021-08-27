@@ -25,3 +25,18 @@ export function intToPix(int) {
   if (int === Number(int)) return int + 'px';
   return int;
 }
+
+/**
+ * Convert a decimal color to a hex reprezentation.
+ * If a string the input is returned as is.
+ * 
+ * @param {*} color string or integer
+ * @returns {string} color hex reprezentation as string
+ */
+export function getHexColorString(color) {
+  if (typeof color === 'string') {
+    return color;
+  }
+  let hex = color.toString(16);
+  return '#' + hex.padStart(6, "000000");
+}

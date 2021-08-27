@@ -32,8 +32,6 @@
 }
 .rct9k-marker-vertical-grid {
   z-index: 0;
-  background: #ccc;
-  width: 1px;
 }
 .rct9k-item-renderer-inner {
   pointer-events: none;

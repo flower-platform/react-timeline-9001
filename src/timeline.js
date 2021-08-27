@@ -9,7 +9,7 @@ import moment from 'moment';
 import interact from 'interactjs';
 import _ from 'lodash';
 
-import {pixToInt, intToPix, sumStyle} from './utils/commonUtils';
+import {pixToInt, intToPix, sumStyle, getHexColorString} from './utils/commonUtils';
 import {
   rowItemsRenderer,
   rowLayerRenderer,
@@ -29,6 +29,15 @@ import Markers from './components/markers';
 
 // startsWith polyfill for IE11 support
 import 'core-js/fn/string/starts-with';
+
+/**
+ * Default properties for vertical grid.
+ * We prefer to use constants instead of adding vertical grid to defaultProps because
+ * we can only declare values for implicit props.
+ */
+const DEFAULT_THICKNESS = 1;
+const DEFAULT_WEEKENDS_COLOR = 0xEEEEFF;
+const DEFAULT_WEEKENDS_OPACITY = 1;
 
 /**
  * Timeline class
@@ -89,8 +98,29 @@ export default class Timeline extends React.Component {
     interactOptions: PropTypes.shape({
       draggable: PropTypes.object,
       pointerEvents: PropTypes.object,
-      resizable: PropTypes.object.isRequired,
+      resizable: PropTypes.object,
     }),
+    verticalGrid: PropTypes.shape({
+      /* Properties for vertical grid lines (markers) */
+      color: PropTypes.number,
+      thickness: PropTypes.number,
+      opacity: PropTypes.number,
+      /* Properties for highlighted weekends */
+      showWeekendsHighlighted: PropTypes.bool,
+      weekendsColor: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
+      weekendsOpacity: PropTypes.number,
+      /* Custom interval lighlighted in vertical grid */
+      highlightedIntervals: PropTypes.arrayOf(
+        PropTypes.shape({
+          start: PropTypes.object, // moment
+          end: PropTypes.object, // moment
+          color: PropTypes.oneOfType([PropTypes.number, PropTypes.string]), // color in decimal reprezentation or string
+          opacity: PropTypes.number,
+          borderColor: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
+          borderThickness: PropTypes.number
+        })
+      )
+    })
   };
 
   static defaultProps = {
@@ -144,6 +174,8 @@ export default class Timeline extends React.Component {
     this.selecting = false;
     this.state = {selection: [], cursorTime: null};
     this.setTimeMap(this.props.items);
+    this.setDisplayedHighlightedWeekends(props.verticalGrid);
+    this.setHighlightedIntervals(props.verticalGrid);
 
     this.cellRenderer = this.cellRenderer.bind(this);
     this.rowHeight = this.rowHeight.bind(this);
@@ -174,6 +206,8 @@ export default class Timeline extends React.Component {
 
   componentWillReceiveProps(nextProps) {
     this.setTimeMap(nextProps.items, nextProps.startDate, nextProps.endDate);
+    this.setDisplayedHighlightedWeekends(nextProps.verticalGrid);
+    this.setHighlightedIntervals(nextProps.verticalGrid);
     // @TODO
     // investigate if we need this, only added to refresh the grid
     // when double click -> add an item
@@ -237,6 +271,88 @@ export default class Timeline extends React.Component {
         this.rowItemMap[rowInt].push(item);
       });
       this.rowHeightCache[rowInt] = getMaxOverlappingItems(visibleItems);
+    });
+  }
+
+  /**
+   * Sets the weekend intervals that are displayes as rowLayers for each row.
+   * @param {VerticalGrid} verticalGrid (showWeekendsHighlighted) Whether the weekends are highlighted. 
+   */
+   setDisplayedHighlightedWeekends(verticalGrid) {
+    this.weekends = [];
+    if (!verticalGrid || !verticalGrid.showWeekendsHighlighted) {
+      return;
+    }
+
+    // get display interval start date; if it's sunday, substract a day
+    let startDate = moment(this.props.startDate);
+    if (startDate.weekday() == 0) {
+      startDate = startDate.subtract(1, 'days');
+    }
+
+    let weekendStartDate = moment(startDate).startOf('isoWeek').day("saturday");
+    let weekendEndDate = null;
+    // compute all the weekends in the interval
+    while (weekendStartDate < this.props.endDate) {
+      weekendEndDate = moment(weekendStartDate).add(2, 'days');
+
+      this.weekends.push({
+        start: weekendStartDate,
+        end: weekendEndDate,
+        style: this.getWeekendsStyle(verticalGrid)
+      });
+
+      // go to the next weekend
+      weekendStartDate = moment(weekendEndDate).startOf('isoWeek').day("saturday");
+    }
+  }
+
+  /**
+   * Creates style for weekends based on vertical grid properties.
+   * We prefer to use constants instead of adding vertical grid to defaultProps because
+   * we can only declare values for implicit props.
+   * @param {*} verticalGrid that contains style properties from user
+   * @returns weekends style
+   */
+  getWeekendsStyle(verticalGrid) {
+    const backgroundColor = getHexColorString(verticalGrid && verticalGrid.weekendsColor ? verticalGrid.weekendsColor : DEFAULT_WEEKENDS_COLOR);
+    const borderColor = getHexColorString(verticalGrid && verticalGrid.weekendsColor ? verticalGrid.weekendsColor : DEFAULT_WEEKENDS_COLOR);
+    const opacity = verticalGrid && verticalGrid.weekendsOpacity ? verticalGrid.weekendsOpacity : DEFAULT_WEEKENDS_OPACITY;
+    const borderWidth = verticalGrid && verticalGrid.thickness ? this.props.verticalGrid.thickness : DEFAULT_THICKNESS;
+    return {
+      backgroundColor,
+      opacity,
+      borderColor,
+      borderWidth
+    }
+  }
+
+  /**
+   * Sets the custom highlighted intervals that are displayes as rowLayers for each row.
+   * @param {VerticalGrid} verticalGrid (highlightedIntervals) list of intervals that need to be highlighted
+   */
+  setHighlightedIntervals(verticalGrid) {
+    this.highlightedIntervals = [];
+    if (!verticalGrid || !verticalGrid.highlightedIntervals) {
+      return;
+    }
+
+    verticalGrid.highlightedIntervals.map(interval => {
+      const backgroundColor = interval.color ? getHexColorString(interval.color) : '';
+      const borderColor = interval.borderColor ? getHexColorString(interval.borderColor) : '';
+      const opacity = interval.opacity;
+      const borderWidth = interval.borderThickness;
+
+      this.highlightedIntervals.push({
+        start: interval.start,
+        end: interval.end,
+        style: {
+          backgroundColor,
+          borderColor,
+          opacity,
+          borderWidth
+        }
+      });
     });
   }
 
@@ -748,6 +864,12 @@ export default class Timeline extends React.Component {
         if (this.rowHeightCache[rowIndex]) {
           rowHeight = rowHeight * this.rowHeightCache[rowIndex];
         }
+
+        // Set rowNumber to weekends and highlighted intervals.
+        // rowNumber is used in rowLayerRenderer to compute the height of the first row (exclude border)
+        this.weekends.map(weekend => weekend.rowNumber = rowIndex);
+        this.highlightedIntervals.map(interval => interval.rowNumber = rowIndex);
+
         return (
           <div
             key={key}
@@ -779,6 +901,8 @@ export default class Timeline extends React.Component {
               canSelect ? this.props.selectedItems : []
             )}
             {rowLayerRenderer(layersInRow, this.props.startDate, this.props.endDate, width, rowHeight)}
+            {rowLayerRenderer(this.weekends, this.props.startDate, this.props.endDate, width, rowHeight)}
+            {rowLayerRenderer(this.highlightedIntervals, this.props.startDate, this.props.endDate, width, rowHeight)}
           </div>
         );
       } else {
@@ -926,6 +1050,9 @@ export default class Timeline extends React.Component {
                 showCursorTime={showCursorTime}
                 mouseSnappedTime={this.mouse_snapped_time}
                 showVerticalGrid={this.props.showVerticalGrid}
+                verticalGridColor={this.props.verticalGrid.color}
+                verticalGridThickness={this.props.verticalGrid.thickness}
+                verticalGridOpacity={this.props.verticalGrid.opacity}
                 startDate={this.props.startDate}
                 endDate={this.props.endDate}
                 timelineWidth={this.getTimelineWidth(width)}

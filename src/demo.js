@@ -28,7 +28,7 @@ export default class DemoTimeline extends Component {
 
     const startDate = moment().startOf('month');
     //const endDate = startDate.clone().add(4, 'days');
-    const endDate = moment().endOf('month');
+    const endDate = moment().endOf('month').subtract(1, "days");
     this.state = {
       selectedItems: [],
       rows: 100,
@@ -39,7 +39,12 @@ export default class DemoTimeline extends Component {
       message: '',
       timelineMode: TIMELINE_MODES.SELECT | TIMELINE_MODES.DRAG | TIMELINE_MODES.RESIZE,
       showVerticalGrid: true,
-      showNowIndicator: true
+      showNowIndicator: true,
+      verticalGrid: {
+        showWeekendsHighlighted: true,
+        weekendsColor: 0x0000FF,
+        weekendsOpacity: 0.3
+      }
     };
     this.reRender = this.reRender.bind(this);
     this.zoomIn = this.zoomIn.bind(this);
@@ -50,6 +55,7 @@ export default class DemoTimeline extends Component {
     this.toggleResizable = this.toggleResizable.bind(this);
     this.toggleVerticalGrid = this.toggleVerticalGrid.bind(this);
     this.toggleNowIndicator = this.toggleNowIndicator.bind(this);
+    this.toggleWeekendsHighlighted = this.toggleWeekendsHighlighted.bind(this);
   }
 
   componentWillMount() {
@@ -92,9 +98,17 @@ export default class DemoTimeline extends Component {
       }
     }
 
+	// create a custom highlighted interval
+    let highlightedIntervals = [];
+    highlightedIntervals.push({
+      start: moment().startOf('month').add(15, 'days').add(4, 'hours'),
+      end: moment().startOf('month').add(16, 'days'),
+      color: 0xEEEEFF
+    });
+
     // this.state = {selectedItems: [11, 12], groups, items: list};
     this.forceUpdate();
-    this.setState({items: list, groups});
+    this.setState({items: list, groups, verticalGrid: {...this.state.verticalGrid, highlightedIntervals}});
   }
 
   handleRowClick = (e, rowNumber, clickedTime, snappedClickedTime) => {
@@ -140,6 +154,11 @@ export default class DemoTimeline extends Component {
   toggleNowIndicator() {
     const { showNowIndicator } = this.state;
     this.setState({ showNowIndicator: !showNowIndicator });
+  }
+
+  toggleWeekendsHighlighted() {
+    const { verticalGrid } = this.state;
+    this.setState({ verticalGrid: { ...verticalGrid, showWeekendsHighlighted: !verticalGrid.showWeekendsHighlighted } });
   }
 
   handleItemClick = (e, key) => {
@@ -263,7 +282,8 @@ export default class DemoTimeline extends Component {
       useCustomRenderers,
       timelineMode,
       showVerticalGrid,
-      showNowIndicator
+      showNowIndicator,
+      verticalGrid
     } = this.state;
     const rangeValue = [startDate, endDate];
 
@@ -362,6 +382,11 @@ export default class DemoTimeline extends Component {
                   Show now indicator
                 </Checkbox>
               </Form.Item>
+              <Form.Item>
+                <Checkbox onChange={this.toggleWeekendsHighlighted} checked={verticalGrid.showWeekendsHighlighted}>
+                  Highlight weekends
+                </Checkbox>
+              </Form.Item>
             </Form>
             <div>
               <span>Debug: </span>
@@ -390,6 +415,7 @@ export default class DemoTimeline extends Component {
             groupTitleRenderer={useCustomRenderers ? () => <div>Group title</div> : undefined}
             showVerticalGrid={showVerticalGrid}
             showNowIndicator={showNowIndicator}
+            verticalGrid={verticalGrid}
           />
         </Layout.Content>
       </Layout>
