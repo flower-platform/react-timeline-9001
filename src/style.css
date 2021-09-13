@@ -16,7 +16,15 @@
   overflow: hidden;
   z-index: 3;
 }
+.rct9k-items-outer {
+  display: flex;
+  overflow: visible;
+}
+
 .rct9k-items-inner {
+  padding: 0;
+  white-space: nowrap;
+  overflow: hidden;
   display: inline-block;
   margin: 3px;
   padding: 3px;
@@ -36,6 +44,11 @@
 .rct9k-item-renderer-inner {
   pointer-events: none;
 }
+.rct9k-item-glow:hover {
+  box-shadow: 0 0 12px #2d618c;
+  opacity: 1 !important;
+  transition: opacity 0.5s ease-in-out, box-shadow 0.5s ease-out;
+}
 .rct9k-row {
   /* white-space: nowrap; */
   box-sizing: border-box;
@@ -47,7 +60,8 @@
 }
 
 .rct9k-items-selected {
-  background-color: magenta;
+  background: magenta !important;
+  opacity: 1 !important;
 }
 
 .ReactVirtualized__Grid {

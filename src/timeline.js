@@ -18,7 +18,7 @@ import {
   getMaxOverlappingItems,
   getTrueBottom,
   getVerticalMarginBorder,
-  getRowObjectRowNumber,
+  getRowObjectRowNumber
 } from './utils/itemUtils';
 import {timeSnap, getTimeAtPixel, getPixelAtTime, getSnapPixelFromDelta, pixelsPerSecond} from './utils/timeUtils';
 import Timebar from './components/timebar';
@@ -36,8 +36,13 @@ import 'core-js/fn/string/starts-with';
  * we can only declare values for implicit props.
  */
 const DEFAULT_THICKNESS = 1;
-const DEFAULT_WEEKENDS_COLOR = 0xEEEEFF;
+const DEFAULT_WEEKENDS_COLOR = 0xeeeeff;
 const DEFAULT_WEEKENDS_OPACITY = 1;
+
+const GRID_CLASS = componentId => `.rct9k-id-${componentId} .ReactVirtualized__Grid`;
+const DEFAULT_GRID_OVERFLOW_STYLE = 'auto';
+const GRID_EMPTY_ROWS_OVERFLOW = 'hidden';
+const EMPTY_GROUP_KEY = 'empty-group';
 
 /**
  * Timeline class
@@ -51,11 +56,29 @@ export default class Timeline extends React.Component {
   static TIMELINE_MODES = Object.freeze({
     SELECT: 1,
     DRAG: 2,
-    RESIZE: 4,
+    RESIZE: 4
   });
 
   static propTypes = {
-    items: PropTypes.arrayOf(PropTypes.object).isRequired,
+    items: PropTypes.arrayOf(
+      PropTypes.shape({
+        key: PropTypes.string.isRequired,
+        row: PropTypes.number.isRequired,
+        start: PropTypes.object.isRequired, // moment
+        end: PropTypes.object.isRequired, // moment
+        title: PropTypes.string,
+        color: PropTypes.object,
+        opacity: PropTypes.number,
+        borderColor: PropTypes.object,
+        borderThickness: PropTypes.number,
+        cornerRadius: PropTypes.number,
+        glowOnHover: PropTypes.bool,
+        useGradient: PropTypes.bool,
+        gradientBrightness: PropTypes.number,
+        gradientStop: PropTypes.number,
+        reverseDirection: PropTypes.bool
+      })
+    ).isRequired,
     groups: PropTypes.arrayOf(PropTypes.object).isRequired,
     groupOffset: PropTypes.number.isRequired,
     rowLayers: PropTypes.arrayOf(
@@ -63,7 +86,7 @@ export default class Timeline extends React.Component {
         start: PropTypes.object.isRequired,
         end: PropTypes.object.isRequired,
         rowNumber: PropTypes.number.isRequired,
-        style: PropTypes.object.isRequired,
+        style: PropTypes.object.isRequired
       })
     ),
     selectedItems: PropTypes.arrayOf(PropTypes.number),
@@ -98,7 +121,7 @@ export default class Timeline extends React.Component {
     interactOptions: PropTypes.shape({
       draggable: PropTypes.object,
       pointerEvents: PropTypes.object,
-      resizable: PropTypes.object,
+      resizable: PropTypes.object
     }),
     verticalGrid: PropTypes.shape({
       /* Properties for vertical grid lines (markers) */
@@ -120,7 +143,8 @@ export default class Timeline extends React.Component {
           borderThickness: PropTypes.number
         })
       )
-    })
+    }),
+    fillWithEmptyRows: PropTypes.bool
   };
 
   static defaultProps = {
@@ -131,6 +155,8 @@ export default class Timeline extends React.Component {
     cursorTimeFormat: 'D MMM YYYY HH:mm',
     componentId: 'r9k1',
     showCursorTime: true,
+    showNowIndicator: false,
+    showVerticalGrid: false,
     groupRenderer: DefaultGroupRenderer,
     itemRenderer: DefaultItemRenderer,
     groupTitleRenderer: () => <div />,
@@ -140,6 +166,7 @@ export default class Timeline extends React.Component {
     onItemHover() {},
     onItemLeave() {},
     interactOptions: {},
+    fillWithEmptyRows: false
   };
 
   /**
@@ -151,7 +178,7 @@ export default class Timeline extends React.Component {
     dragEnd: 'dragEnd',
     dragStart: 'dragStart',
     itemsSelected: 'itemsSelected',
-    snappedMouseMove: 'snappedMouseMove',
+    snappedMouseMove: 'snappedMouseMove'
   };
 
   /**
@@ -172,7 +199,7 @@ export default class Timeline extends React.Component {
   constructor(props) {
     super(props);
     this.selecting = false;
-    this.state = {selection: [], cursorTime: null};
+    this.state = {selection: [], cursorTime: null, groups: props.groups, height: 0};
     this.setTimeMap(this.props.items);
     this.setDisplayedHighlightedWeekends(props.verticalGrid);
     this.setHighlightedIntervals(props.verticalGrid);
@@ -208,6 +235,7 @@ export default class Timeline extends React.Component {
     this.setTimeMap(nextProps.items, nextProps.startDate, nextProps.endDate);
     this.setDisplayedHighlightedWeekends(nextProps.verticalGrid);
     this.setHighlightedIntervals(nextProps.verticalGrid);
+    this.fillInTimelineWithEmptyRows(nextProps.groups, nextProps.fillWithEmptyRows);
     // @TODO
     // investigate if we need this, only added to refresh the grid
     // when double click -> add an item
@@ -276,9 +304,9 @@ export default class Timeline extends React.Component {
 
   /**
    * Sets the weekend intervals that are displayes as rowLayers for each row.
-   * @param {VerticalGrid} verticalGrid (showWeekendsHighlighted) Whether the weekends are highlighted. 
+   * @param {VerticalGrid} verticalGrid (showWeekendsHighlighted) Whether the weekends are highlighted.
    */
-   setDisplayedHighlightedWeekends(verticalGrid) {
+  setDisplayedHighlightedWeekends(verticalGrid) {
     this.weekends = [];
     if (!verticalGrid || !verticalGrid.showWeekendsHighlighted) {
       return;
@@ -290,7 +318,9 @@ export default class Timeline extends React.Component {
       startDate = startDate.subtract(1, 'days');
     }
 
-    let weekendStartDate = moment(startDate).startOf('isoWeek').day("saturday");
+    let weekendStartDate = moment(startDate)
+      .startOf('isoWeek')
+      .day('saturday');
     let weekendEndDate = null;
     // compute all the weekends in the interval
     while (weekendStartDate < this.props.endDate) {
@@ -303,7 +333,9 @@ export default class Timeline extends React.Component {
       });
 
       // go to the next weekend
-      weekendStartDate = moment(weekendEndDate).startOf('isoWeek').day("saturday");
+      weekendStartDate = moment(weekendEndDate)
+        .startOf('isoWeek')
+        .day('saturday');
     }
   }
 
@@ -315,16 +347,21 @@ export default class Timeline extends React.Component {
    * @returns weekends style
    */
   getWeekendsStyle(verticalGrid) {
-    const backgroundColor = getHexColorString(verticalGrid && verticalGrid.weekendsColor ? verticalGrid.weekendsColor : DEFAULT_WEEKENDS_COLOR);
-    const borderColor = getHexColorString(verticalGrid && verticalGrid.weekendsColor ? verticalGrid.weekendsColor : DEFAULT_WEEKENDS_COLOR);
-    const opacity = verticalGrid && verticalGrid.weekendsOpacity ? verticalGrid.weekendsOpacity : DEFAULT_WEEKENDS_OPACITY;
+    const backgroundColor = getHexColorString(
+      verticalGrid && verticalGrid.weekendsColor ? verticalGrid.weekendsColor : DEFAULT_WEEKENDS_COLOR
+    );
+    const borderColor = getHexColorString(
+      verticalGrid && verticalGrid.weekendsColor ? verticalGrid.weekendsColor : DEFAULT_WEEKENDS_COLOR
+    );
+    const opacity =
+      verticalGrid && verticalGrid.weekendsOpacity ? verticalGrid.weekendsOpacity : DEFAULT_WEEKENDS_OPACITY;
     const borderWidth = verticalGrid && verticalGrid.thickness ? this.props.verticalGrid.thickness : DEFAULT_THICKNESS;
     return {
       backgroundColor,
       opacity,
       borderColor,
       borderWidth
-    }
+    };
   }
 
   /**
@@ -433,7 +470,7 @@ export default class Timeline extends React.Component {
    * Get the snap in milliseconds from snapMinutes or snap
    */
   getTimelineSnap() {
-    if(this.props.snap) {
+    if (this.props.snap) {
       return this.props.snap * 1000;
     } else if (this.props.snapMinutes) {
       return this.props.snapMinutes * 60 * 1000;
@@ -447,6 +484,11 @@ export default class Timeline extends React.Component {
    */
   refreshGrid = (config = {}) => {
     this._grid.recomputeGridSize(config);
+
+    // fill in timeline with empty rows only on resize
+    if (!_.isEmpty(config)) {
+      this.fillInTimelineWithEmptyRows(this.state.groups, this.props.fillWithEmptyRows);
+    }
   };
 
   setUpDragging(canSelect, canDrag, canResize) {
@@ -463,11 +505,9 @@ export default class Timeline extends React.Component {
     this._itemInteractable = interact(`.${topDivClassId} .item_draggable`);
     this._selectRectangleInteractable = interact(`.${topDivClassId} .parent-div`);
 
-    this._itemInteractable
-      .pointerEvents(this.props.interactOptions.pointerEvents)
-      .on('tap', e => {
-        this._handleItemRowEvent(e, this.props.onItemClick, this.props.onRowClick);
-      });
+    this._itemInteractable.pointerEvents(this.props.interactOptions.pointerEvents).on('tap', e => {
+      this._handleItemRowEvent(e, this.props.onItemClick, this.props.onRowClick);
+    });
 
     if (canDrag) {
       this._itemInteractable
@@ -476,9 +516,9 @@ export default class Timeline extends React.Component {
           allowFrom: selectedItemSelector,
           restrict: {
             restriction: `.${topDivClassId}`,
-            elementRect: {left: 0, right: 1, top: 0, bottom: 1},
+            elementRect: {left: 0, right: 1, top: 0, bottom: 1}
           },
-          ...this.props.interactOptions.draggable,
+          ...this.props.interactOptions.draggable
         })
         .on('dragstart', e => {
           let selections = [];
@@ -578,7 +618,7 @@ export default class Timeline extends React.Component {
             if (rowChangeDelta < 0) {
               item.row = Math.max(0, item.row + rowChangeDelta);
             } else if (rowChangeDelta > 0) {
-              item.row = Math.min(this.props.groups.length - 1, item.row + rowChangeDelta);
+              item.row = Math.min(this.state.groups.length - 1, item.row + rowChangeDelta);
             }
 
             items.push(item);
@@ -606,7 +646,7 @@ export default class Timeline extends React.Component {
         .resizable({
           allowFrom: selectedItemSelector,
           edges: {left: true, right: true, bottom: false, top: false},
-          ...this.props.interactOptions.draggable,
+          ...this.props.interactOptions.draggable
         })
         .on('resizestart', e => {
           const selected = this.props.onInteraction(Timeline.changeTypes.resizeStart, null, this.props.selectedItems);
@@ -725,7 +765,7 @@ export default class Timeline extends React.Component {
       this._selectRectangleInteractable
         .draggable({
           enabled: true,
-          ignoreFrom: '.item_draggable, .rct9k-group',
+          ignoreFrom: '.item_draggable, .rct9k-group'
         })
         .styleCursor(false)
         .on('dragstart', e => {
@@ -867,8 +907,8 @@ export default class Timeline extends React.Component {
 
         // Set rowNumber to weekends and highlighted intervals.
         // rowNumber is used in rowLayerRenderer to compute the height of the first row (exclude border)
-        this.weekends.map(weekend => weekend.rowNumber = rowIndex);
-        this.highlightedIntervals.map(interval => interval.rowNumber = rowIndex);
+        this.weekends.map(weekend => (weekend.rowNumber = rowIndex));
+        this.highlightedIntervals.map(interval => (interval.rowNumber = rowIndex));
 
         return (
           <div
@@ -907,7 +947,7 @@ export default class Timeline extends React.Component {
         );
       } else {
         const GroupComp = this.props.groupRenderer;
-        let group = _.find(this.props.groups, g => g.id == rowIndex);
+        let group = _.find(this.state.groups, g => g.id == rowIndex);
         return (
           <div data-row-index={rowIndex} key={key} style={style} className="rct9k-group">
             <GroupComp group={group} />
@@ -983,7 +1023,54 @@ export default class Timeline extends React.Component {
   setTimebarResolution(resolution) {
     // This property is needed for showing the vertical grid;
     // compute the vertical line positions using the bottom timebar unit(resolution).
-    this.timebarResolution = resolution
+    this.timebarResolution = resolution;
+  }
+
+  /**
+   * Compute the number of rows that fit inside the timeline. If there can fit
+   * more rows than the model, fill in with empty groups.
+   */
+  fillInTimelineWithEmptyRows(groups, fillWithEmptyRows) {
+    // remove empty groups
+    groups = groups.filter(group => !group.key || !group.key.startsWith(EMPTY_GROUP_KEY));
+
+    // get height of the grid (without timebar);
+    // used to compute the number of rows we need to fill in
+    if (!this._grid || this._grid.props.height <= 0 || !fillWithEmptyRows) {
+      this.setState({groups: groups});
+      return;
+    }
+    const height = this._grid.props.height;
+
+    // compute the total height of the actual rows
+    let totalItemsHeight = 0;
+    _.forEach(this.rowHeightCache, row => {
+      totalItemsHeight += row * this.props.itemHeight;
+    });
+    let rowsToFillIn = (height - totalItemsHeight) / this.props.itemHeight;
+
+    let overflowStyle = DEFAULT_GRID_OVERFLOW_STYLE;
+    let fillInGroups = [];
+    if (rowsToFillIn > 0) {
+      let groupId = groups.length;
+      while (rowsToFillIn > 0) {
+        // create new empty group
+        fillInGroups.push({
+          id: groupId,
+          key: EMPTY_GROUP_KEY + groupId
+        });
+        rowsToFillIn--;
+        groupId++;
+      }
+      overflowStyle = GRID_EMPTY_ROWS_OVERFLOW;
+    }
+
+    const parentElement = document.querySelector(GRID_CLASS(this.props.componentId));
+    if (parentElement !== null) {
+      parentElement.style.overflow = overflowStyle;
+    }
+
+    this.setState({groups: [...groups, ...fillInGroups]});
   }
 
   render() {
@@ -999,7 +1086,7 @@ export default class Timeline extends React.Component {
       startDate,
       endDate,
       bottomResolution,
-      topResolution,
+      topResolution
     } = this.props;
 
     const divCssClass = `rct9k-timeline-div rct9k-id-${componentId}`;
@@ -1067,7 +1154,7 @@ export default class Timeline extends React.Component {
                 columnWidth={columnWidth(width)}
                 height={calculateHeight(height)}
                 rowHeight={this.rowHeight}
-                rowCount={this.props.groups.length}
+                rowCount={this.state.groups.length}
                 cellRenderer={this.cellRenderer(this.getTimelineWidth(width))}
                 grid_ref_callback={this.grid_ref_callback}
                 shallowUpdateCheck={shallowUpdateCheck}

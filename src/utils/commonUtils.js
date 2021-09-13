@@ -29,7 +29,7 @@ export function intToPix(int) {
 /**
  * Convert a decimal color to a hex reprezentation.
  * If a string the input is returned as is.
- * 
+ *
  * @param {*} color string or integer
  * @returns {string} color hex reprezentation as string
  */
@@ -38,5 +38,24 @@ export function getHexColorString(color) {
     return color;
   }
   let hex = color.toString(16);
-  return '#' + hex.padStart(6, "000000");
+  return '#' + hex.padStart(6, '000000');
+}
+
+/**
+ * @param {*} color hex (string) or decimal reprezentation
+ * @param {number} percent
+ * @returns a lighter color
+ */
+export function adjustBrightness(color, percent) {
+  if (typeof color === 'number') {
+    color = getHexColorString(color);
+  }
+  return (
+    '#' +
+    _(color.replace('#', ''))
+      .chunk(2)
+      .map(v => parseInt(v.join(''), 16))
+      .map(v => (0 | ((1 << 8) + v + ((256 - v) * percent) / 100)).toString(16).substr(1))
+      .join('')
+  );
 }

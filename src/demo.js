@@ -28,7 +28,9 @@ export default class DemoTimeline extends Component {
 
     const startDate = moment().startOf('month');
     //const endDate = startDate.clone().add(4, 'days');
-    const endDate = moment().endOf('month').subtract(1, "days");
+    const endDate = moment()
+      .endOf('month')
+      .subtract(1, 'days');
     this.state = {
       selectedItems: [],
       rows: 100,
@@ -42,9 +44,10 @@ export default class DemoTimeline extends Component {
       showNowIndicator: true,
       verticalGrid: {
         showWeekendsHighlighted: true,
-        weekendsColor: 0x0000FF,
+        weekendsColor: 0x0000ff,
         weekendsOpacity: 0.3
-      }
+      },
+      fillWithEmptyRows: true
     };
     this.reRender = this.reRender.bind(this);
     this.zoomIn = this.zoomIn.bind(this);
@@ -56,6 +59,7 @@ export default class DemoTimeline extends Component {
     this.toggleVerticalGrid = this.toggleVerticalGrid.bind(this);
     this.toggleNowIndicator = this.toggleNowIndicator.bind(this);
     this.toggleWeekendsHighlighted = this.toggleWeekendsHighlighted.bind(this);
+    this.toggleFillWithEmptyRows = this.toggleFillWithEmptyRows.bind(this);
   }
 
   componentWillMount() {
@@ -72,13 +76,28 @@ export default class DemoTimeline extends Component {
       groups.push({id: i, title: `Row ${i}`});
       for (let j = 0; j < this.state.items_per_row; j++) {
         this.key += 1;
-        const color = COLORS[(i + j) % COLORS.length];
+        const colorIndex = (i + j) % COLORS.length;
+        const color = COLORS[colorIndex];
+        const borderColor = COLORS[colorIndex - 1];
+        const borderThickness = (i + j) % 3;
+        const cornerRadius = i + j;
+        const opacity = Math.random();
+        const gradientStop = Math.random() * 100;
+        let useGradient = false;
+        let glowOnHover = false;
+        if ((i + j) % 3 === 0) {
+          useGradient = true;
+          glowOnHover = true;
+        }
+
         const duration = ITEM_DURATIONS[Math.floor(Math.random() * ITEM_DURATIONS.length)];
         // let start = last_moment;
-        let start = moment(Math.floor(
-          Math.random() * (this.state.endDate.valueOf() - this.state.startDate.valueOf()) +
-            this.state.startDate.valueOf()
-        ));
+        let start = moment(
+          Math.floor(
+            Math.random() * (this.state.endDate.valueOf() - this.state.startDate.valueOf()) +
+              this.state.startDate.valueOf()
+          )
+        );
         let end = start.clone().add(duration);
 
         // Round to the nearest snap distance
@@ -91,6 +110,14 @@ export default class DemoTimeline extends Component {
           key: this.key,
           title: duration.humanize(),
           color,
+          borderColor,
+          borderThickness,
+          glowOnHover,
+          cornerRadius,
+          useGradient,
+          reverseDirection: true,
+          gradientStop,
+          opacity,
           row: i,
           start,
           end
@@ -98,12 +125,17 @@ export default class DemoTimeline extends Component {
       }
     }
 
-	// create a custom highlighted interval
+    // create a custom highlighted interval
     let highlightedIntervals = [];
     highlightedIntervals.push({
-      start: moment().startOf('month').add(15, 'days').add(4, 'hours'),
-      end: moment().startOf('month').add(16, 'days'),
-      color: 0xEEEEFF
+      start: moment()
+        .startOf('month')
+        .add(15, 'days')
+        .add(4, 'hours'),
+      end: moment()
+        .startOf('month')
+        .add(16, 'days'),
+      color: 0xeeeeff
     });
 
     // this.state = {selectedItems: [11, 12], groups, items: list};
@@ -147,18 +179,23 @@ export default class DemoTimeline extends Component {
   }
 
   toggleVerticalGrid() {
-    const { showVerticalGrid } = this.state;
-    this.setState({ showVerticalGrid: !showVerticalGrid });
+    const {showVerticalGrid} = this.state;
+    this.setState({showVerticalGrid: !showVerticalGrid});
   }
 
   toggleNowIndicator() {
-    const { showNowIndicator } = this.state;
-    this.setState({ showNowIndicator: !showNowIndicator });
+    const {showNowIndicator} = this.state;
+    this.setState({showNowIndicator: !showNowIndicator});
   }
 
   toggleWeekendsHighlighted() {
-    const { verticalGrid } = this.state;
-    this.setState({ verticalGrid: { ...verticalGrid, showWeekendsHighlighted: !verticalGrid.showWeekendsHighlighted } });
+    const {verticalGrid} = this.state;
+    this.setState({verticalGrid: {...verticalGrid, showWeekendsHighlighted: !verticalGrid.showWeekendsHighlighted}});
+  }
+
+  toggleFillWithEmptyRows() {
+    const {fillWithEmptyRows} = this.state;
+    this.setState({fillWithEmptyRows: !fillWithEmptyRows});
   }
 
   handleItemClick = (e, key) => {
@@ -283,7 +320,8 @@ export default class DemoTimeline extends Component {
       timelineMode,
       showVerticalGrid,
       showNowIndicator,
-      verticalGrid
+      verticalGrid,
+      fillWithEmptyRows
     } = this.state;
     const rangeValue = [startDate, endDate];
 
@@ -387,6 +425,11 @@ export default class DemoTimeline extends Component {
                   Highlight weekends
                 </Checkbox>
               </Form.Item>
+              <Form.Item>
+                <Checkbox onChange={this.toggleFillWithEmptyRows} checked={fillWithEmptyRows}>
+                  Fill with empty rows
+                </Checkbox>
+              </Form.Item>
             </Form>
             <div>
               <span>Debug: </span>
@@ -416,6 +459,7 @@ export default class DemoTimeline extends Component {
             showVerticalGrid={showVerticalGrid}
             showNowIndicator={showNowIndicator}
             verticalGrid={verticalGrid}
+            fillWithEmptyRows={fillWithEmptyRows}
           />
         </Layout.Content>
       </Layout>
