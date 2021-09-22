@@ -83,24 +83,41 @@
 }
 
 /* Timeline top timebar */
+.rct9k-timebar {
+  display: flex;
+}
+
 .rct9k-timebar-outer {
   height: 60px;
   background-color: white;
-  border: 1px solid black;
   box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  outline: 1px solid black;
+  outline-offset: -1px;
+  border: 0px;
 }
+
 .rct9k-timebar-inner {
   height: 30px;
   white-space: nowrap;
   overflow: hidden;
 }
+
 .rct9k-timebar-item {
   text-align: center;
   display: inline-block;
-  border-left: 1px solid;
+  border-left: 1px solid black;
   white-space: nowrap;
   box-sizing: border-box;
+  height: 100%;
+  padding: 5px;
 }
+
+.rct9k-timebar-inner.rct9k-timebar-inner-bottom {
+  border-top: 1px solid black;
+}
+
 .rct9k-timebar-item-selected {
   background-color: lightblue;
 }
@@ -135,4 +152,10 @@
 .demo-layout-content {
   display: flex;
   flex-direction: column;
+}
+
+.rct9k-timeline-div {
+  background-color: #fff;
+  font-size: 12px;
+  height: 100%;
 }
