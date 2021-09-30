@@ -12,15 +12,17 @@
 .rct9k-items-outer {
   white-space: nowrap;
   position: absolute;
-  display: inline-block;
+  display: flex;
+  overflow: visible;
   overflow: hidden;
   z-index: 3;
 }
 .rct9k-items-inner {
-  display: inline-block;
-  margin: 3px;
-  padding: 3px;
+  display: flex;
+  margin: 5px 0;
   width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
 }
 .rct9k-marker-overlay {
   z-index: 2;
@@ -32,6 +34,12 @@
 }
 .rct9k-item-renderer-inner {
   pointer-events: none;
+  align-self: center;
+}
+.rct9k-item-glow:hover {
+  box-shadow: 0 0 12px #2d618c;
+  opacity: 1 !important;
+  transition: opacity 0.5s ease-in-out, box-shadow 0.5s ease-out;
 }
 .rct9k-row {
   /* white-space: nowrap; */
@@ -44,7 +52,8 @@
 }
 
 .rct9k-items-selected {
-  background-color: magenta;
+  background: magenta !important;
+  opacity: 1 !important;
 }
 
 .ReactVirtualized__Grid {
@@ -66,11 +75,19 @@
 }
 
 /* Timeline top timebar */
+.rct9k-timebar {
+  display: flex;
+}
 .rct9k-timebar-outer {
   height: 60px;
   background-color: white;
   border: 1px solid black;
   box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  outline: 1px solid black;
+  outline-offset: -1px;
+  border: 0px;
 }
 .rct9k-timebar-inner {
   height: 30px;
@@ -83,6 +100,11 @@
   border-left: 1px solid;
   white-space: nowrap;
   box-sizing: border-box;
+  height: 100%;
+  padding: 5px;
+}
+.rct9k-timebar-inner.rct9k-timebar-inner-bottom {
+  border-top: 1px solid black;
 }
 .rct9k-timebar-item-selected {
   background-color: lightblue;
@@ -92,6 +114,12 @@
   display: inline-block;
   position: absolute;
   height: 4em;
+}
+
+.rct9k-timeline-div {
+  background-color: #fff;
+  font-size: 12px;
+  height: 100%;
 }
 
 /* Multi-select box */

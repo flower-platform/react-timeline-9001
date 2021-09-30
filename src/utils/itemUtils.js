@@ -47,7 +47,7 @@ export function rowItemsRenderer(items, vis_start, vis_end, total_width, itemHei
     let width = Math.round(item_duration_mins * pixels_per_ms);
     let compClassnames = 'rct9k-items-inner';
     let outerClassnames = 'rct9k-items-outer item_draggable';
-    let style = {backgroundColor: color};
+    let style = {};
     let isSelected = selectedItems.indexOf(Number(i.key)) > -1;
 
     if (isSelected) {
@@ -62,7 +62,22 @@ export function rowItemsRenderer(items, vis_start, vis_end, total_width, itemHei
         data-item-index={i.key}
         className={outerClassnames}
         style={{left, width, top, backgroundColor: 'transparent'}}>
-        <Comp key={i.key} item={i} className={compClassnames} style={style} />
+        <Comp
+          key={i.key}
+          item={i}
+          style={style}
+          color={color}
+          borderColor={i.borderColor}
+          cornerRadius={i.cornerRadius}
+          borderThickness={i.borderThickness}
+          useGradient={i.useGradient}
+          gradientBrightness={i.gradientBrightness}
+          gradientStop={i.gradientStop}
+          reverseDirection={i.reverseDirection}
+          opacity={i.opacity}
+          className={compClassnames}
+          itemHeight={itemHeight}
+        />
       </span>
     );
   });
