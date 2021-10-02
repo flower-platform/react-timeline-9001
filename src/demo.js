@@ -65,10 +65,12 @@ export default class DemoTimeline extends Component {
         const color = COLORS[(i + j) % COLORS.length];
         const duration = ITEM_DURATIONS[Math.floor(Math.random() * ITEM_DURATIONS.length)];
         // let start = last_moment;
-        let start = moment(Math.floor(
-          Math.random() * (this.state.endDate.valueOf() - this.state.startDate.valueOf()) +
-            this.state.startDate.valueOf()
-        ));
+        let start = moment(
+          Math.floor(
+            Math.random() * (this.state.endDate.valueOf() - this.state.startDate.valueOf()) +
+              this.state.startDate.valueOf()
+          )
+        );
         let end = start.clone().add(duration);
 
         // Round to the nearest snap distance
@@ -82,8 +84,8 @@ export default class DemoTimeline extends Component {
           title: duration.humanize(),
           color,
           row: i,
-          start,
-          end
+          start: start.valueOf(),
+          end: end.valueOf()
         });
       }
     }
@@ -345,8 +347,9 @@ export default class DemoTimeline extends Component {
             shallowUpdateCheck
             items={items}
             groups={groups}
-            startDate={startDate}
-            endDate={endDate}
+            useTimestamps={true}
+            startDate={startDate.valueOf()}
+            endDate={endDate.valueOf()}
             rowLayers={rowLayers}
             selectedItems={selectedItems}
             timelineMode={timelineMode}
