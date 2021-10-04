@@ -46,6 +46,7 @@ export default class DemoTimeline extends Component {
     this.toggleSelectable = this.toggleSelectable.bind(this);
     this.toggleDraggable = this.toggleDraggable.bind(this);
     this.toggleResizable = this.toggleResizable.bind(this);
+    this.toggleTimestamps = this.toggleTimestamps.bind(this);
   }
 
   componentWillMount() {
@@ -96,8 +97,8 @@ export default class DemoTimeline extends Component {
           title: duration.humanize(),
           color,
           row: i,
-          start,
-          end,
+          start: this.state.useTimestamps ? start.valueOf() : start,
+          end: this.state.useTimestamps ? end.valueOf() : end,
           borderColor,
           borderThickness,
           glowOnHover,
@@ -148,6 +149,10 @@ export default class DemoTimeline extends Component {
     const {timelineMode} = this.state;
     let newMode = timelineMode ^ TIMELINE_MODES.RESIZE;
     this.setState({timelineMode: newMode, message: 'Timeline mode change: ' + timelineMode + ' -> ' + newMode});
+  }
+  toggleTimestamps() {
+    const {useTimestamps} = this.state;
+    this.setState({useTimestamps: !useTimestamps});
   }
   handleItemClick = (e, key) => {
     const message = `Item Click ${key}`;
@@ -219,7 +224,7 @@ export default class DemoTimeline extends Component {
         });
         if (i) {
           item = i;
-          item.title = moment.duration(item.end.diff(item.start)).humanize();
+          item.title = moment.duration(moment(item.end).diff(moment(item.start))).humanize();
         }
       });
     }
@@ -268,7 +273,8 @@ export default class DemoTimeline extends Component {
       groups,
       message,
       useCustomRenderers,
-      timelineMode
+      timelineMode,
+      useTimestamps
     } = this.state;
     const rangeValue = [startDate, endDate];
 
@@ -295,8 +301,13 @@ export default class DemoTimeline extends Component {
         }
 
         rowLayers.push({
-          start: curDate.clone(),
-          end: curDate.clone().add(bandDuration, 'days'),
+          start: this.state.useTimestamps ? curDate.valueOf() : curDate.clone(),
+          end: this.state.useTimestamps
+            ? curDate
+                .clone()
+                .add(bandDuration, 'days')
+                .valueOf()
+            : curDate.clone().add(bandDuration, 'days'),
           style: {backgroundColor: color, opacity: '0.3'},
           rowNumber: i
         });
@@ -357,6 +368,11 @@ export default class DemoTimeline extends Component {
                   Enable resizing
                 </Checkbox>
               </Form.Item>
+              <Form.Item>
+                <Checkbox onChange={this.toggleTimestamps} checked={useTimestamps}>
+                  Use timestamps
+                </Checkbox>
+              </Form.Item>
             </Form>
             <div>
               <span>Debug: </span>
@@ -367,8 +383,9 @@ export default class DemoTimeline extends Component {
             shallowUpdateCheck
             items={items}
             groups={groups}
-            startDate={startDate}
-            endDate={endDate}
+            useTimestamps={useTimestamps}
+            startDate={useTimestamps ? startDate.valueOf() : startDate}
+            endDate={useTimestamps ? endDate.valueOf() : endDate}
             rowLayers={rowLayers}
             selectedItems={selectedItems}
             timelineMode={timelineMode}
