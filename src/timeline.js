@@ -144,7 +144,7 @@ export default class Timeline extends React.Component {
     this.state = {selection: [], cursorTime: null};
     const startDate = this.getDateAsMoment(this.props.startDate);
     const endDate = this.getDateAsMoment(this.props.endDate);
-    this.setTimeMap(this.props.items, startDate, endDate);
+    this.setTimeMap(this.props.items, startDate, endDate, this.props.useTimestamps);
 
     this.cellRenderer = this.cellRenderer.bind(this);
     this.rowHeight = this.rowHeight.bind(this);
@@ -176,7 +176,8 @@ export default class Timeline extends React.Component {
     this.setTimeMap(
       nextProps.items,
       this.getDateAsMoment(nextProps.startDate),
-      this.getDateAsMoment(nextProps.endDate)
+      this.getDateAsMoment(nextProps.endDate),
+      nextProps.useTimestamps
     );
     // @TODO
     // investigate if we need this, only added to refresh the grid
@@ -210,8 +211,14 @@ export default class Timeline extends React.Component {
     }
   }
 
-  getDateAsMoment(date) {
-    if (this.props.useTimestamps) {
+  /**
+   * If this.props.useTimestamps is true, converts date to moment, otherwise returns date.
+   * @param {moment|number} date as moment or timestamp
+   * @param {boolean} useTimestamps
+   * @returns moment
+   */
+  getDateAsMoment(date, useTimestamps = this.props.useTimestamps) {
+    if (useTimestamps) {
       return moment(date);
     }
     return date;
@@ -233,22 +240,25 @@ export default class Timeline extends React.Component {
    * @param {Object[]} items The items to be displayed in the grid
    * @param {moment} startDate The visible start date of the timeline
    * @param {moment} endDate The visible end date of the timeline
+   * @param {boolean} useTimestamps If the timeline uses timestamps
    */
-  setTimeMap(items, startDate, endDate) {
+  setTimeMap(items, startDate, endDate, useTimestamps) {
     this.itemRowMap = {}; // timeline elements (key) => (rowNo).
     this.rowItemMap = {}; // (rowNo) => timeline elements
     this.rowHeightCache = {}; // (rowNo) => max number of stacked items
-    let visibleItems = _.map(
-      _.filter(items, i => {
-        return this.getDateAsMoment(i.end) > startDate && this.getDateAsMoment(i.start) < endDate;
-      }),
-      i => {
+    let visibleItems = _.filter(items, i => {
+      return (
+        this.getDateAsMoment(i.end, useTimestamps) > startDate && this.getDateAsMoment(i.start, useTimestamps) < endDate
+      );
+    });
+    if (useTimestamps) {
+      visibleItems = _.map(visibleItems, i => {
         let newItem = _.clone(i);
-        newItem.start = this.getDateAsMoment(i.start);
-        newItem.end = this.getDateAsMoment(i.end);
+        newItem.start = this.getDateAsMoment(i.start, useTimestamps);
+        newItem.end = this.getDateAsMoment(i.end, useTimestamps);
         return newItem;
-      }
-    );
+      });
+    }
     let itemRows = _.groupBy(visibleItems, 'row');
     _.forEach(itemRows, (visibleItems, row) => {
       const rowInt = parseInt(row);
@@ -477,7 +487,19 @@ export default class Timeline extends React.Component {
               item.row = Math.min(this.props.groups.length - 1, item.row + rowChangeDelta);
             }
 
-            items.push(item);
+            if (this.props.useTimestamps) {
+              // find the original item from props.items, update the item and add it to the list;
+              // this item it will be used in dragEnd interaction
+              const originalItem = this.props.items.find(i => i.key == item.key);
+              if (originalItem !== null) {
+                originalItem.start = newStart.valueOf();
+                originalItem.end = newEnd.valueOf();
+                originalItem.row = item.row;
+              }
+              items.push(originalItem);
+            } else {
+              items.push(item);
+            }
           });
 
           this.props.onInteraction(Timeline.changeTypes.dragEnd, changes, items);
@@ -600,7 +622,18 @@ export default class Timeline extends React.Component {
             domItem.style['z-index'] = 3;
             domItem.style.webkitTransform = domItem.style.transform = 'translate(0px, 0px)';
 
-            items.push(item);
+            if (this.props.useTimestamps) {
+              // find the original item from props.items, update the item and add it to the list;
+              // this item it will be used in resizeEnd interaction
+              const originalItem = this.props.items.find(i => i.key == item.key);
+              if (originalItem !== null) {
+                originalItem.start = item.start.valueOf();
+                originalItem.end = item.end.valueOf();
+              }
+              items.push(originalItem);
+            } else {
+              items.push(item);
+            }
           });
           if (durationChange === null) durationChange = 0;
           const changes = {isStartTimeChange, timeDelta: -durationChange};
@@ -696,12 +729,24 @@ export default class Timeline extends React.Component {
             );
             //Get items in these ranges
             let selectedItems = [];
-            for (let r = Math.min(topRowNumber, bottomRow); r <= Math.max(topRowNumber, bottomRow); r++) {
-              selectedItems.push(
-                ..._.filter(this.rowItemMap[r], i => {
-                  return i.start.isBefore(endTime) && i.end.isAfter(startTime);
-                })
-              );
+
+            if (this.props.useTimestamps) {
+              let itemRows = _.groupBy(this.props.items, 'row');
+              for (let r = Math.min(topRowNumber, bottomRow); r <= Math.max(topRowNumber, bottomRow); r++) {
+                selectedItems.push(
+                  ..._.filter(itemRows[r], i => {
+                    return i.start < endTime.valueOf() && i.end > startTime.valueOf();
+                  })
+                );
+              }
+            } else {
+              for (let r = Math.min(topRowNumber, bottomRow); r <= Math.max(topRowNumber, bottomRow); r++) {
+                selectedItems.push(
+                  ..._.filter(this.rowItemMap[r], i => {
+                    return i.start.isBefore(endTime) && i.end.isAfter(startTime);
+                  })
+                );
+              }
             }
             this.props.onInteraction(Timeline.changeTypes.itemsSelected, selectedItems);
           }
@@ -735,8 +780,8 @@ export default class Timeline extends React.Component {
 
   /**
    * @param {number} width container width (in px)
-   * @param {moment|number} the visible start date of the timeline
-   * @param {moment|number} the visible end date of the timeline
+   * @param {moment} the visible start date of the timeline
+   * @param {moment} the visible end date of the timeline
    */
   cellRenderer(width, startDate, endDate) {
     /**
@@ -752,7 +797,16 @@ export default class Timeline extends React.Component {
       let itemCol = 1;
       if (itemCol == columnIndex) {
         let itemsInRow = this.rowItemMap[rowIndex];
-        const layersInRow = rowLayers.filter(r => r.rowNumber === rowIndex);
+        let layersInRow = rowLayers.filter(r => r.rowNumber === rowIndex);
+        if (this.props.useTimestamps) {
+          layersInRow = _.map(layersInRow, r => {
+            let rowLayer = _.clone(r);
+            rowLayer.start = this.getDateAsMoment(r.start);
+            rowLayer.end = this.getDateAsMoment(r.end);
+            return rowLayer;
+          });
+        }
+
         let rowHeight = this.props.itemHeight;
         if (this.rowHeightCache[rowIndex]) {
           rowHeight = rowHeight * this.rowHeightCache[rowIndex];
