@@ -62,13 +62,27 @@ export default class DemoTimeline extends Component {
       groups.push({id: i, title: `Row ${i}`});
       for (let j = 0; j < this.state.items_per_row; j++) {
         this.key += 1;
-        const color = COLORS[(i + j) % COLORS.length];
+        const colorIndex = (i + j) % COLORS.length;
+        const color = COLORS[colorIndex];
+        const borderColor = COLORS[colorIndex - 1];
+        const borderThickness = (i + j) % 3;
+        const cornerRadius = i + j;
+        const opacity = Math.random();
+        const gradientStop = Math.random() * 100;
+        let useGradient = true;
+        let glowOnHover = false;
+        if ((i + j) % 3 === 0) {
+          useGradient = true;
+          glowOnHover = true;
+        }
         const duration = ITEM_DURATIONS[Math.floor(Math.random() * ITEM_DURATIONS.length)];
         // let start = last_moment;
-        let start = moment(Math.floor(
-          Math.random() * (this.state.endDate.valueOf() - this.state.startDate.valueOf()) +
-            this.state.startDate.valueOf()
-        ));
+        let start = moment(
+          Math.floor(
+            Math.random() * (this.state.endDate.valueOf() - this.state.startDate.valueOf()) +
+              this.state.startDate.valueOf()
+          )
+        );
         let end = start.clone().add(duration);
 
         // Round to the nearest snap distance
@@ -83,7 +97,15 @@ export default class DemoTimeline extends Component {
           color,
           row: i,
           start,
-          end
+          end,
+          borderColor,
+          borderThickness,
+          glowOnHover,
+          cornerRadius,
+          useGradient,
+          reverseDirection: true,
+          gradientStop,
+          opacity
         });
       }
     }
