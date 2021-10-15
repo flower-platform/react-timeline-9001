@@ -5,7 +5,7 @@ import PropTypes from 'prop-types';
 import _ from 'lodash';
 import moment from 'moment';
 import {intToPix} from '../utils/commonUtils';
-import {timebarFormat as defaultTimebarFormat} from '../consts/timebarConsts';
+import {timebarFormat as defaultTimebarFormat, headerRenderer as defaultHeaderRenderer} from '../consts/timebarConsts';
 
 /**
  * Timebar component - displays the current time on top of the timeline
@@ -51,7 +51,7 @@ export default class Timebar extends React.Component {
     /// 1ms -> 1s
     if (durationMilliSecs <= 1000) this.setState({resolution: {top: 'second', bottom: 'millisecond'}});
     // 1s  -> 2m
-    else if (durationMilliSecs <= 60 * 2 * 1000) this.setState({resolution: {top: 'minute', bottom:  'second'}});
+    else if (durationMilliSecs <= 60 * 2 * 1000) this.setState({resolution: {top: 'minute', bottom: 'second'}});
     // 2m -> 2h
     else if (durationMilliSecs <= 60 * 60 * 2 * 1000) this.setState({resolution: {top: 'hour', bottom: 'minute'}});
     // 2h -> 3d
@@ -59,7 +59,8 @@ export default class Timebar extends React.Component {
     // 1d -> 30d
     else if (durationMilliSecs <= 30 * 24 * 60 * 60 * 1000) this.setState({resolution: {top: 'month', bottom: 'day'}});
     //30d -> 1y
-    else if (durationMilliSecs <= 365 * 24 * 60 * 60 * 1000) this.setState({resolution: {top: 'year', bottom: 'month'}});
+    else if (durationMilliSecs <= 365 * 24 * 60 * 60 * 1000)
+      this.setState({resolution: {top: 'year', bottom: 'month'}});
     // 1y ->
     else this.setState({resolution: {top: 'year', bottom: 'year'}});
   }
@@ -200,10 +201,30 @@ export default class Timebar extends React.Component {
    * @returns {Object} Timebar component
    */
   render() {
-    const {cursorTime} = this.props;
+    const {cursorTime, dataGridColumns, groupOffset, multipleColumns} = this.props;
     const topBarComponent = this.renderTopBar();
     const bottomBarComponent = this.renderBottomBar();
     const GroupTitleRenderer = this.props.groupTitleRenderer;
+
+    /**
+     * It renders the header of a column. If the column does not have a headerRenderer it uses
+     * a defaultHeaderRenderer.
+     * @param {object} column
+     */
+    function renderColumnHeader(column) {
+      const ColumnRenderer = column.headerRenderer ? column.headerRenderer : defaultHeaderRenderer;
+      const columnWidth = column.width ? column.width : groupOffset;
+      return (
+        <div
+          className="rct9k-timebar-group-title"
+          key={column.headerKey}
+          style={{
+            width: columnWidth
+          }}>
+          <ColumnRenderer />
+        </div>
+      );
+    }
 
     // Only show the cursor on 1 of the top bar segments
     // Pick the segment that has the biggest size
@@ -213,11 +234,17 @@ export default class Timebar extends React.Component {
     else if (topBarComponent.length > 0) topBarCursorKey = topBarComponent[0].key;
 
     return (
-      <div className="rct9k-timebar">
-        <div className="rct9k-timebar-group-title" style={{width: this.props.leftOffset}}>
-          <GroupTitleRenderer />
-        </div>
-        <div className="rct9k-timebar-outer" style={{width: this.props.width, paddingLeft: this.props.leftOffset}}>
+      <div className="rct9k-timebar" style={{width: this.props.width}}>
+        {!multipleColumns && (
+          <div className="rct9k-timebar-group-title" style={{width: this.props.leftOffset}}>
+            <GroupTitleRenderer />
+          </div>
+        )}
+        {multipleColumns &&
+          dataGridColumns.map(column => {
+            return renderColumnHeader(column);
+          })}
+        <div className="rct9k-timebar-outer" style={{width: this.props.width - this.props.leftOffset}}>
           <div className="rct9k-timebar-inner rct9k-timebar-inner-top">
             {_.map(topBarComponent, i => {
               let topLabel = i.label;
@@ -260,11 +287,16 @@ Timebar.propTypes = {
   top_resolution: PropTypes.string,
   bottom_resolution: PropTypes.string,
   selectedRanges: PropTypes.arrayOf(PropTypes.object), // [start: moment ,end: moment (end)]
-  timeFormats: PropTypes.object
+  timeFormats: PropTypes.object,
+  dataGridColumns: PropTypes.arrayOf(PropTypes.object),
+  groupOffset: PropTypes.number,
+  multipleColumns: PropTypes.bool
 };
 Timebar.defaultProps = {
   selectedRanges: [],
   groupTitleRenderer: () => <div />,
   leftOffset: 0,
-  timeFormats: defaultTimebarFormat
+  timeFormats: defaultTimebarFormat,
+  dataGridColumns: [],
+  multipleColumns: false
 };

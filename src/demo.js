@@ -37,7 +37,8 @@ export default class DemoTimeline extends Component {
       startDate,
       endDate,
       message: '',
-      timelineMode: TIMELINE_MODES.SELECT | TIMELINE_MODES.DRAG | TIMELINE_MODES.RESIZE
+      timelineMode: TIMELINE_MODES.SELECT | TIMELINE_MODES.DRAG | TIMELINE_MODES.RESIZE,
+      multipleColumns: false
     };
     this.reRender = this.reRender.bind(this);
     this.zoomIn = this.zoomIn.bind(this);
@@ -46,6 +47,7 @@ export default class DemoTimeline extends Component {
     this.toggleSelectable = this.toggleSelectable.bind(this);
     this.toggleDraggable = this.toggleDraggable.bind(this);
     this.toggleResizable = this.toggleResizable.bind(this);
+    this.toggleMultipleColumns = this.toggleMultipleColumns.bind(this);
   }
 
   componentWillMount() {
@@ -59,16 +61,18 @@ export default class DemoTimeline extends Component {
 
     this.key = 0;
     for (let i = 0; i < this.state.rows; i++) {
-      groups.push({id: i, title: `Row ${i}`});
+      groups.push({id: i, title: `Row ${i}`, description: `Description for row ${i}`});
       for (let j = 0; j < this.state.items_per_row; j++) {
         this.key += 1;
         const color = COLORS[(i + j) % COLORS.length];
         const duration = ITEM_DURATIONS[Math.floor(Math.random() * ITEM_DURATIONS.length)];
         // let start = last_moment;
-        let start = moment(Math.floor(
-          Math.random() * (this.state.endDate.valueOf() - this.state.startDate.valueOf()) +
-            this.state.startDate.valueOf()
-        ));
+        let start = moment(
+          Math.floor(
+            Math.random() * (this.state.endDate.valueOf() - this.state.startDate.valueOf()) +
+              this.state.startDate.valueOf()
+          )
+        );
         let end = start.clone().add(duration);
 
         // Round to the nearest snap distance
@@ -88,9 +92,24 @@ export default class DemoTimeline extends Component {
       }
     }
 
+    const dataGridColumns = [
+      {
+        width: 100,
+        headerKey: 1
+      },
+      {
+        width: 250,
+        dataKey: 'description',
+        headerKey: 2,
+        headerRenderer: () => {
+          return <div>Description</div>;
+        }
+      }
+    ];
+
     // this.state = {selectedItems: [11, 12], groups, items: list};
     this.forceUpdate();
-    this.setState({items: list, groups});
+    this.setState({items: list, groups, dataGridColumns});
   }
 
   handleRowClick = (e, rowNumber, clickedTime, snappedClickedTime) => {
@@ -126,6 +145,10 @@ export default class DemoTimeline extends Component {
     const {timelineMode} = this.state;
     let newMode = timelineMode ^ TIMELINE_MODES.RESIZE;
     this.setState({timelineMode: newMode, message: 'Timeline mode change: ' + timelineMode + ' -> ' + newMode});
+  }
+  toggleMultipleColumns() {
+    const {multipleColumns} = this.state;
+    this.setState({multipleColumns: !multipleColumns});
   }
   handleItemClick = (e, key) => {
     const message = `Item Click ${key}`;
@@ -246,7 +269,9 @@ export default class DemoTimeline extends Component {
       groups,
       message,
       useCustomRenderers,
-      timelineMode
+      timelineMode,
+      multipleColumns,
+      dataGridColumns
     } = this.state;
     const rangeValue = [startDate, endDate];
 
@@ -335,6 +360,11 @@ export default class DemoTimeline extends Component {
                   Enable resizing
                 </Checkbox>
               </Form.Item>
+              <Form.Item>
+                <Checkbox onChange={this.toggleMultipleColumns} checked={multipleColumns}>
+                  Enable multiple columns
+                </Checkbox>
+              </Form.Item>
             </Form>
             <div>
               <span>Debug: </span>
@@ -345,6 +375,8 @@ export default class DemoTimeline extends Component {
             shallowUpdateCheck
             items={items}
             groups={groups}
+            multipleColumns={multipleColumns}
+            dataGridColumns={dataGridColumns}
             startDate={startDate}
             endDate={endDate}
             rowLayers={rowLayers}
