@@ -285,7 +285,7 @@ export default class DemoTimeline extends Component {
     }
 
     return (
-      <React.Fragment>
+      <div className="demo">
         <div style={{margin: 24}}>
           <Form layout="inline">
             <Form.Item label="No rows">
@@ -363,7 +363,7 @@ export default class DemoTimeline extends Component {
           groupRenderer={useCustomRenderers ? customGroupRenderer : undefined}
           groupTitleRenderer={useCustomRenderers ? () => <div>Group title</div> : undefined}
         />
-      </React.Fragment>
+      </div>
     );
   }
 }

@@ -1,6 +1,6 @@
 .rct9k-timeline-div {
   width: 100%;
-  height: 95vh;
+  flex-grow: 1;
   background-color: #a5a5a5;
   -webkit-user-select: none;
   -moz-user-select: none;
@@ -111,11 +111,13 @@
   z-index: 1;
 }
 
-.demo-layout {
+#root {
+  width: 100%;
   height: 100%;
 }
 
-.demo-layout-content {
+.demo {
+  height: 100%;
   display: flex;
   flex-direction: column;
 }
