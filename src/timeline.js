@@ -20,7 +20,15 @@ import {
   getVerticalMarginBorder,
   getRowObjectRowNumber
 } from './utils/itemUtils';
-import {timeSnap, getTimeAtPixel, getPixelAtTime, getSnapPixelFromDelta, pixelsPerSecond} from './utils/timeUtils';
+import {
+  timeSnap,
+  getTimeAtPixel,
+  getPixelAtTime,
+  getSnapPixelFromDelta,
+  pixelsPerSecond,
+  convertDateToMoment,
+  convertMomentToDateType
+} from './utils/timeUtils';
 import Timebar from './components/timebar';
 import SelectBox from './components/selector';
 import {DefaultGroupRenderer, DefaultItemRenderer} from './components/renderers';
@@ -89,7 +97,7 @@ export default class Timeline extends React.Component {
       pointerEvents: PropTypes.object,
       resizable: PropTypes.object.isRequired
     }),
-    useTimestamps: PropTypes.bool
+    useMoment: PropTypes.bool // Whether the timeline should receive dates as moment object or in milliseconds.
   };
 
   static defaultProps = {
@@ -108,7 +116,8 @@ export default class Timeline extends React.Component {
     forceRedrawFunc: null,
     onItemHover() {},
     onItemLeave() {},
-    interactOptions: {}
+    interactOptions: {},
+    useMoment: true
   };
 
   /**
@@ -142,9 +151,7 @@ export default class Timeline extends React.Component {
     super(props);
     this.selecting = false;
     this.state = {selection: [], cursorTime: null};
-    const startDate = this.getDateAsMoment(this.props.startDate);
-    const endDate = this.getDateAsMoment(this.props.endDate);
-    this.setTimeMap(this.props.items, startDate, endDate, this.props.useTimestamps);
+    this.setTimeMap(this.props.items);
 
     this.cellRenderer = this.cellRenderer.bind(this);
     this.rowHeight = this.rowHeight.bind(this);
@@ -161,11 +168,17 @@ export default class Timeline extends React.Component {
     this.throttledMouseMoveFunc = _.throttle(this.throttledMouseMoveFunc.bind(this), 20);
     this.mouseMoveFunc = this.mouseMoveFunc.bind(this);
     this.getCursor = this.getCursor.bind(this);
+    this.getStartDate = this.getStartDate.bind(this);
+    this.getEndDate = this.getEndDate.bind(this);
+    this.getStartFromItem = this.getStartFromItem.bind(this);
+    this.getEndFromItem = this.getEndFromItem.bind(this);
+    this.getStartFromRowLayer = this.getStartFromRowLayer.bind(this);
+    this.getEndFromRowLayer = this.getEndFromRowLayer.bind(this);
 
     const canSelect = Timeline.isBitSet(Timeline.TIMELINE_MODES.SELECT, this.props.timelineMode);
     const canDrag = Timeline.isBitSet(Timeline.TIMELINE_MODES.DRAG, this.props.timelineMode);
     const canResize = Timeline.isBitSet(Timeline.TIMELINE_MODES.RESIZE, this.props.timelineMode);
-    this.setUpDragging(canSelect, canDrag, canResize, startDate, endDate);
+    this.setUpDragging(canSelect, canDrag, canResize);
   }
 
   componentDidMount() {
@@ -175,9 +188,8 @@ export default class Timeline extends React.Component {
   componentWillReceiveProps(nextProps) {
     this.setTimeMap(
       nextProps.items,
-      this.getDateAsMoment(nextProps.startDate),
-      this.getDateAsMoment(nextProps.endDate),
-      nextProps.useTimestamps
+      this.getStartDate(nextProps.startDate, nextProps.useMoment),
+      this.getEndDate(nextProps.endDate, nextProps.useMoment)
     );
     // @TODO
     // investigate if we need this, only added to refresh the grid
@@ -201,27 +213,112 @@ export default class Timeline extends React.Component {
       const canSelect = Timeline.isBitSet(Timeline.TIMELINE_MODES.SELECT, timelineMode);
       const canDrag = Timeline.isBitSet(Timeline.TIMELINE_MODES.DRAG, timelineMode);
       const canResize = Timeline.isBitSet(Timeline.TIMELINE_MODES.RESIZE, timelineMode);
-      this.setUpDragging(
-        canSelect,
-        canDrag,
-        canResize,
-        this.getDateAsMoment(this.props.startDate),
-        this.getDateAsMoment(this.props.endDate)
-      );
+      this.setUpDragging(canSelect, canDrag, canResize);
     }
   }
 
   /**
-   * If this.props.useTimestamps is true, converts date to moment, otherwise returns date.
-   * @param {moment|number} date as moment or timestamp
-   * @param {boolean} useTimestamps
-   * @returns moment
+   * It returns the start date of the timeline as moment.
+   * @param {moment|number} startDate The visible startDate of the timeline. Can be a moment object or a date as number.
+   * @param {boolean} useMoment Whether the date is already a moment or should be converted.
+   * @returns startDate as moment
    */
-  getDateAsMoment(date, useTimestamps = this.props.useTimestamps) {
-    if (useTimestamps) {
-      return moment(date);
-    }
-    return date;
+  getStartDate(startDate = this.props.startDate, useMoment = this.props.useMoment) {
+    return convertDateToMoment(startDate, useMoment);
+  }
+
+  /**
+   * It returns the end date of the timeline as moment.
+   * @param {moment|number} endDate The visible endDate of the timeline. Can be a moment object or a date as number.
+   * @param {boolean} useMoment Whether the date is already a moment or should be converted.
+   * @returns endDate as moment
+   */
+  getEndDate(endDate = this.props.endDate, useMoment = this.props.useMoment) {
+    return convertDateToMoment(endDate, useMoment);
+  }
+
+  /**
+   * It returns the start of the item as moment.
+   * @param {object} item Item that is displayed in the grid.
+   * @param {boolean} useMoment Whether the date is already a moment or should be converted.
+   * @returns start of the item as moment
+   */
+  getStartFromItem(item, useMoment = this.props.useMoment) {
+    return convertDateToMoment(item.start, useMoment);
+  }
+
+  /**
+   * It assigns newDateAsMoment to the start of the item, but first it converts newDateAsMoment
+   * to moment or milliseconds according to useMoment.
+   * @param {object} item Item that is displayed in the grid.
+   * @param {moment} newDateAsMoment
+   * @param {boolean} useMoment Whether the date should be a moment or a number(millis).
+   */
+  setStartToItem(item, newDateAsMoment, useMoment = this.props.useMoment) {
+    item.start = convertMomentToDateType(newDateAsMoment, useMoment);
+  }
+
+  /**
+   * It returns the end of the item as moment.
+   * @param {object} item Item that is displayed in the grid.
+   * @param {boolean} useMoment Whether the date is already a moment or should be converted.
+   * @returns end of the item as moment.
+   */
+  getEndFromItem(item, useMoment = this.props.useMoment) {
+    return convertDateToMoment(item.end, useMoment);
+  }
+
+  /**
+   * It assigns newDateAsMoment to the end of the item, but first it converts newDateAsMoment
+   * to moment or milliseconds according to useMoment.
+   * @param {object} item Item that is displayed in the grid.
+   * @param {moment} newDateAsMoment
+   * @param {boolean} useMoment Whether the date should be a moment or a number(millis).
+   */
+  setEndToItem(item, newDateAsMoment, useMoment = this.props.useMoment) {
+    item.end = convertMomentToDateType(newDateAsMoment, useMoment);
+  }
+
+  /**
+   * It returns the start of the layer as moment.
+   * @param {object} layer
+   * @param {boolean} useMoment Whether the date is already a moment or should be converted.
+   * @returns the start of the rowLayer as moment.
+   */
+  getStartFromRowLayer(layer, useMoment = this.props.useMoment) {
+    return convertDateToMoment(layer.start, useMoment);
+  }
+
+  /**
+   * It assigns newDateAsMoment to the start of the layer, but first it converts newDateAsMoment
+   * to moment or milliseconds according to useMoment.
+   * @param {object} layer Item that is displayed in the grid.
+   * @param {moment} newDateAsMoment
+   * @param {boolean} useMoment Whether the date should be a moment or a number(millis).
+   */
+  setStartToRowLayer(layer, newDateAsMoment, useMoment = this.props.useMoment) {
+    layer.start = convertMomentToDateType(newDateAsMoment, useMoment);
+  }
+
+  /**
+   * It returns the end of the layer as moment.
+   * @param {object} layer
+   * @param {boolean} useMoment Whether the date is already a moment or should be converted.
+   * @returns the end of the layer as moment.
+   */
+  getEndFromRowLayer(layer, useMoment = this.props.useMoment) {
+    return convertDateToMoment(layer.end, useMoment);
+  }
+
+  /**
+   * It assigns newDateAsMoment to the end of the layer, but first it converts newDateAsMoment
+   * to moment or milliseconds according to useMoment.
+   * @param {object} layer Item that is displayed in the grid.
+   * @param {moment} newDateAsMoment
+   * @param {boolean} useMoment Whether the date should be a moment or a number(millis).
+   */
+  setEndToRowLayer(layer, newDateAsMoment, useMoment = this.props.useMoment) {
+    layer.end = convertMomentToDateType(newDateAsMoment, useMoment);
   }
 
   /**
@@ -240,25 +337,18 @@ export default class Timeline extends React.Component {
    * @param {Object[]} items The items to be displayed in the grid
    * @param {moment} startDate The visible start date of the timeline
    * @param {moment} endDate The visible end date of the timeline
-   * @param {boolean} useTimestamps If the timeline uses timestamps
    */
-  setTimeMap(items, startDate, endDate, useTimestamps) {
+  setTimeMap(items, startDate, endDate) {
+    if (!startDate || !endDate) {
+      startDate = this.getStartDate();
+      endDate = this.getEndDate();
+    }
     this.itemRowMap = {}; // timeline elements (key) => (rowNo).
     this.rowItemMap = {}; // (rowNo) => timeline elements
     this.rowHeightCache = {}; // (rowNo) => max number of stacked items
     let visibleItems = _.filter(items, i => {
-      return (
-        this.getDateAsMoment(i.end, useTimestamps) > startDate && this.getDateAsMoment(i.start, useTimestamps) < endDate
-      );
+      return this.getEndFromItem(i) > startDate && this.getStartFromItem(i) < endDate;
     });
-    if (useTimestamps) {
-      visibleItems = _.map(visibleItems, i => {
-        let newItem = _.clone(i);
-        newItem.start = this.getDateAsMoment(i.start, useTimestamps);
-        newItem.end = this.getDateAsMoment(i.end, useTimestamps);
-        return newItem;
-      });
-    }
     let itemRows = _.groupBy(visibleItems, 'row');
     _.forEach(itemRows, (visibleItems, row) => {
       const rowInt = parseInt(row);
@@ -267,7 +357,12 @@ export default class Timeline extends React.Component {
         this.itemRowMap[item.key] = rowInt;
         this.rowItemMap[rowInt].push(item);
       });
-      this.rowHeightCache[rowInt] = getMaxOverlappingItems(visibleItems);
+      this.rowHeightCache[rowInt] = getMaxOverlappingItems(
+        visibleItems,
+        this.getStartFromItem,
+        this.getEndFromItem,
+        this.props.useMoment
+      );
     });
   }
 
@@ -363,7 +458,7 @@ export default class Timeline extends React.Component {
     this._grid.recomputeGridSize(config);
   };
 
-  setUpDragging(canSelect, canDrag, canResize, startDate, endDate) {
+  setUpDragging(canSelect, canDrag, canResize) {
     // No need to setUpDragging during SSR
     if (typeof window === 'undefined') {
       return;
@@ -403,7 +498,7 @@ export default class Timeline extends React.Component {
           _.forEach(animatedItems, id => {
             let domItem = this._gridDomNode.querySelector("span[data-item-index='" + id + "'");
             if (domItem) {
-              selections.push([this.getItem(id).start, this.getItem(id).end]);
+              selections.push([this.getStartFromItem(this.getItem(id)), this.getEndFromItem(this.getItem(id))]);
               domItem.setAttribute('isDragging', 'True');
               domItem.setAttribute('drag-x', 0);
               domItem.setAttribute('drag-y', 0);
@@ -421,16 +516,22 @@ export default class Timeline extends React.Component {
           let selections = [];
 
           // Snap the movement to the current snap interval
-          const snapDx = getSnapPixelFromDelta(dx, startDate, endDate, this.getTimelineWidth(), this.getTimelineSnap());
+          const snapDx = getSnapPixelFromDelta(
+            dx,
+            this.getStartDate(),
+            this.getEndDate(),
+            this.getTimelineWidth(),
+            this.getTimelineSnap()
+          );
 
           _.forEach(animatedItems, domItem => {
             const {item} = this.itemFromElement(domItem);
-            let itemDuration = item.end.diff(item.start);
+            let itemDuration = this.getEndFromItem(item).diff(this.getStartFromItem(item));
             let newPixelOffset = pixToInt(domItem.style.left) + snapDx;
             let newStart = getTimeAtPixel(
               newPixelOffset,
-              startDate,
-              endDate,
+              this.getStartDate(),
+              this.getEndDate(),
               this.getTimelineWidth(),
               this.getTimelineSnap()
             );
@@ -451,7 +552,7 @@ export default class Timeline extends React.Component {
           const {item, rowNo} = this.itemFromElement(e.target);
           let animatedItems = this._gridDomNode.querySelectorAll("span[isDragging='True'") || [];
 
-          this.setSelection([[item.start, item.end]]);
+          this.setSelection([[this.getStartFromItem(item), this.getEndFromItem(item)]]);
           this.clearSelection();
 
           // Change row
@@ -462,13 +563,13 @@ export default class Timeline extends React.Component {
           let newPixelOffset = pixToInt(e.target.style.left) + (parseFloat(e.target.getAttribute('drag-x')) || 0);
           let newStart = getTimeAtPixel(
             newPixelOffset,
-            startDate,
-            endDate,
+            this.getStartDate(),
+            this.getEndDate(),
             this.getTimelineWidth(),
             this.getTimelineSnap()
           );
 
-          const timeDelta = newStart.clone().diff(item.start, 'minutes');
+          const timeDelta = newStart.clone().diff(this.getStartFromItem(item), 'minutes');
           const changes = {rowChangeDelta, timeDelta};
           let items = [];
 
@@ -476,30 +577,20 @@ export default class Timeline extends React.Component {
           _.forEach(animatedItems, domItem => {
             const {item, rowNo} = this.itemFromElement(domItem);
 
-            let itemDuration = item.end.diff(item.start);
-            let newStart = item.start.clone().add(timeDelta, 'minutes');
+            let itemDuration = this.getEndFromItem(item).diff(this.getStartFromItem(item));
+            let newStart = this.getStartFromItem(item)
+              .clone()
+              .add(timeDelta, 'minutes');
             let newEnd = newStart.clone().add(itemDuration);
-            item.start = newStart;
-            item.end = newEnd;
+            this.setStartToItem(item, newStart);
+            this.setEndToItem(item, newEnd);
             if (rowChangeDelta < 0) {
               item.row = Math.max(0, item.row + rowChangeDelta);
             } else if (rowChangeDelta > 0) {
               item.row = Math.min(this.props.groups.length - 1, item.row + rowChangeDelta);
             }
 
-            if (this.props.useTimestamps) {
-              // find the original item from props.items, update the item and add it to the list;
-              // this item it will be used in dragEnd interaction
-              const originalItem = this.props.items.find(i => i.key == item.key);
-              if (originalItem !== null) {
-                originalItem.start = newStart.valueOf();
-                originalItem.end = newEnd.valueOf();
-                originalItem.row = item.row;
-              }
-              items.push(originalItem);
-            } else {
-              items.push(item);
-            }
+            items.push(item);
           });
 
           this.props.onInteraction(Timeline.changeTypes.dragEnd, changes, items);
@@ -545,20 +636,21 @@ export default class Timeline extends React.Component {
 
           let dw = e.rect.width - Number(e.target.getAttribute('initialWidth'));
 
-          const minimumWidth = pixelsPerSecond(startDate, endDate, this.getTimelineWidth()) * this.getTimelineSnap();
+          const minimumWidth =
+            pixelsPerSecond(this.getStartDate(), this.getEndDate(), this.getTimelineWidth()) * this.getTimelineSnap();
 
           const snappedDx = getSnapPixelFromDelta(
             dx,
-            startDate,
-            endDate,
+            this.getStartDate(),
+            this.getEndDate(),
             this.getTimelineWidth(),
             this.getTimelineSnap()
           );
 
           const snappedDw = getSnapPixelFromDelta(
             dw,
-            startDate,
-            endDate,
+            this.getStartDate(),
+            this.getEndDate(),
             this.getTimelineWidth(),
             this.getTimelineSnap()
           );
@@ -589,29 +681,34 @@ export default class Timeline extends React.Component {
             if (isStartTimeChange) {
               let newStart = getTimeAtPixel(
                 startPixelOffset,
-                startDate,
-                endDate,
+                this.getStartDate(),
+                this.getEndDate(),
                 this.getTimelineWidth(),
                 this.getTimelineSnap()
               );
-              if (durationChange === null) durationChange = item.start.diff(newStart, 'minutes');
-              item.start = newStart;
+              if (durationChange === null) durationChange = this.getStartFromItem(item).diff(newStart, 'minutes');
+              this.setStartToItem(item, newStart);
             } else {
               let endPixelOffset = startPixelOffset + pixToInt(domItem.style.width);
               let newEnd = getTimeAtPixel(
                 endPixelOffset,
-                startDate,
-                endDate,
+                this.getStartDate(),
+                this.getEndDate(),
                 this.getTimelineWidth(),
                 this.getTimelineSnap()
               );
-              if (durationChange === null) durationChange = item.end.diff(newEnd, 'minutes');
+              if (durationChange === null) durationChange = this.getEndFromItem(item).diff(newEnd, 'minutes');
 
-              item.end = newEnd;
+              this.setEndToItem(item, newEnd);
             }
 
             // Check row height doesn't need changing
-            let new_row_height = getMaxOverlappingItems(this.rowItemMap[rowNo], startDate, endDate);
+            let new_row_height = getMaxOverlappingItems(
+              this.rowItemMap[rowNo],
+              this.getStartFromItem,
+              this.getEndFromItem,
+              this.props.useMoment
+            );
             if (new_row_height !== this.rowHeightCache[rowNo]) {
               this.rowHeightCache[rowNo] = new_row_height;
             }
@@ -622,18 +719,7 @@ export default class Timeline extends React.Component {
             domItem.style['z-index'] = 3;
             domItem.style.webkitTransform = domItem.style.transform = 'translate(0px, 0px)';
 
-            if (this.props.useTimestamps) {
-              // find the original item from props.items, update the item and add it to the list;
-              // this item it will be used in resizeEnd interaction
-              const originalItem = this.props.items.find(i => i.key == item.key);
-              if (originalItem !== null) {
-                originalItem.start = item.start.valueOf();
-                originalItem.end = item.end.valueOf();
-              }
-              items.push(originalItem);
-            } else {
-              items.push(item);
-            }
+            items.push(item);
           });
           if (durationChange === null) durationChange = 0;
           const changes = {isStartTimeChange, timeDelta: -durationChange};
@@ -715,38 +801,26 @@ export default class Timeline extends React.Component {
             let endOffset = width > 0 ? left + width : left;
             const startTime = getTimeAtPixel(
               startOffset,
-              startDate,
-              endDate,
+              this.getStartDate(),
+              this.getEndDate(),
               this.getTimelineWidth(),
               this.getTimelineSnap()
             );
             const endTime = getTimeAtPixel(
               endOffset,
-              startDate,
-              endDate,
+              this.getStartDate(),
+              this.getEndDate(),
               this.getTimelineWidth(),
               this.getTimelineSnap()
             );
             //Get items in these ranges
             let selectedItems = [];
-
-            if (this.props.useTimestamps) {
-              let itemRows = _.groupBy(this.props.items, 'row');
-              for (let r = Math.min(topRowNumber, bottomRow); r <= Math.max(topRowNumber, bottomRow); r++) {
-                selectedItems.push(
-                  ..._.filter(itemRows[r], i => {
-                    return i.start < endTime.valueOf() && i.end > startTime.valueOf();
-                  })
-                );
-              }
-            } else {
-              for (let r = Math.min(topRowNumber, bottomRow); r <= Math.max(topRowNumber, bottomRow); r++) {
-                selectedItems.push(
-                  ..._.filter(this.rowItemMap[r], i => {
-                    return i.start.isBefore(endTime) && i.end.isAfter(startTime);
-                  })
-                );
-              }
+            for (let r = Math.min(topRowNumber, bottomRow); r <= Math.max(topRowNumber, bottomRow); r++) {
+              selectedItems.push(
+                ..._.filter(this.rowItemMap[r], i => {
+                  return this.getStartFromItem(i).isBefore(endTime) && this.getEndFromItem(i).isAfter(startTime);
+                })
+              );
             }
             this.props.onInteraction(Timeline.changeTypes.itemsSelected, selectedItems);
           }
@@ -767,8 +841,8 @@ export default class Timeline extends React.Component {
       let row = e.target.getAttribute('data-row-index');
       let clickedTime = getTimeAtPixel(
         e.clientX - this.props.groupOffset,
-        this.getDateAsMoment(this.props.startDate),
-        this.getDateAsMoment(this.props.endDate),
+        this.getStartDate(),
+        this.getEndDate(),
         this.getTimelineWidth()
       );
 
@@ -780,10 +854,8 @@ export default class Timeline extends React.Component {
 
   /**
    * @param {number} width container width (in px)
-   * @param {moment} the visible start date of the timeline
-   * @param {moment} the visible end date of the timeline
    */
-  cellRenderer(width, startDate, endDate) {
+  cellRenderer(width) {
     /**
      * @param  {} columnIndex Always 1
      * @param  {} key Unique key within array of cells
@@ -797,16 +869,7 @@ export default class Timeline extends React.Component {
       let itemCol = 1;
       if (itemCol == columnIndex) {
         let itemsInRow = this.rowItemMap[rowIndex];
-        let layersInRow = rowLayers.filter(r => r.rowNumber === rowIndex);
-        if (this.props.useTimestamps) {
-          layersInRow = _.map(layersInRow, r => {
-            let rowLayer = _.clone(r);
-            rowLayer.start = this.getDateAsMoment(r.start);
-            rowLayer.end = this.getDateAsMoment(r.end);
-            return rowLayer;
-          });
-        }
-
+        const layersInRow = rowLayers.filter(r => r.rowNumber === rowIndex);
         let rowHeight = this.props.itemHeight;
         if (this.rowHeightCache[rowIndex]) {
           rowHeight = rowHeight * this.rowHeightCache[rowIndex];
@@ -834,14 +897,26 @@ export default class Timeline extends React.Component {
             onDoubleClick={e => this._handleItemRowEvent(e, this.props.onItemDoubleClick, this.props.onRowDoubleClick)}>
             {rowItemsRenderer(
               itemsInRow,
-              startDate,
-              endDate,
+              this.getStartDate(),
+              this.getEndDate(),
               width,
               this.props.itemHeight,
               this.props.itemRenderer,
-              canSelect ? this.props.selectedItems : []
+              canSelect ? this.props.selectedItems : [],
+              this.getStartFromItem,
+              this.getEndFromItem,
+              this.props.useMoment
             )}
-            {rowLayerRenderer(layersInRow, startDate, endDate, width, rowHeight)}
+            {rowLayerRenderer(
+              layersInRow,
+              this.getStartDate(),
+              this.getEndDate(),
+              width,
+              rowHeight,
+              this.getStartFromRowLayer,
+              this.getEndFromRowLayer,
+              this.props.useMoment
+            )}
           </div>
         );
       } else {
@@ -896,13 +971,13 @@ export default class Timeline extends React.Component {
     const leftOffset = document.querySelector(`.rct9k-id-${componentId} .parent-div`).getBoundingClientRect().left;
     const cursorSnappedTime = getTimeAtPixel(
       e.clientX - this.props.groupOffset - leftOffset,
-      this.getDateAsMoment(this.props.startDate),
-      this.getDateAsMoment(this.props.endDate),
+      this.getStartDate(),
+      this.getEndDate(),
       this.getTimelineWidth(),
       this.getTimelineSnap()
     );
     if (!this.mouse_snapped_time || this.mouse_snapped_time.unix() !== cursorSnappedTime.unix()) {
-      if (cursorSnappedTime.isSameOrAfter(this.getDateAsMoment(this.props.startDate))) {
+      if (cursorSnappedTime.isSameOrAfter(this.getStartDate())) {
         this.mouse_snapped_time = cursorSnappedTime;
         this.setState({cursorTime: this.mouse_snapped_time});
         this.props.onInteraction(
@@ -932,9 +1007,6 @@ export default class Timeline extends React.Component {
       bottomResolution,
       topResolution
     } = this.props;
-
-    const startDate = this.getDateAsMoment(this.props.startDate);
-    const endDate = this.getDateAsMoment(this.props.endDate);
 
     const divCssClass = `rct9k-timeline-div rct9k-id-${componentId}`;
     let varTimebarProps = {};
@@ -966,7 +1038,12 @@ export default class Timeline extends React.Component {
     // Markers (only current time marker atm)
     const markers = [];
     if (showCursorTime && this.mouse_snapped_time) {
-      const cursorPix = getPixelAtTime(this.mouse_snapped_time, startDate, endDate, this.getTimelineWidth());
+      const cursorPix = getPixelAtTime(
+        this.mouse_snapped_time,
+        this.getStartDate(),
+        this.getEndDate(),
+        this.getTimelineWidth()
+      );
       markers.push({
         left: cursorPix + this.props.groupOffset,
         key: 1
@@ -980,8 +1057,8 @@ export default class Timeline extends React.Component {
               <SelectBox ref={this.select_ref_callback} />
               <Timebar
                 cursorTime={this.getCursor()}
-                start={startDate}
-                end={endDate}
+                start={this.getStartDate()}
+                end={this.getEndDate()}
                 width={width}
                 leftOffset={groupOffset}
                 selectedRanges={this.state.selection}
@@ -997,7 +1074,7 @@ export default class Timeline extends React.Component {
                 height={calculateHeight(height)}
                 rowHeight={this.rowHeight}
                 rowCount={this.props.groups.length}
-                cellRenderer={this.cellRenderer(this.getTimelineWidth(width), startDate, endDate)}
+                cellRenderer={this.cellRenderer(this.getTimelineWidth(width))}
                 grid_ref_callback={this.grid_ref_callback}
                 shallowUpdateCheck={shallowUpdateCheck}
                 forceRedrawFunc={forceRedrawFunc}

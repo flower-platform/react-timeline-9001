@@ -37,7 +37,8 @@ export default class DemoTimeline extends Component {
       startDate,
       endDate,
       message: '',
-      timelineMode: TIMELINE_MODES.SELECT | TIMELINE_MODES.DRAG | TIMELINE_MODES.RESIZE
+      timelineMode: TIMELINE_MODES.SELECT | TIMELINE_MODES.DRAG | TIMELINE_MODES.RESIZE,
+      useMoment: true
     };
     this.reRender = this.reRender.bind(this);
     this.zoomIn = this.zoomIn.bind(this);
@@ -46,7 +47,7 @@ export default class DemoTimeline extends Component {
     this.toggleSelectable = this.toggleSelectable.bind(this);
     this.toggleDraggable = this.toggleDraggable.bind(this);
     this.toggleResizable = this.toggleResizable.bind(this);
-    this.toggleTimestamps = this.toggleTimestamps.bind(this);
+    this.toggleUseMoment = this.toggleUseMoment.bind(this);
   }
 
   componentWillMount() {
@@ -85,8 +86,8 @@ export default class DemoTimeline extends Component {
           title: duration.humanize(),
           color,
           row: i,
-          start: this.state.useTimestamps ? start.valueOf() : start,
-          end: this.state.useTimestamps ? end.valueOf() : end
+          start: this.state.useMoment ? start : start.valueOf(),
+          end: this.state.useMoment ? end : end.valueOf()
         });
       }
     }
@@ -130,9 +131,9 @@ export default class DemoTimeline extends Component {
     let newMode = timelineMode ^ TIMELINE_MODES.RESIZE;
     this.setState({timelineMode: newMode, message: 'Timeline mode change: ' + timelineMode + ' -> ' + newMode});
   }
-  toggleTimestamps() {
-    const {useTimestamps} = this.state;
-    this.setState({useTimestamps: !useTimestamps});
+  toggleUseMoment() {
+    const {useMoment} = this.state;
+    this.setState({useMoment: !useMoment});
   }
   handleItemClick = (e, key) => {
     const message = `Item Click ${key}`;
@@ -254,7 +255,7 @@ export default class DemoTimeline extends Component {
       message,
       useCustomRenderers,
       timelineMode,
-      useTimestamps
+      useMoment
     } = this.state;
     const rangeValue = [startDate, endDate];
 
@@ -281,13 +282,13 @@ export default class DemoTimeline extends Component {
         }
 
         rowLayers.push({
-          start: this.state.useTimestamps ? curDate.valueOf() : curDate.clone(),
-          end: this.state.useTimestamps
-            ? curDate
+          start: this.state.useMoment ? curDate.clone() : curDate.valueOf(),
+          end: this.state.useMoment
+            ? curDate.clone().add(bandDuration, 'days')
+            : curDate
                 .clone()
                 .add(bandDuration, 'days')
-                .valueOf()
-            : curDate.clone().add(bandDuration, 'days'),
+                .valueOf(),
           style: {backgroundColor: color, opacity: '0.3'},
           rowNumber: i
         });
@@ -349,8 +350,8 @@ export default class DemoTimeline extends Component {
                 </Checkbox>
               </Form.Item>
               <Form.Item>
-                <Checkbox onChange={this.toggleTimestamps} checked={useTimestamps}>
-                  Use timestamps
+                <Checkbox onChange={this.toggleUseMoment} checked={useMoment}>
+                  Use moment for dates
                 </Checkbox>
               </Form.Item>
             </Form>
@@ -363,9 +364,9 @@ export default class DemoTimeline extends Component {
             shallowUpdateCheck
             items={items}
             groups={groups}
-            useTimestamps={useTimestamps}
-            startDate={useTimestamps ? startDate.valueOf() : startDate}
-            endDate={useTimestamps ? endDate.valueOf() : endDate}
+            useMoment={useMoment}
+            startDate={useMoment ? startDate : startDate.valueOf()}
+            endDate={useMoment ? endDate : endDate.valueOf()}
             rowLayers={rowLayers}
             selectedItems={selectedItems}
             timelineMode={timelineMode}

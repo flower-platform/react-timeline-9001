@@ -11,28 +11,45 @@ import moment from 'moment';
  * @param  {moment} vis_start The visible start of the timeline
  * @param  {moment} vis_end The visible end of the timeline
  * @param  {number} total_width pixel width of the timeline
+ * @param  {number} itemHeight The height of the item in px
+ * @param  {function} itemRenderer The renderer of the item
+ * @param  {Object[]} selectedItems
+ * @param  {function} getStartFromItem Function that returns the start of an item
+ * @param  {function} getEndFromItem Function that returns the end of an item
+ * @param  {boolean} useMoment If the dates are moment objects or dates in milliseconds
  */
-export function rowItemsRenderer(items, vis_start, vis_end, total_width, itemHeight, itemRenderer, selectedItems = []) {
+export function rowItemsRenderer(
+  items,
+  vis_start,
+  vis_end,
+  total_width,
+  itemHeight,
+  itemRenderer,
+  selectedItems = [],
+  getStartFromItem,
+  getEndFromItem,
+  useMoment
+) {
   const start_end_ms = vis_end.diff(vis_start, 'milliseconds');
   const pixels_per_ms = total_width / start_end_ms;
   let filtered_items = _.sortBy(
     _.filter(items, i => {
       // if end not before window && start not after window
-      return !i.end.isBefore(vis_start) && !i.start.isAfter(vis_end);
+      return !getEndFromItem(i, useMoment).isBefore(vis_start) && !getStartFromItem(i, useMoment).isAfter(vis_end);
     }),
-    i => -i.start.unix()
+    i => -getStartFromItem(i, useMoment).unix()
   ); // sorted in reverse order as we iterate over the array backwards
   let displayItems = [];
   let rowOffset = 0;
   while (filtered_items.length > 0) {
     let lastEnd = null;
     for (let i = filtered_items.length - 1; i >= 0; i--) {
-      if (lastEnd === null || filtered_items[i].start >= lastEnd) {
+      if (lastEnd === null || getStartFromItem(filtered_items[i], useMoment) >= lastEnd) {
         let item = _.clone(filtered_items[i]);
         item.rowOffset = rowOffset;
         displayItems.push(item);
         filtered_items.splice(i, 1);
-        lastEnd = item.end;
+        lastEnd = getEndFromItem(item, useMoment);
       }
     }
     rowOffset++;
@@ -41,8 +58,8 @@ export function rowItemsRenderer(items, vis_start, vis_end, total_width, itemHei
     const {color} = i;
     const Comp = itemRenderer;
     let top = itemHeight * i['rowOffset'];
-    let item_offset_mins = i.start.diff(vis_start, 'milliseconds');
-    let item_duration_mins = i.end.diff(i.start, 'milliseconds');
+    let item_offset_mins = getStartFromItem(i, useMoment).diff(vis_start, 'milliseconds');
+    let item_duration_mins = getEndFromItem(i, useMoment).diff(getStartFromItem(i, useMoment), 'milliseconds');
     let left = Math.round(item_offset_mins * pixels_per_ms);
     let width = Math.round(item_duration_mins * pixels_per_ms);
     let compClassnames = 'rct9k-items-inner';
@@ -75,27 +92,41 @@ export function rowItemsRenderer(items, vis_start, vis_end, total_width, itemHei
  * @param  {moment} vis_end The visible end of the timeline
  * @param  {number} total_width pixel width of the timeline
  * @param  {number} itemHeight The layer height in px
+ * @param  {function} getStartFromRowLayer Function that returns the start of a row layer
+ * @param  {function} getEndFromRowLayer Function that returns the end of a row layer
+ * @param  {boolean} useMoment If the dates are moment objects or dates in milliseconds
  */
-export function rowLayerRenderer(layers, vis_start, vis_end, total_width, itemHeight) {
+export function rowLayerRenderer(
+  layers,
+  vis_start,
+  vis_end,
+  total_width,
+  itemHeight,
+  getStartFromRowLayer,
+  getEndFromRowLayer,
+  useMoment
+) {
   const start_end_ms = vis_end.diff(vis_start, 'milliseconds');
   const pixels_per_ms = total_width / start_end_ms;
   let filtered_items = _.sortBy(
     _.filter(layers, i => {
-      return !i.end.isBefore(vis_start) && !i.start.isAfter(vis_end);
+      return (
+        !getEndFromRowLayer(i, useMoment).isBefore(vis_start) && !getStartFromRowLayer(i, useMoment).isAfter(vis_end)
+      );
     }),
-    i => -i.start.unix()
+    i => -getStartFromRowLayer(i, useMoment).unix()
   ); // sorted in reverse order as we iterate over the array backwards
   let displayItems = [];
   let rowOffset = 0;
   while (filtered_items.length > 0) {
     let lastEnd = null;
     for (let i = filtered_items.length - 1; i >= 0; i--) {
-      if (lastEnd === null || filtered_items[i].start >= lastEnd) {
+      if (lastEnd === null || getStartFromRowLayer(filtered_items[i], useMoment) >= lastEnd) {
         let item = _.clone(filtered_items[i]);
         item.rowOffset = rowOffset;
         displayItems.push(item);
         filtered_items.splice(i, 1);
-        lastEnd = item.end;
+        lastEnd = getEndFromRowLayer(item, useMoment);
       }
     }
     rowOffset++;
@@ -103,8 +134,8 @@ export function rowLayerRenderer(layers, vis_start, vis_end, total_width, itemHe
   return _.map(displayItems, i => {
     const {style, rowNumber} = i;
     let top = itemHeight * i['rowOffset'];
-    let item_offset_mins = i.start.diff(vis_start, 'milliseconds');
-    let item_duration_mins = i.end.diff(i.start, 'milliseconds');
+    let item_offset_mins = getStartFromRowLayer(i, useMoment).diff(vis_start, 'milliseconds');
+    let item_duration_mins = getEndFromRowLayer(i, useMoment).diff(getStartFromRowLayer(i, useMoment), 'milliseconds');
     let left = Math.round(item_offset_mins * pixels_per_ms);
     let width = Math.round(item_duration_mins * pixels_per_ms);
     let height = itemHeight - (rowNumber === 0 ? 2 : 1); // for border
@@ -112,7 +143,7 @@ export function rowLayerRenderer(layers, vis_start, vis_end, total_width, itemHe
 
     return (
       <div
-        key={`r-${rowNumber}-${i.start.unix()}`}
+        key={`r-${rowNumber}-${getStartFromRowLayer(i, useMoment).unix()}`}
         data-item-index={i.key}
         className={outerClassnames}
         style={{...style, left, width, top, height}}
@@ -199,17 +230,19 @@ export function getNearestRowNumber(x, y, topDiv = document) {
 /**
  * Use to find the height of a row, given a set of items
  * @param  {Object[]} items List of items
+ * @param  {function} getStartFromItem Function that returns the start of an item.
+ * @param  {function} getEndFromItem Function that returns the end of an item.
+ * @param  {boolean} useMoment If the dates are moment objects or dates in milliseconds.
  * @returns {number} Max row height
  */
-export function getMaxOverlappingItems(items) {
+export function getMaxOverlappingItems(items, getStartFromItem, getEndFromItem, useMoment) {
   let max = 0;
-  let sorted_items = _.sortBy(items, i => -i.start.unix());
-
+  let sorted_items = _.sortBy(items, i => -getStartFromItem(i, useMoment).unix());
   while (sorted_items.length > 0) {
     let lastEnd = null;
     for (let i = sorted_items.length - 1; i >= 0; i--) {
-      if (lastEnd === null || sorted_items[i].start >= lastEnd) {
-        lastEnd = sorted_items[i].end;
+      if (lastEnd === null || getStartFromItem(sorted_items[i], useMoment) >= lastEnd) {
+        lastEnd = getEndFromItem(sorted_items[i], useMoment);
         sorted_items.splice(i, 1);
       }
     }
