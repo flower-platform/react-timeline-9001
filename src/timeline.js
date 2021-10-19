@@ -18,7 +18,7 @@ import {
   getMaxOverlappingItems,
   getTrueBottom,
   getVerticalMarginBorder,
-  getRowObjectRowNumber
+  getRowObjectRowNumber,
 } from './utils/itemUtils';
 import {
   timeSnap,
@@ -50,7 +50,7 @@ export default class Timeline extends React.Component {
   static TIMELINE_MODES = Object.freeze({
     SELECT: 1,
     DRAG: 2,
-    RESIZE: 4
+    RESIZE: 4,
   });
 
   static propTypes = {
@@ -62,7 +62,7 @@ export default class Timeline extends React.Component {
         start: PropTypes.oneOfType([PropTypes.object, PropTypes.number]).isRequired,
         end: PropTypes.oneOfType([PropTypes.object, PropTypes.number]).isRequired,
         rowNumber: PropTypes.number.isRequired,
-        style: PropTypes.object.isRequired
+        style: PropTypes.object.isRequired,
       })
     ),
     selectedItems: PropTypes.arrayOf(PropTypes.number),
@@ -95,7 +95,7 @@ export default class Timeline extends React.Component {
     interactOptions: PropTypes.shape({
       draggable: PropTypes.object,
       pointerEvents: PropTypes.object,
-      resizable: PropTypes.object.isRequired
+      resizable: PropTypes.object.isRequired,
     }),
     useMoment: PropTypes.bool // Whether the timeline should receive dates as moment object or in milliseconds.
   };
@@ -129,7 +129,7 @@ export default class Timeline extends React.Component {
     dragEnd: 'dragEnd',
     dragStart: 'dragStart',
     itemsSelected: 'itemsSelected',
-    snappedMouseMove: 'snappedMouseMove'
+    snappedMouseMove: 'snappedMouseMove',
   };
 
   /**
@@ -442,7 +442,7 @@ export default class Timeline extends React.Component {
    * Get the snap in milliseconds from snapMinutes or snap
    */
   getTimelineSnap() {
-    if (this.props.snap) {
+    if(this.props.snap) {
       return this.props.snap * 1000;
     } else if (this.props.snapMinutes) {
       return this.props.snapMinutes * 60 * 1000;
@@ -472,9 +472,11 @@ export default class Timeline extends React.Component {
     this._itemInteractable = interact(`.${topDivClassId} .item_draggable`);
     this._selectRectangleInteractable = interact(`.${topDivClassId} .parent-div`);
 
-    this._itemInteractable.pointerEvents(this.props.interactOptions.pointerEvents).on('tap', e => {
-      this._handleItemRowEvent(e, this.props.onItemClick, this.props.onRowClick);
-    });
+    this._itemInteractable
+      .pointerEvents(this.props.interactOptions.pointerEvents)
+      .on('tap', e => {
+        this._handleItemRowEvent(e, this.props.onItemClick, this.props.onRowClick);
+      });
 
     if (canDrag) {
       this._itemInteractable
@@ -483,9 +485,9 @@ export default class Timeline extends React.Component {
           allowFrom: selectedItemSelector,
           restrict: {
             restriction: `.${topDivClassId}`,
-            elementRect: {left: 0, right: 1, top: 0, bottom: 1}
+            elementRect: {left: 0, right: 1, top: 0, bottom: 1},
           },
-          ...this.props.interactOptions.draggable
+          ...this.props.interactOptions.draggable,
         })
         .on('dragstart', e => {
           let selections = [];
@@ -615,7 +617,7 @@ export default class Timeline extends React.Component {
         .resizable({
           allowFrom: selectedItemSelector,
           edges: {left: true, right: true, bottom: false, top: false},
-          ...this.props.interactOptions.draggable
+          ...this.props.interactOptions.draggable,
         })
         .on('resizestart', e => {
           const selected = this.props.onInteraction(Timeline.changeTypes.resizeStart, null, this.props.selectedItems);
@@ -735,7 +737,7 @@ export default class Timeline extends React.Component {
       this._selectRectangleInteractable
         .draggable({
           enabled: true,
-          ignoreFrom: '.item_draggable, .rct9k-group'
+          ignoreFrom: '.item_draggable, .rct9k-group',
         })
         .styleCursor(false)
         .on('dragstart', e => {
@@ -1005,7 +1007,7 @@ export default class Timeline extends React.Component {
       shallowUpdateCheck,
       forceRedrawFunc,
       bottomResolution,
-      topResolution
+      topResolution,
     } = this.props;
 
     const divCssClass = `rct9k-timeline-div rct9k-id-${componentId}`;
@@ -1046,7 +1048,7 @@ export default class Timeline extends React.Component {
       );
       markers.push({
         left: cursorPix + this.props.groupOffset,
-        key: 1
+        key: 1,
       });
     }
     return (

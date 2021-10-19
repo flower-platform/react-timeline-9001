@@ -67,12 +67,10 @@ export default class DemoTimeline extends Component {
         const color = COLORS[(i + j) % COLORS.length];
         const duration = ITEM_DURATIONS[Math.floor(Math.random() * ITEM_DURATIONS.length)];
         // let start = last_moment;
-        let start = moment(
-          Math.floor(
-            Math.random() * (this.state.endDate.valueOf() - this.state.startDate.valueOf()) +
-              this.state.startDate.valueOf()
-          )
-        );
+        let start = moment(Math.floor(
+          Math.random() * (this.state.endDate.valueOf() - this.state.startDate.valueOf()) +
+            this.state.startDate.valueOf()
+        ));
         let end = start.clone().add(duration);
 
         // Round to the nearest snap distance
