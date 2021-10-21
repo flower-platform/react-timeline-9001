@@ -54,13 +54,22 @@ export default class Timeline extends React.Component {
   });
 
   static propTypes = {
-    items: PropTypes.arrayOf(PropTypes.object).isRequired,
+    items: PropTypes.arrayOf(
+      PropTypes.shape({
+        // start and end are not required because getStartFromItem() and getEndFromItem() functions
+        // are being used and they can be overriden to use other fields
+        start: PropTypes.oneOfType([PropTypes.object, PropTypes.number]),
+        end: PropTypes.oneOfType([PropTypes.object, PropTypes.number])
+      })
+    ).isRequired,
     groups: PropTypes.arrayOf(PropTypes.object).isRequired,
     groupOffset: PropTypes.number.isRequired,
     rowLayers: PropTypes.arrayOf(
       PropTypes.shape({
-        start: PropTypes.oneOfType([PropTypes.object, PropTypes.number]).isRequired,
-        end: PropTypes.oneOfType([PropTypes.object, PropTypes.number]).isRequired,
+        // start and end are not required because getStartFromItem() and getEndFromItem() functions
+        // are being used and they can be overriden to use other fields
+        start: PropTypes.oneOfType([PropTypes.object, PropTypes.number]),
+        end: PropTypes.oneOfType([PropTypes.object, PropTypes.number]),
         rowNumber: PropTypes.number.isRequired,
         style: PropTypes.object.isRequired,
       })
@@ -151,6 +160,17 @@ export default class Timeline extends React.Component {
     super(props);
     this.selecting = false;
     this.state = {selection: [], cursorTime: null};
+
+    // These functions need to be bound because they are passed as parameters.
+    // getStartFromItem and getEndFromItem are used in rowItemsRenderer function
+    // to obtain the start and end of the rendered items.
+    this.getStartFromItem = this.getStartFromItem.bind(this);
+    this.getEndFromItem = this.getEndFromItem.bind(this);
+    // getStartFromRowLayer and getEndFromRowLayer are used in rowLayerRenderer
+    // to obtain the start and end of the rendered row layers.
+    this.getStartFromRowLayer = this.getStartFromRowLayer.bind(this);
+    this.getEndFromRowLayer = this.getEndFromRowLayer.bind(this);
+
     this.setTimeMap(this.props.items);
 
     this.cellRenderer = this.cellRenderer.bind(this);
@@ -168,12 +188,6 @@ export default class Timeline extends React.Component {
     this.throttledMouseMoveFunc = _.throttle(this.throttledMouseMoveFunc.bind(this), 20);
     this.mouseMoveFunc = this.mouseMoveFunc.bind(this);
     this.getCursor = this.getCursor.bind(this);
-    this.getStartDate = this.getStartDate.bind(this);
-    this.getEndDate = this.getEndDate.bind(this);
-    this.getStartFromItem = this.getStartFromItem.bind(this);
-    this.getEndFromItem = this.getEndFromItem.bind(this);
-    this.getStartFromRowLayer = this.getStartFromRowLayer.bind(this);
-    this.getEndFromRowLayer = this.getEndFromRowLayer.bind(this);
 
     const canSelect = Timeline.isBitSet(Timeline.TIMELINE_MODES.SELECT, this.props.timelineMode);
     const canDrag = Timeline.isBitSet(Timeline.TIMELINE_MODES.DRAG, this.props.timelineMode);
@@ -188,8 +202,8 @@ export default class Timeline extends React.Component {
   componentWillReceiveProps(nextProps) {
     this.setTimeMap(
       nextProps.items,
-      this.getStartDate(nextProps.startDate, nextProps.useMoment),
-      this.getEndDate(nextProps.endDate, nextProps.useMoment)
+      convertDateToMoment(nextProps.startDate, nextProps.useMoment),
+      convertDateToMoment(nextProps.endDate, nextProps.useMoment)
     );
     // @TODO
     // investigate if we need this, only added to refresh the grid
@@ -219,32 +233,27 @@ export default class Timeline extends React.Component {
 
   /**
    * It returns the start date of the timeline as moment.
-   * @param {moment|number} startDate The visible startDate of the timeline. Can be a moment object or a date as number.
-   * @param {boolean} useMoment Whether the date is already a moment or should be converted.
    * @returns startDate as moment
    */
-  getStartDate(startDate = this.props.startDate, useMoment = this.props.useMoment) {
-    return convertDateToMoment(startDate, useMoment);
+  getStartDate() {
+    return convertDateToMoment(this.props.startDate, this.props.useMoment);
   }
 
   /**
    * It returns the end date of the timeline as moment.
-   * @param {moment|number} endDate The visible endDate of the timeline. Can be a moment object or a date as number.
-   * @param {boolean} useMoment Whether the date is already a moment or should be converted.
    * @returns endDate as moment
    */
-  getEndDate(endDate = this.props.endDate, useMoment = this.props.useMoment) {
-    return convertDateToMoment(endDate, useMoment);
+  getEndDate() {
+    return convertDateToMoment(this.props.endDate, this.props.useMoment);
   }
 
   /**
    * It returns the start of the item as moment.
    * @param {object} item Item that is displayed in the grid.
-   * @param {boolean} useMoment Whether the date is already a moment or should be converted.
    * @returns start of the item as moment
    */
-  getStartFromItem(item, useMoment = this.props.useMoment) {
-    return convertDateToMoment(item.start, useMoment);
+  getStartFromItem(item) {
+    return convertDateToMoment(item.start, this.props.useMoment);
   }
 
   /**
@@ -252,20 +261,18 @@ export default class Timeline extends React.Component {
    * to moment or milliseconds according to useMoment.
    * @param {object} item Item that is displayed in the grid.
    * @param {moment} newDateAsMoment
-   * @param {boolean} useMoment Whether the date should be a moment or a number(millis).
    */
-  setStartToItem(item, newDateAsMoment, useMoment = this.props.useMoment) {
-    item.start = convertMomentToDateType(newDateAsMoment, useMoment);
+  setStartToItem(item, newDateAsMoment) {
+    item.start = convertMomentToDateType(newDateAsMoment, this.props.useMoment);
   }
 
   /**
    * It returns the end of the item as moment.
    * @param {object} item Item that is displayed in the grid.
-   * @param {boolean} useMoment Whether the date is already a moment or should be converted.
    * @returns end of the item as moment.
    */
-  getEndFromItem(item, useMoment = this.props.useMoment) {
-    return convertDateToMoment(item.end, useMoment);
+  getEndFromItem(item) {
+    return convertDateToMoment(item.end, this.props.useMoment);
   }
 
   /**
@@ -273,20 +280,18 @@ export default class Timeline extends React.Component {
    * to moment or milliseconds according to useMoment.
    * @param {object} item Item that is displayed in the grid.
    * @param {moment} newDateAsMoment
-   * @param {boolean} useMoment Whether the date should be a moment or a number(millis).
    */
-  setEndToItem(item, newDateAsMoment, useMoment = this.props.useMoment) {
-    item.end = convertMomentToDateType(newDateAsMoment, useMoment);
+  setEndToItem(item, newDateAsMoment) {
+    item.end = convertMomentToDateType(newDateAsMoment, this.props.useMoment);
   }
 
   /**
    * It returns the start of the layer as moment.
    * @param {object} layer
-   * @param {boolean} useMoment Whether the date is already a moment or should be converted.
    * @returns the start of the rowLayer as moment.
    */
-  getStartFromRowLayer(layer, useMoment = this.props.useMoment) {
-    return convertDateToMoment(layer.start, useMoment);
+  getStartFromRowLayer(layer) {
+    return convertDateToMoment(layer.start, this.props.useMoment);
   }
 
   /**
@@ -294,20 +299,18 @@ export default class Timeline extends React.Component {
    * to moment or milliseconds according to useMoment.
    * @param {object} layer Item that is displayed in the grid.
    * @param {moment} newDateAsMoment
-   * @param {boolean} useMoment Whether the date should be a moment or a number(millis).
    */
-  setStartToRowLayer(layer, newDateAsMoment, useMoment = this.props.useMoment) {
-    layer.start = convertMomentToDateType(newDateAsMoment, useMoment);
+  setStartToRowLayer(layer, newDateAsMoment) {
+    layer.start = convertMomentToDateType(newDateAsMoment, this.props.useMoment);
   }
 
   /**
    * It returns the end of the layer as moment.
    * @param {object} layer
-   * @param {boolean} useMoment Whether the date is already a moment or should be converted.
    * @returns the end of the layer as moment.
    */
-  getEndFromRowLayer(layer, useMoment = this.props.useMoment) {
-    return convertDateToMoment(layer.end, useMoment);
+  getEndFromRowLayer(layer) {
+    return convertDateToMoment(layer.end, this.props.useMoment);
   }
 
   /**
@@ -315,10 +318,9 @@ export default class Timeline extends React.Component {
    * to moment or milliseconds according to useMoment.
    * @param {object} layer Item that is displayed in the grid.
    * @param {moment} newDateAsMoment
-   * @param {boolean} useMoment Whether the date should be a moment or a number(millis).
    */
-  setEndToRowLayer(layer, newDateAsMoment, useMoment = this.props.useMoment) {
-    layer.end = convertMomentToDateType(newDateAsMoment, useMoment);
+  setEndToRowLayer(layer, newDateAsMoment) {
+    layer.end = convertMomentToDateType(newDateAsMoment, this.props.useMoment);
   }
 
   /**
@@ -360,8 +362,7 @@ export default class Timeline extends React.Component {
       this.rowHeightCache[rowInt] = getMaxOverlappingItems(
         visibleItems,
         this.getStartFromItem,
-        this.getEndFromItem,
-        this.props.useMoment
+        this.getEndFromItem
       );
     });
   }
@@ -708,8 +709,7 @@ export default class Timeline extends React.Component {
             let new_row_height = getMaxOverlappingItems(
               this.rowItemMap[rowNo],
               this.getStartFromItem,
-              this.getEndFromItem,
-              this.props.useMoment
+              this.getEndFromItem
             );
             if (new_row_height !== this.rowHeightCache[rowNo]) {
               this.rowHeightCache[rowNo] = new_row_height;
@@ -906,8 +906,7 @@ export default class Timeline extends React.Component {
               this.props.itemRenderer,
               canSelect ? this.props.selectedItems : [],
               this.getStartFromItem,
-              this.getEndFromItem,
-              this.props.useMoment
+              this.getEndFromItem
             )}
             {rowLayerRenderer(
               layersInRow,
@@ -916,8 +915,7 @@ export default class Timeline extends React.Component {
               width,
               rowHeight,
               this.getStartFromRowLayer,
-              this.getEndFromRowLayer,
-              this.props.useMoment
+              this.getEndFromRowLayer
             )}
           </div>
         );

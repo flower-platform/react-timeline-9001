@@ -22,27 +22,15 @@ Default date fields in a row layer:
 
 > **WARNING** All operations involving the dates mentioned above should pass through the following functions. It is forbidden to manipulate the dates from props directly. These function can be overriden in order to use other fields or for additional logic. 
 
-### getStartDate(startDate: this.props.startDate, useMoment: this.props.useMoment)
+### getStartDate()
 
 It returns the start date of the timeline as moment.
 
-Params:
-| Name      | Type             | Description                                                 |
-|-----------|------------------|-------------------------------------------------------------|
-| startDate | Object or number | The visible start date of the timeline as moment object or in milliseconds. |
-| useMoment | Boolean          | Whether the date is already a moment or should be converted.|
-
-### getEndDate(endDate: this.props.endDate, useMoment: this.props.useMoment)
+### getEndDate()
 
 It returns the end date of the timeline as moment.
 
-Params:
-| Name      | Type             | Description                                                 |
-|-----------|------------------|-------------------------------------------------------------|
-| endDate   | Object or number | The visible end date of the timeline as moment object or in milliseconds. |
-| useMoment | Boolean          | Whether the date is already a moment or should be converted.|
-
-### getStartFromItem(item, useMoment = this.props.useMoment) 
+### getStartFromItem(item) 
 
 It returns the start date of an item as moment.
 
@@ -50,9 +38,8 @@ Params:
 | Name      | Type     | Description                                                 |
 |-----------|----------|-------------------------------------------------------------|
 | item      | Object   | Item that will be rendered in the grid.                     |
-| useMoment | Boolean  | Whether the date is already a moment or should be converted.|
 
-### getEndFromItem(item, useMoment = this.props.useMoment) 
+### getEndFromItem(item) 
 
 It returns the end date of an item as moment.
 
@@ -60,31 +47,28 @@ Params:
 | Name      | Type     | Description                                                 |
 |-----------|----------|-------------------------------------------------------------|
 | item      | Object   | Item that will be rendered in the grid.                     |
-| useMoment | Boolean  | Whether the date is already a moment or should be converted.|
 
-### setStartToItem(item, newDateAsMoment, useMoment = this.props.useMoment)
+### setStartToItem(item, newDateAsMoment)
 
-Sets the start of the item to newDateAsMoment converted to moment or milliseconds depending on useMoment.
+Sets the start of the item to newDateAsMoment converted to moment or milliseconds depending on props.useMoment.
 
 Params:
 | Name            | Type     | Description                                                 |
 |-----------------|----------|-------------------------------------------------------------|
 | item            | Object   | Item that will be rendered in the grid.                     |
 | newDateAsMoment | Object   | The new value of the start date as moment.                  |
-| useMoment       | Boolean  | Whether the date is already a moment or should be converted.|
 
-### setEndToItem(item, newDateAsMoment, useMoment = this.props.useMoment)
+### setEndToItem(item, newDateAsMoment)
 
-Sets the end of the item to newDateAsMoment converted to moment or milliseconds depending on useMoment.
+Sets the end of the item to newDateAsMoment converted to moment or milliseconds depending on props.useMoment.
 
 Params:
 | Name            | Type     | Description                                                 |
 |-----------------|----------|-------------------------------------------------------------|
 | item            | Object   | Item that will be rendered in the grid.                     |
-| newDateAsMoment | Object   | The new value of the end date as moment.                    | 
-| useMoment       | Boolean  | Whether the date is already a moment or should be converted.|
+| newDateAsMoment | Object   | The new value of the end date as moment.                    |
 
-### getStartFromRowLayer(layer, useMoment = this.props.useMoment) 
+### getStartFromRowLayer(layer) 
 
 It returns the start date of a row layer as moment.
 
@@ -92,9 +76,8 @@ Params:
 | Name      | Type     | Description                                                 |
 |-----------|----------|-------------------------------------------------------------|
 | layer     | Object   | Row layer that will be rendered in the grid.                |
-| useMoment | Boolean  | Whether the date is already a moment or should be converted.|
 
-### getEndFromRowLayer(layer, useMoment = this.props.useMoment) 
+### getEndFromRowLayer(layer) 
 
 It returns the end date of a row layer as moment.
 
@@ -102,30 +85,26 @@ Params:
 | Name      | Type     | Description                                                 |
 |-----------|----------|-------------------------------------------------------------|
 | layer     | Object   | Row layer that will be rendered in the grid.                |
-| useMoment | Boolean  | Whether the date is already a moment or should be converted.|
 
-### setStartToRowLayer(layer, newDateAsMoment, useMoment = this.props.useMoment)
+### setStartToRowLayer(layer, newDateAsMoment)
 
-Sets the start of the layer to newDateAsMoment converted to moment or milliseconds depending on useMoment.
+Sets the start of the layer to newDateAsMoment converted to moment or milliseconds depending on props.useMoment.
 
 Params:
 | Name            | Type     | Description                                                 |
 |-----------------|----------|-------------------------------------------------------------|
 | layer           | Object   | Row layer that will be rendered in the grid.                |
 | newDateAsMoment | Object   | The new value of the end date as moment.                    |
-| useMoment       | Boolean  | Whether the date is already a moment or should be converted.|
 
+### setEndToRowLayer(layer, newDateAsMoment)
 
-### setEndToRowLayer(layer, newDateAsMoment, useMoment = this.props.useMoment)
-
-Sets the end of the layer to newDateAsMoment converted to moment or milliseconds depending on useMoment.
+Sets the end of the layer to newDateAsMoment converted to moment or milliseconds depending on props.useMoment.
 
 Params:
 | Name            | Type     | Description                                                 |
 |-----------------|----------|-------------------------------------------------------------|
 | layer           | Object   | Row layer that will be rendered in the grid.                |
-| newDateAsMoment | Object   | The new value of the end date as moment.                    | 
-| useMoment       | Boolean  | Whether the date is already a moment or should be converted.|
+| newDateAsMoment | Object   | The new value of the end date as moment.                    |
 
 ## Utils functions
 
