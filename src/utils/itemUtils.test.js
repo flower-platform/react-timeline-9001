@@ -5,12 +5,12 @@ import moment from 'moment';
 import {getMaxOverlappingItems} from './itemUtils';
 import {convertDateToMoment} from './timeUtils';
 
-function getStartFromItem(item, useMoment) {
-  return convertDateToMoment(item.start, useMoment);
+function getStartFromItem(item) {
+  return convertDateToMoment(item.start, true);
 }
 
-function getEndFromItem(item, useMoment) {
-  return convertDateToMoment(item.end, useMoment);
+function getEndFromItem(item) {
+  return convertDateToMoment(item.end, true);
 }
 
 //
@@ -73,7 +73,7 @@ const allTestItems = [
 describe('Item Utils', function() {
   describe('getMaxOverlappingItems', function() {
     it('should return a default of 1', function() {
-      const result = getMaxOverlappingItems([], getStartFromItem, getEndFromItem, true);
+      const result = getMaxOverlappingItems([], getStartFromItem, getEndFromItem);
       expect(result).to.equal(1);
     });
     // Diagram
@@ -83,7 +83,7 @@ describe('Item Utils', function() {
       let items = _.filter(allTestItems, i => {
         return _.includes(testInstanceIDs, i.key);
       });
-      const result = getMaxOverlappingItems(items, getStartFromItem, getEndFromItem, true);
+      const result = getMaxOverlappingItems(items, getStartFromItem, getEndFromItem);
       expect(result).to.equal(1);
     });
     // Diagram
@@ -94,7 +94,7 @@ describe('Item Utils', function() {
       let items = _.filter(allTestItems, i => {
         return _.includes(testInstanceIDs, i.key);
       });
-      const result = getMaxOverlappingItems(items, getStartFromItem, getEndFromItem, true);
+      const result = getMaxOverlappingItems(items, getStartFromItem, getEndFromItem);
       expect(result).to.equal(2);
     });
     // Diagram
@@ -104,7 +104,7 @@ describe('Item Utils', function() {
       let items = _.filter(allTestItems, i => {
         return _.includes(testInstanceIDs, i.key);
       });
-      const result = getMaxOverlappingItems(items, getStartFromItem, getEndFromItem, true);
+      const result = getMaxOverlappingItems(items, getStartFromItem, getEndFromItem);
       expect(result).to.equal(1);
     });
     // Diagram
@@ -116,7 +116,7 @@ describe('Item Utils', function() {
       let items = _.filter(allTestItems, i => {
         return _.includes(testInstanceIDs, i.key);
       });
-      const result = getMaxOverlappingItems(items, getStartFromItem, getEndFromItem, true);
+      const result = getMaxOverlappingItems(items, getStartFromItem, getEndFromItem);
       expect(result).to.equal(3);
     });
     // Diagram
@@ -127,7 +127,7 @@ describe('Item Utils', function() {
       let items = _.filter(allTestItems, i => {
         return _.includes(testInstanceIDs, i.key);
       });
-      const result = getMaxOverlappingItems(items, getStartFromItem, getEndFromItem, true);
+      const result = getMaxOverlappingItems(items, getStartFromItem, getEndFromItem);
       expect(result).to.equal(2);
     });
   });

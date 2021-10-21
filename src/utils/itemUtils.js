@@ -232,7 +232,6 @@ export function getNearestRowNumber(x, y, topDiv = document) {
  */
 export function getMaxOverlappingItems(items, getStartFromItem, getEndFromItem) {
   let max = 0;
-  getStartFromItem(items[0]);
   let sorted_items = _.sortBy(items, i => -getStartFromItem(i).unix());
   while (sorted_items.length > 0) {
     let lastEnd = null;
