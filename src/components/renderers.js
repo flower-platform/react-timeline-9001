@@ -3,199 +3,129 @@ import PropTypes from 'prop-types';
 const Color = require('color');
 
 const ITEM_GLOW_CLS = 'rct9k-item-glow';
-const TIMELINE_ITEM_BORDER_STYLE = 'solid';
+
+/**
+ * Default values for gradient properties (in item).
+ * defaultProps couldn't be used in this case because it doesn't merge the value
+ * instead it replaces the value.
+ */
+const DEFAULT_COLOR = '#2185d0';
+const DEFAULT_GRADIENT_BRIGHTNESS = 45;
+const DEFAULT_GRADIENT_STOP = 40;
+const DEFAULT_REVERSE_DIRECTION = false;
 
 /**
  * Default item renderer class
  * @param {object} props - Component props
- * @param {string} props.color - The background color of the item
- * @param {boolean} props.useGradient - If the item should use gradient for brackground
- * @param {number} props.gradientBrightness - Percentage use to lighten the color; the resulted color is used in gradient
- * @param {number} props.gradientStop - Percentage; where the first gradient color stops
- * @param {boolean} props.reverseDirection - If gradient colors should be reversed
- * @param {string} props.borderColor - The color of the border
- * @param {number} props.borderThickness - The thickness of the border
- * @param {number} props.cornerRadius - The radius of the item's corners.
  * @param {number} props.itemHeight - The height of the item.
  * @param {object} props.item - The item to be rendered
  * @param {string} props.item.title - The item's title
+ * @param {string} props.item.color - The color used for gradient
+ * @param {number} props.item.gradientBrightness - Percentage use to lighten the color; the resulted color is used in gradient
+ * @param {number} props.item.gradientStop - Percentage; where the first gradient color stops
+ * @param {boolean} props.item.reverseDirection - If gradient colors should be reversed
  * @param {boolean} props.item.glowOnHover - If the item should glow on item hover
- * @param {?...object} props.rest - Any other arguments for the span tag
  */
 export class DefaultItemRenderer extends React.Component {
   static propTypes = {
     item: PropTypes.object.isRequired,
     style: PropTypes.object,
     className: PropTypes.string,
-    color: PropTypes.string,
-    opacity: PropTypes.number,
-    /**
-     * Border properties
-     */
-    borderColor: PropTypes.string,
-    borderThickness: PropTypes.number,
-    cornerRadius: PropTypes.number,
-    /**
-     * Gradient properties for item.
-     */
-    useGradient: PropTypes.bool,
-    // A number between 0 and 100. It's a percentage used to compute
-    // a lighter color than the given color. The resulted color is used in gradient.
-    gradientBrightness: PropTypes.number,
-    // A number between 0 and 100, where the first color in the gradient stops.
-    gradientStop: PropTypes.number,
-    // Default colors in gradient: lighter color, color. The order can be reversed: color, lighter color.
-    reverseDirection: PropTypes.bool
+    itemHeight: PropTypes.number
   };
 
-  static defaultProps = {
-    useGradient: false,
-    gradientStop: 40,
-    gradientBrightness: 45,
-    reverseDirection: false,
-    borderColor: '#000000',
-    cornerRadius: 0,
-    opacity: 1
-  };
-
-  constructor(props) {
-    super(props);
-    this.state = {style: {}};
-  }
-
-  componentWillMount() {
-    const background = this.getBackground();
-    const border = this.getBorder();
-    this.setState({
-      style: {
-        ...this.state.style,
-        background,
-        ...border
-      }
-    });
-  }
-
-  componentDidUpdate(previousProps) {
-    let background, border;
-    if (
-      this.props.color != previousProps.color ||
-      this.props.useGradient != previousProps.useGradient ||
-      this.props.gradientBrightness != previousProps.gradientBrightness ||
-      this.props.reverseDirection != previousProps.reverseDirection ||
-      this.props.gradientStop != previousProps.gradientStop
-    ) {
-      background = this.getBackground();
-    }
-
-    if (
-      this.props.borderColor != previousProps.borderColor ||
-      this.props.borderThickness != previousProps.borderThickness ||
-      this.props.cornerRadius != previousProps.cornerRadius
-    ) {
-      border = this.getBorder();
-    }
-
-    if (background !== undefined || border !== undefined) {
-      this.setState({
-        style: {
-          ...this.state.style,
-          ...border,
-          background
-        }
-      });
-    }
+  /**
+   * Returns the color used for gradient.
+   * @default DEFAULT_COLOR
+   */
+  getGradientColor() {
+    return this.props.item.color ? this.props.item.color : DEFAULT_COLOR;
   }
 
   /**
-   * Create a linear gradient using the received color and a color obtained adjusting the brightness
-   * of that color using props.gradientBrightness. The order is [adjusted color, received color];
-   * this order can be reversed using reverseDirection.
-   * @param {string} color of the item
-   * @param {boolean} reverseDirection used to reverse the order of the colors in the gradient.
+   * Returns the gradient brightness. The gradient uses two colors; one is props.color and the other one
+   * is the color brightened by props.item.gradientBrightness percentage. Is a number between 0 and 100.
+   * @default DEFAULT_GRADIENT_BRIGHTNESS
+   */
+  getGradientBrightness() {
+    return this.props.item.gradientBrightness ? this.props.item.gradientBrightness : DEFAULT_GRADIENT_BRIGHTNESS;
+  }
+
+  /**
+   * Returns a number between 0 and 100 (percentage), where the first gradient color stops.
+   * @default DEFAULT_GRADIENT_STOP
+   */
+  getGradientStop() {
+    return this.props.item.gradientStop ? this.props.item.gradientStop : DEFAULT_GRADIENT_STOP;
+  }
+
+  /**
+   * If the colors in the gradient should be reversed.
+   * Default order of the colors in the gradient: [brighter item.color, item.color]
+   * @default DEFAULT_REVERSE_DIRECTION
+   */
+  getReverseDirection() {
+    return this.props.item.reverseDirection ? this.props.item.reverseDirection : DEFAULT_REVERSE_DIRECTION;
+  }
+
+  /**
+   * Create a linear gradient using the base color(calls getGradientColor) and a color obtained adjusting
+   * the brightness of that color using getGradientBrightness(). The default order of the colors is
+   * [brighter color, color]; this order can be reversed if getReverseDirection() is true.
+   * 
+   * By default, the background of an item uses a gradient, this method should be overriden if this behaviour is not wanted.
    * @returns {string} linear gradient
    */
-  getGradient(color, reverseDirection) {
+  getBackgroundGradient() {
     let colors = [
-      Color(color)
-        .lightness(this.props.gradientBrightness)
+      Color(this.getGradientColor())
+        .lightness(this.getGradientBrightness())
         .hexString(),
-      color
+      this.getGradientColor()
     ];
-    if (reverseDirection) {
+    if (this.getReverseDirection()) {
       colors.reverse();
     }
-    return (
-      'linear-gradient(' +
-      colors[0] +
-      ' ' +
-      (this.props.gradientStop === undefined ? '' : this.props.gradientStop + '%') +
-      ', ' +
-      colors[1] +
-      ')'
-    );
+
+    return ('linear-gradient(' + colors[0] + ' ' + this.getGradientStop() + '%, ' + colors[1] + ')');
   }
 
   /**
-   * If this.props.useGradient true, create gradient using props.color; otherwise return the color.
-   * @returns background style
+   * Returns the style of the item.
    */
-  getBackground() {
-    if (this.props.useGradient) {
-      return this.getGradient(this.props.color, this.props.reverseDirection);
-    } else {
-      return this.props.color;
+  getStyle() {
+    // subtract 10 because of the margin (see rct9k-items-inner class in style.css)
+    const itemHeight = this.props.itemHeight ? this.props.itemHeight - 10 : 'auto';
+
+    return {
+      ...this.props.style,
+      height: itemHeight,
+      background: this.getBackgroundGradient()
     }
   }
 
   /**
-   * Create border style: borderThickness, cornerRadius and borderColor.
-   * @returns border style
+   * Returns the css classes applied on the item.
    */
-  getBorder() {
-    let border = {
-      borderRadius: this.props.cornerRadius,
-      borderWidth: this.props.borderThickness,
-      borderStyle: this.props.borderThickness !== undefined ? TIMELINE_ITEM_BORDER_STYLE : '',
-      borderColor: this.props.borderColor
-    };
-    return border;
+  getClassName() {
+    let className = this.props.className;
+    if (this.props.item.glowOnHover) {
+      className += ' ' + ITEM_GLOW_CLS;
+    }
+    return className;
+  }
+
+  /**
+   * Returns the title of the item.
+   */
+  getTitle() {
+    return this.props.item.title;
   }
 
   render() {
-    const {
-      item,
-      className,
-      useGradient,
-      opacity,
-      gradientBrightness,
-      gradientStop,
-      color,
-      borderColor,
-      borderThickness,
-      reverseDirection,
-      glowOnHover,
-      cornerRadius,
-      rowOffset,
-      itemHeight,
-      ...rest
-    } = this.props;
-
-    let classList = className;
-    if (item.glowOnHover) {
-      classList += ' ' + ITEM_GLOW_CLS + ' ';
-    }
-
     return (
-      <span
-        {...rest}
-        className={classList}
-        style={{
-          ...this.state.style,
-          opacity,
-          height: itemHeight - 10, // -10 because of the margins
-          width: 'inherit'
-        }}>
-        <span className="rct9k-item-renderer-inner">{item.title}</span>
+      <span className={this.getClassName()} style={this.getStyle()} title={this.props.item.tooltip ? this.props.item.tooltip : ""}>
+        <span className="rct9k-item-renderer-inner">{this.getTitle()}</span>
       </span>
     );
   }

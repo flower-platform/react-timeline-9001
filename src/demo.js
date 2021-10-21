@@ -37,7 +37,8 @@ export default class DemoTimeline extends Component {
       startDate,
       endDate,
       message: '',
-      timelineMode: TIMELINE_MODES.SELECT | TIMELINE_MODES.DRAG | TIMELINE_MODES.RESIZE
+      timelineMode: TIMELINE_MODES.SELECT | TIMELINE_MODES.DRAG | TIMELINE_MODES.RESIZE,
+      itemStyle: {}
     };
     this.reRender = this.reRender.bind(this);
     this.zoomIn = this.zoomIn.bind(this);
@@ -62,27 +63,19 @@ export default class DemoTimeline extends Component {
       groups.push({id: i, title: `Row ${i}`});
       for (let j = 0; j < this.state.items_per_row; j++) {
         this.key += 1;
-        const colorIndex = (i + j) % COLORS.length;
-        const color = COLORS[colorIndex];
-        const borderColor = COLORS[colorIndex - 1];
-        const borderThickness = (i + j) % 3;
-        const cornerRadius = i + j;
-        const opacity = Math.random();
+        const colorIndex = (i + j) % (COLORS.length + 1);
+        const color = colorIndex != (COLORS.length + 1) ? COLORS[colorIndex] : '';
         const gradientStop = Math.random() * 100;
-        let useGradient = true;
         let glowOnHover = false;
         if ((i + j) % 3 === 0) {
-          useGradient = true;
           glowOnHover = true;
         }
         const duration = ITEM_DURATIONS[Math.floor(Math.random() * ITEM_DURATIONS.length)];
         // let start = last_moment;
-        let start = moment(
-          Math.floor(
-            Math.random() * (this.state.endDate.valueOf() - this.state.startDate.valueOf()) +
-              this.state.startDate.valueOf()
-          )
-        );
+        let start = moment(Math.floor(
+          Math.random() * (this.state.endDate.valueOf() - this.state.startDate.valueOf()) +
+            this.state.startDate.valueOf()
+        ));
         let end = start.clone().add(duration);
 
         // Round to the nearest snap distance
@@ -98,21 +91,18 @@ export default class DemoTimeline extends Component {
           row: i,
           start,
           end,
-          borderColor,
-          borderThickness,
           glowOnHover,
-          cornerRadius,
-          useGradient,
-          reverseDirection: true,
-          gradientStop,
-          opacity
+          gradientStop
         });
       }
     }
 
+    const itemStyle = {
+      opacity: 0.8
+    }
     // this.state = {selectedItems: [11, 12], groups, items: list};
     this.forceUpdate();
-    this.setState({items: list, groups});
+    this.setState({items: list, groups, itemStyle});
   }
 
   handleRowClick = (e, rowNumber, clickedTime, snappedClickedTime) => {
@@ -366,6 +356,7 @@ export default class DemoTimeline extends Component {
           <Timeline
             shallowUpdateCheck
             items={items}
+            itemStyle={this.state.itemStyle}
             groups={groups}
             startDate={startDate}
             endDate={endDate}

@@ -1,67 +1,57 @@
-# Default item renderer
+# DefaultItemRenderer
 
-## Props
+## Style and className
 
-| Name               | Type    | Default | Description                                      |
-| -------------------|---------|---------|--------------------------------------------------|
-| item               | object  |         | The item to be rendered                          |
-| item.title         | string  |         | he item's title                                  | 
-| item.glowOnHover   | string  | false   | If the item should glow on item hover            |
-| itemHeight         | number  |         | The height of the item                           |
-| style              | object  |         | Additional style                                 |
-| color              | string  |         | The background color of the item                 |
-| opacity            | number  | 1       | Value between 0 and 1, the opacity of the item   |
-| useGradient        | boolean | false   | If the item should use gradient for brackground  |
-| gradientBrightness | number  | 45      | The gradient uses two colors; one is props.color and the other one is props.color brightened by props.gradientBrightness percentage. Is a number between 0 and 100. |
-| gradientStop       | number  | 40      | A number between 0 and 100 (percentage). Where the first gradient color stops. |
-| reverseDirection   | boolean | false   | If the order of the gradient colors should be reversed |
-| borderColor        | string  | #000000 | The color of the border                          |
-| borderThickness    | number  |         | The thickness of the border. The border is not visible without this prop |
-| cornerRadius       | number  | 0       | The radius of the item's corners                 |
+A single style or a single className can be configured for all the items using <code>props.itemStyle</code> or <code>props.itemClassName</code> in **Timeline** that are passed to **DefaultItemRenderer** as <code>props.style</code> and <code>props.className</code>.
 
+## Background
 
-### Background
+The renderer used a gradient as a background. The gradient is configured using two colors: the base color, <code>props.item.color</code>, and for the second color we use <code>props.item.gradientBrightness</code> to lighten the base color. <code>props.item.gradientStop</code> is used to indicate the point when the gradient transitions from the first color to the second color and it is a value between 0 and 100. The default order of the colors is [lighter color, base color], but it can be reverse using <code>props.item.reverseDirection</code>.
 
-The background of the item can be:
-* a solid color (1)
-* gradient (2)
-
-The gradient is configured using two colors: the base color (props.color) and for the second color we use **props.gradientBrightness** to lighten the base color. **props.gradientStop** is used to indicate the point when the gradient transitions from the first color to the second color and it is a value between 0 and 100. The default order of the colors is lighter color, base color, but it can be reverse using **props.reverseDirection**.
+If the gradient is not wanted, <code>getBackgroundGradient</code> function(see below) can be overriden. In the image below there are two cases:
+1. <code>getBackgroundGradient</code> function is overriden and returns <code>props.item.color</code>
+2. default behaviour
 
 ![Background](https://user-images.githubusercontent.com/68424941/135446554-901b882f-0716-41c4-989a-1da1028a1598.png)
 
-### Border
-
-Border is visible only when borderThickness is configured. The height of the items is the same regardless of the border thickness.
-
-1. borderThickness = 0, border is not visible.
-2. borderThickness = 1
-3. borderThickness = 2
-
-![Border image](https://user-images.githubusercontent.com/68424941/135441967-ff264cf5-034b-44e6-84f0-4c9ffa5048b8.png)
-
-## Opacity
-
-1. Default value, 1
-2. opacity = 0.6
-3. opacity = 0.35 
-
-![Opacity](https://user-images.githubusercontent.com/68424941/135448653-6786d3ea-9047-49f2-8483-d12a82ecbbba.png)
-
 ## Glow on hover
 
-On mouse hover item, a glow effect appears around the item if props.glowOnHover is true.
+On mouse hover item, a glow effect appears around the item if <code>props.item.glowOnHover</code> is true.
 
 ![Glow](https://user-images.githubusercontent.com/68424941/135447119-2dc7b968-f918-475e-84f5-ec339536d80d.png)
 
-### Corner radius
+## Functions
 
-1. Uses default value: 0. The corners are not rounded.
-2. Corner radius value: 7px.
+### getGradientColor() {
 
-![Corner radius](https://user-images.githubusercontent.com/68424941/135428218-aa252364-08a0-4f3c-b185-6927042453a4.png)
+Returns the color used for gradient.
 
+### getGradientBrightness()
 
-This is a screenshot with random values for all props.
+Returns the gradient brightness. The gradient uses two colors; one is props.color and the other one is the color brightened by props.item.gradientBrightness percentage(a number between 0 and 100).
 
-![Demo](https://user-images.githubusercontent.com/68424941/135449025-e087d3c7-1d89-4542-8bbf-a2cf8d9680c2.png)
+### getGradientStop()
+
+Returns a number between 0 and 100 (percentage), where the first gradient color stops.
+
+### getReverseDirection()
+
+If the colors in the gradient should be reversed. Default order of the colors in the gradient: [brighter item.color, item.color].
+
+### getBackgroundGradient()
+
+Create a linear gradient using the base color(calls getGradientColor) and a color obtained adjusting the brightness of that color using getGradientBrightness(). The default order of the colors is [brighter color, color]; this order can be reversed if getReverseDirection() is true.
+
+By default, the background of an item uses a gradient, this method should be overriden if this behaviour is not wanted.
+
+### getStyle()
+
+Returns the style applied to the item.
+
+### getTitle()
+
+Returns the title of the item.
+
+### getClassName()
+
+Returns the css classes applied on the item.

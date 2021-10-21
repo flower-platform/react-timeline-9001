@@ -12,7 +12,7 @@ import moment from 'moment';
  * @param  {moment} vis_end The visible end of the timeline
  * @param  {number} total_width pixel width of the timeline
  */
-export function rowItemsRenderer(items, vis_start, vis_end, total_width, itemHeight, itemRenderer, selectedItems = []) {
+export function rowItemsRenderer(items, vis_start, vis_end, total_width, itemHeight, itemRenderer, selectedItems = [], itemStyle, itemClassName) {
   const start_end_ms = vis_end.diff(vis_start, 'milliseconds');
   const pixels_per_ms = total_width / start_end_ms;
   let filtered_items = _.sortBy(
@@ -38,14 +38,13 @@ export function rowItemsRenderer(items, vis_start, vis_end, total_width, itemHei
     rowOffset++;
   }
   return _.map(displayItems, i => {
-    const {color} = i;
     const Comp = itemRenderer;
     let top = itemHeight * i['rowOffset'];
     let item_offset_mins = i.start.diff(vis_start, 'milliseconds');
     let item_duration_mins = i.end.diff(i.start, 'milliseconds');
     let left = Math.round(item_offset_mins * pixels_per_ms);
     let width = Math.round(item_duration_mins * pixels_per_ms);
-    let compClassnames = 'rct9k-items-inner';
+    let compClassnames = itemClassName + ' rct9k-items-inner';
     let outerClassnames = 'rct9k-items-outer item_draggable';
     let style = {};
     let isSelected = selectedItems.indexOf(Number(i.key)) > -1;
@@ -65,16 +64,7 @@ export function rowItemsRenderer(items, vis_start, vis_end, total_width, itemHei
         <Comp
           key={i.key}
           item={i}
-          style={style}
-          color={color}
-          borderColor={i.borderColor}
-          cornerRadius={i.cornerRadius}
-          borderThickness={i.borderThickness}
-          useGradient={i.useGradient}
-          gradientBrightness={i.gradientBrightness}
-          gradientStop={i.gradientStop}
-          reverseDirection={i.reverseDirection}
-          opacity={i.opacity}
+          style={itemStyle}
           className={compClassnames}
           itemHeight={itemHeight}
         />
