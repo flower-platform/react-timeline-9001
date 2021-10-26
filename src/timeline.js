@@ -18,7 +18,7 @@ import {
   getMaxOverlappingItems,
   getTrueBottom,
   getVerticalMarginBorder,
-  getRowObjectRowNumber
+  getRowObjectRowNumber,
 } from './utils/itemUtils';
 import {timeSnap, getTimeAtPixel, getPixelAtTime, getSnapPixelFromDelta, pixelsPerSecond} from './utils/timeUtils';
 import Timebar from './components/timebar';
@@ -29,6 +29,8 @@ import Marker from './components/marker';
 
 // startsWith polyfill for IE11 support
 import 'core-js/fn/string/starts-with';
+
+const SINGLE_COLUMN_LABEL_PROPERTY = 'title';
 
 /**
  * Timeline class
@@ -42,19 +44,28 @@ export default class Timeline extends React.Component {
   static TIMELINE_MODES = Object.freeze({
     SELECT: 1,
     DRAG: 2,
-    RESIZE: 4
+    RESIZE: 4,
   });
 
   static propTypes = {
     items: PropTypes.arrayOf(PropTypes.object).isRequired,
     groups: PropTypes.arrayOf(PropTypes.object).isRequired,
-    // groupOffset is the width of the column when multipleColumns is false or the default width of the columns
-    // if column.width is not configured.
+    // Single column mode: the width of the column.
+    // Multiple columns mode: the default width of the columns, which may be overridden on a per column basis.
     groupOffset: PropTypes.number.isRequired,
-    multipleColumns: PropTypes.bool, // If the timeline should have multiple columns or only one column.
-    dataGridColumns: PropTypes.arrayOf(
+    tableColumns: PropTypes.arrayOf(
       PropTypes.shape({
-        headerKey: PropTypes.number.isRequired
+        // The default renderer for a cell is props.groupRenderer that renders labelProperty from group. 
+        // The renderer for a column can be overriden using cellRenderer. cellRenderer can be a React element
+        // or a function or a class component that generates a React element.
+        labelProperty: PropTypes.string,
+        cellRenderer: PropTypes.oneOfType([PropTypes.func, PropTypes.element]),
+        // The default renderer for a header is props.groupTitleRenderer that renders headerLabel. 
+        // The renderer for a header column can be overriden using headerRenderer. headerRenderer can be a React element
+        // or a function or a class component that generates a React element.
+        headerLabel: PropTypes.string,
+        headerRenderer: PropTypes.oneOfType([PropTypes.func, PropTypes.element]),
+        width: PropTypes.number // width of the column in px
       })
     ),
     rowLayers: PropTypes.arrayOf(
@@ -62,7 +73,7 @@ export default class Timeline extends React.Component {
         start: PropTypes.object.isRequired,
         end: PropTypes.object.isRequired,
         rowNumber: PropTypes.number.isRequired,
-        style: PropTypes.object.isRequired
+        style: PropTypes.object.isRequired,
       })
     ),
     selectedItems: PropTypes.arrayOf(PropTypes.number),
@@ -86,10 +97,11 @@ export default class Timeline extends React.Component {
     onItemHover: PropTypes.func,
     onItemLeave: PropTypes.func,
     itemRenderer: PropTypes.func,
-    // The renderer of the columns. The DefaultGroupRenderer has a getTitle() function that returns group.title
-    // if the dataKey is empty, otherwise it returns group[dataKey]. This function can be overriden.
+    // Single column mode: the renderer of a cell.
+    // Multiple columns mode: the default renderer of a cell, which may be overridden on a per column basis.
     groupRenderer: PropTypes.func,
-    // The renderer of the column header when multiple columns is false; otherwise each column defines its own headerRenderer.
+    // Single column mode: the renderer of the header cell.
+    // Multiple columns mode: the default renderer of a header cell, which may be overridden on a per column basis.
     groupTitleRenderer: PropTypes.func,
     shallowUpdateCheck: PropTypes.bool,
     forceRedrawFunc: PropTypes.func,
@@ -98,8 +110,8 @@ export default class Timeline extends React.Component {
     interactOptions: PropTypes.shape({
       draggable: PropTypes.object,
       pointerEvents: PropTypes.object,
-      resizable: PropTypes.object.isRequired
-    })
+      resizable: PropTypes.object.isRequired,
+    }),
   };
 
   static defaultProps = {
@@ -112,15 +124,13 @@ export default class Timeline extends React.Component {
     showCursorTime: true,
     groupRenderer: DefaultGroupRenderer,
     itemRenderer: DefaultItemRenderer,
-    groupTitleRenderer: () => <div />,
     timelineMode: Timeline.TIMELINE_MODES.SELECT | Timeline.TIMELINE_MODES.DRAG | Timeline.TIMELINE_MODES.RESIZE,
     shallowUpdateCheck: false,
     forceRedrawFunc: null,
     onItemHover() {},
     onItemLeave() {},
     interactOptions: {},
-    multipleColumns: false,
-    dataGridColumns: []
+    tableColumns: []
   };
 
   /**
@@ -132,7 +142,7 @@ export default class Timeline extends React.Component {
     dragEnd: 'dragEnd',
     dragStart: 'dragStart',
     itemsSelected: 'itemsSelected',
-    snappedMouseMove: 'snappedMouseMove'
+    snappedMouseMove: 'snappedMouseMove',
   };
 
   /**
@@ -325,7 +335,7 @@ export default class Timeline extends React.Component {
    * Get the snap in milliseconds from snapMinutes or snap
    */
   getTimelineSnap() {
-    if (this.props.snap) {
+    if(this.props.snap) {
       return this.props.snap * 1000;
     } else if (this.props.snapMinutes) {
       return this.props.snapMinutes * 60 * 1000;
@@ -355,9 +365,11 @@ export default class Timeline extends React.Component {
     this._itemInteractable = interact(`.${topDivClassId} .item_draggable`);
     this._selectRectangleInteractable = interact(`.${topDivClassId} .parent-div`);
 
-    this._itemInteractable.pointerEvents(this.props.interactOptions.pointerEvents).on('tap', e => {
-      this._handleItemRowEvent(e, this.props.onItemClick, this.props.onRowClick);
-    });
+    this._itemInteractable
+      .pointerEvents(this.props.interactOptions.pointerEvents)
+      .on('tap', e => {
+        this._handleItemRowEvent(e, this.props.onItemClick, this.props.onRowClick);
+      });
 
     if (canDrag) {
       this._itemInteractable
@@ -366,9 +378,9 @@ export default class Timeline extends React.Component {
           allowFrom: selectedItemSelector,
           restrict: {
             restriction: `.${topDivClassId}`,
-            elementRect: {left: 0, right: 1, top: 0, bottom: 1}
+            elementRect: {left: 0, right: 1, top: 0, bottom: 1},
           },
-          ...this.props.interactOptions.draggable
+          ...this.props.interactOptions.draggable,
         })
         .on('dragstart', e => {
           let selections = [];
@@ -496,7 +508,7 @@ export default class Timeline extends React.Component {
         .resizable({
           allowFrom: selectedItemSelector,
           edges: {left: true, right: true, bottom: false, top: false},
-          ...this.props.interactOptions.draggable
+          ...this.props.interactOptions.draggable,
         })
         .on('resizestart', e => {
           const selected = this.props.onInteraction(Timeline.changeTypes.resizeStart, null, this.props.selectedItems);
@@ -615,7 +627,7 @@ export default class Timeline extends React.Component {
       this._selectRectangleInteractable
         .draggable({
           enabled: true,
-          ignoreFrom: '.item_draggable, .rct9k-group'
+          ignoreFrom: '.item_draggable, .rct9k-group',
         })
         .styleCursor(false)
         .on('dragstart', e => {
@@ -747,7 +759,7 @@ export default class Timeline extends React.Component {
     const canSelect = Timeline.isBitSet(Timeline.TIMELINE_MODES.SELECT, timelineMode);
     return ({columnIndex, key, parent, rowIndex, style}) => {
       // the items column is the last column in the grid; itemCol is the index of this column
-      let itemCol = this.props.multipleColumns ? this.props.dataGridColumns.length : 1;
+      let itemCol = this.props.tableColumns && this.props.tableColumns.length > 0 ? this.props.tableColumns.length : 1;
       if (itemCol == columnIndex) {
         let itemsInRow = this.rowItemMap[rowIndex];
         const layersInRow = rowLayers.filter(r => r.rowNumber === rowIndex);
@@ -789,16 +801,28 @@ export default class Timeline extends React.Component {
           </div>
         );
       } else {
-        let dataKey = '';
-        if (this.props.multipleColumns) {
-          const column = this.props.dataGridColumns[columnIndex];
-          dataKey = column.dataKey;
+        // Single column mode: the renderer of the cell is props.groupRenderer
+        // with default labelProperty: SINGLE_COLUMN_LABEL_PROPERTY(title).
+        //
+        // Multiple columns mode: default renderer - props.groupRenderer with column.labelProperty;
+        // custom renderer: column.cellRenderer.
+        let labelProperty = '';
+        let ColumnRenderer = this.props.groupRenderer;
+        if (this.props.tableColumns && this.props.tableColumns.length > 0) {
+          const column = this.props.tableColumns[columnIndex];
+          if (column.cellRenderer) {
+            ColumnRenderer = column.cellRenderer;
+          } else {
+            labelProperty = column.labelProperty;
+          }
+        } else {
+          labelProperty = SINGLE_COLUMN_LABEL_PROPERTY;
         }
-        const GroupComp = this.props.groupRenderer;
         let group = _.find(this.props.groups, g => g.id == rowIndex);
         return (
           <div data-row-index={rowIndex} key={key} style={style} className="rct9k-group">
-            <GroupComp group={group} dataKey={dataKey} />
+            {React.isValidElement(ColumnRenderer) && ColumnRenderer}
+            {!React.isValidElement(ColumnRenderer) && <ColumnRenderer group={group} labelProperty={labelProperty} rowIndex={rowIndex} />}
           </div>
         );
       }
@@ -869,18 +893,18 @@ export default class Timeline extends React.Component {
   }
 
   /**
-   * Calculates left offset of the timeline (group lists). If props.multipleColumns is true,
-   * the left offset is the sum of the widths of all dataGridColumns; otherwise returns groupOffset.
+   * Calculates left offset of the timeline (group lists). If props.tableColumns is defined,
+   * the left offset is the sum of the widths of all tableColumns; otherwise returns groupOffset.
    * @returns left offset
    */
   calculateLeftOffset() {
-    const {multipleColumns, dataGridColumns, groupOffset} = this.props;
-    if (!multipleColumns) {
+    const {tableColumns, groupOffset} = this.props;
+    if (!tableColumns || tableColumns.length == 0) {
       return groupOffset;
     }
 
     let totalOffset = 0;
-    dataGridColumns.forEach(column => {
+    tableColumns.forEach(column => {
       totalOffset += column.width ? column.width : groupOffset;
     });
     return totalOffset;
@@ -900,8 +924,7 @@ export default class Timeline extends React.Component {
       endDate,
       bottomResolution,
       topResolution,
-      multipleColumns,
-      dataGridColumns
+      tableColumns
     } = this.props;
     let that = this;
 
@@ -917,19 +940,19 @@ export default class Timeline extends React.Component {
 
     function columnWidth(width) {
       return ({index}) => {
-        // The width of the first column when multipleColumns is false is groupOffset.
-        if (index == 0 && !that.props.multipleColumns) return groupOffset;
+        // The width of the first column when tableColumns is not defined is groupOffset.
+        if (index == 0 && (!that.props.tableColumns || that.props.tableColumns.length == 0)) return groupOffset;
 
         // The width of the last column is width minus the left offset.
-        // The left offset is groupOffset when multipleColumns is false or
-        // the sum of the widths of all dataGridColumns.
+        // The left offset is groupOffset when tableColumns is not defined or
+        // the sum of the widths of all tableColumns.
         let leftOffset = groupOffset;
-        if (that.props.multipleColumns) {
-          if (index < that.props.dataGridColumns.length) {
-            return getColumnWidth(that.props.dataGridColumns[index]);
+        if (that.props.tableColumns && that.props.tableColumns.length > 0) {
+          if (index < that.props.tableColumns.length) {
+            return getColumnWidth(that.props.tableColumns[index]);
           } else {
             leftOffset = 0;
-            that.props.dataGridColumns.forEach(column => {
+            that.props.tableColumns.forEach(column => {
               leftOffset += getColumnWidth(column);
             });
           }
@@ -958,7 +981,7 @@ export default class Timeline extends React.Component {
       const cursorPix = getPixelAtTime(this.mouse_snapped_time, startDate, endDate, this.getTimelineWidth());
       markers.push({
         left: cursorPix + this.calculateLeftOffset(),
-        key: 1
+        key: 1,
       });
     }
     return (
@@ -975,8 +998,7 @@ export default class Timeline extends React.Component {
                 leftOffset={this.calculateLeftOffset()}
                 selectedRanges={this.state.selection}
                 groupTitleRenderer={groupTitleRenderer}
-                dataGridColumns={dataGridColumns}
-                multipleColumns={multipleColumns}
+                tableColumns={tableColumns}
                 groupOffset={groupOffset}
                 {...varTimebarProps}
               />
@@ -989,7 +1011,7 @@ export default class Timeline extends React.Component {
                 height={calculateHeight(height)}
                 rowHeight={this.rowHeight}
                 rowCount={this.props.groups.length}
-                columnCount={(multipleColumns ? dataGridColumns.length : 1) + 1}
+                columnCount={(tableColumns && tableColumns.length > 0 ? tableColumns.length : 1) + 1}
                 cellRenderer={this.cellRenderer(this.getTimelineWidth(width))}
                 grid_ref_callback={this.grid_ref_callback}
                 shallowUpdateCheck={shallowUpdateCheck}

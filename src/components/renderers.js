@@ -20,29 +20,44 @@ export const DefaultItemRenderer = props => {
 /**
  * Default group (row) renderer class
  * @param {object} props - Component props
- * @param {string} props.dataKey - The key of the data from group that should be rendered
+ * @param {string} props.labelProperty - The key of the data from group that should be rendered
  * @param {object} props.group - The group to be rendered
- * @param {string} props.group.title - The group's title
  * @param {string} props.group.id - The group's id
- * @param {?...object} props.rest - Any other arguments for the span tag
  */
 export class DefaultGroupRenderer extends React.Component {
-  getTitle() {
-    const {dataKey, group} = this.props;
-    // If dataKey is missing, return title field from group.
-    if (dataKey == undefined || dataKey == null || dataKey == '') {
-      return group.title;
-    }
 
-    return group[dataKey];
+  /**
+   * Returns the label of the cell.
+   */
+  getLabel() {
+    return this.props.group[this.props.labelProperty];
   }
 
   render() {
-    const {group, dataKey, ...rest} = this.props;
     return (
-      <span data-group-index={group.id} {...rest}>
-        <span>{this.getTitle()}</span>
+      <span data-group-index={this.props.group.id}>
+        <span>{this.getLabel()}</span>
       </span>
     );
+  }
+}
+
+/**
+ * Default renderer for column header.
+ * @param {object} props - Component props
+ * @param {object} props.column - The properties of the column
+ * @param {string} props.column.headerLabel - The header's label
+ */
+export class DefaultColumnHeaderRenderer extends React.Component {
+
+  /**
+   * Returns the label of the header.
+   */
+  getLabel() {
+    return this.props.column ? this.props.column.headerLabel : "";
+  }
+
+  render() {
+    return <span>{this.getLabel()}</span>
   }
 }

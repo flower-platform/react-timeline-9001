@@ -1,5 +1,3 @@
-import React from 'react';
-
 /**
  * Default timebar format
  */
@@ -65,8 +63,3 @@ export const timebarFormat = {
     }
   }
 };
-
-/**
- * Default column header renderer
- */
-export const headerRenderer = () => <div />;
