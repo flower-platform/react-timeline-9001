@@ -1,11 +1,13 @@
 # Table columns
 
+Historically, the Timeline only had a single column to the left of the component. Then we improved this, by allowing the possibility to have multiple columns. Hence the left zone can now be regarded also as a table.
+
 ## Props in Timeline
 
 | Name               | Type     | Default              | Description                                       |
 |--------------------|----------|----------------------|---------------------------------------------------|
 | groups             | object[] |                      | Rows data                                         |
-| groupOffest        | number   | 150                  | Single column mode: the width of the column. Multiple columns mode: the default width of a column (if column.width is not configured). |
+| groupOffset        | number   | 150                  | Single column mode: the width of the column. Multiple columns mode: the default width of a column (if column.width is not configured). |
 | groupRenderer      | function | DefaultGroupRenderer | Single column mode: the renderer of a cell. Multiple columns mode: the default renderer of a cell, which may be overridden on a per column basis.  |
 | groupTitleRenderer | function |                      | Single mode view: the renderer of a header cell. Multiple columns mode: the default renderer of a header cell, which may be overridden on a per column basis. |
 | tableColumns       | object[] | []                   | The columns that will be rendered using data from groups. |
@@ -48,7 +50,7 @@ Single column mode:
 
 Multiple columns mode:
 * <code>props.groupRenderer</code> is the default renderer of a cell, which may be overridden on a per column basis. The default value of <code>props.groupRenderer</code> is <code>DefaultGroupRenderer</code> that renders <code>column.labelProperty</code> from group.
-* <code>column.cellRenderer</code> is the costm renderer for a cell. It can be a React element or a function/class component.
+* <code>column.cellRenderer</code> is the custom renderer for a cell. It can be a React element or a function/class component.
 
 * <code>props.groupRenderer</code> is the default renderer of a cell, which may be overridden on a per column basis. The default value of <code>props.groupRenderer</code> is <code>DefaultGroupRenderer</code> that renders <code>column.labelProperty</code> from group.
 
