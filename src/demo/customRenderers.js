@@ -1,8 +1,7 @@
 import React, {Component} from 'react';
-import { DefaultItemRenderer } from '../components/renderers';
+import {DefaultItemRenderer} from '../components/renderers';
 
 export class customItemRenderer extends DefaultItemRenderer {
-
   getBackgroundGradient() {
     return this.getGradientColor();
   }
@@ -28,4 +27,16 @@ export function customGroupRenderer(props) {
       Custom {group.title}
     </span>
   );
+}
+
+export class CustomCellRenderer extends React.Component {
+  render() {
+    return <span>{this.props.group.description}</span>;
+  }
+}
+
+export class CustomColumnHeaderRenderer extends React.Component {
+  render() {
+    return <span>Description</span>;
+  }
 }

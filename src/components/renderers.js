@@ -72,7 +72,7 @@ export class DefaultItemRenderer extends React.Component {
    * Create a linear gradient using the base color(calls getGradientColor) and a color obtained adjusting
    * the brightness of that color using getGradientBrightness(). The default order of the colors is
    * [brighter color, color]; this order can be reversed if getReverseDirection() is true.
-   * 
+   *
    * By default, the background of an item uses a gradient, this method should be overriden if this behaviour is not wanted.
    * @returns {string} linear gradient
    */
@@ -87,7 +87,7 @@ export class DefaultItemRenderer extends React.Component {
       colors.reverse();
     }
 
-    return ('linear-gradient(' + colors[0] + ' ' + this.getGradientStop() + '%, ' + colors[1] + ')');
+    return 'linear-gradient(' + colors[0] + ' ' + this.getGradientStop() + '%, ' + colors[1] + ')';
   }
 
   /**
@@ -101,7 +101,7 @@ export class DefaultItemRenderer extends React.Component {
       ...this.props.style,
       height: itemHeight,
       background: this.getBackgroundGradient()
-    }
+    };
   }
 
   /**
@@ -124,7 +124,10 @@ export class DefaultItemRenderer extends React.Component {
 
   render() {
     return (
-      <span className={this.getClassName()} style={this.getStyle()} title={this.props.item.tooltip ? this.props.item.tooltip : ""}>
+      <span
+        className={this.getClassName()}
+        style={this.getStyle()}
+        title={this.props.item.tooltip ? this.props.item.tooltip : ''}>
         <span className="rct9k-item-renderer-inner">{this.getTitle()}</span>
       </span>
     );
@@ -134,17 +137,42 @@ export class DefaultItemRenderer extends React.Component {
 /**
  * Default group (row) renderer class
  * @param {object} props - Component props
+ * @param {string} props.labelProperty - The key of the data from group that should be rendered
  * @param {object} props.group - The group to be rendered
- * @param {string} props.group.title - The group's title
  * @param {string} props.group.id - The group's id
- * @param {?...object} props.rest - Any other arguments for the span tag
  */
-export const DefaultGroupRenderer = props => {
-  const {group, ...rest} = props;
+export class DefaultGroupRenderer extends React.Component {
+  /**
+   * Returns the label of the cell.
+   */
+  getLabel() {
+    return this.props.group[this.props.labelProperty];
+  }
 
-  return (
-    <span data-group-index={group.id} {...rest}>
-      <span>{group.title}</span>
-    </span>
-  );
-};
+  render() {
+    return (
+      <span data-group-index={this.props.group.id}>
+        <span>{this.getLabel()}</span>
+      </span>
+    );
+  }
+}
+
+/**
+ * Default renderer for column header.
+ * @param {object} props - Component props
+ * @param {object} props.column - The properties of the column
+ * @param {string} props.column.headerLabel - The header's label
+ */
+export class DefaultColumnHeaderRenderer extends React.Component {
+  /**
+   * Returns the label of the header.
+   */
+  getLabel() {
+    return this.props.column ? this.props.column.headerLabel : '';
+  }
+
+  render() {
+    return <span>{this.getLabel()}</span>;
+  }
+}

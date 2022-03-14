@@ -45,7 +45,7 @@ TBA
 
 # Props Summary
 
-See http://bhp-react-timeline-9k.s3-website-ap-southeast-2.amazonaws.com/docs for detailed docs
+See http://react-timeline-9000.s3-website-ap-southeast-2.amazonaws.com/docs/ for detailed docs
 
 ## Props
 | Name               | Default     | Description                                                                                                                                              |
@@ -65,6 +65,7 @@ See http://bhp-react-timeline-9k.s3-website-ap-southeast-2.amazonaws.com/docs fo
 | groupRenderer      |             |                                                                                                                                                          |
 | shallowUpdateCheck | False       | If true timeline will try to minimize re-renders . Set to false if items don't show up/update on prop change                                             |
 | forceRedrawFunc  | () => False | Function called when `shallowUpdateCheck`==true. If returns true the timeline will be redrawn. If false the library will decide if redrawing is required |
+| useMoment        | True        | If true timeline will use moment for dates (including for items and rowLayers); otherwise the type for dates is number |
 
 ## Data
 | Name             |

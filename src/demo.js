@@ -5,9 +5,14 @@ import moment from 'moment';
 import _ from 'lodash';
 
 import Timeline from './timeline';
-import {customItemRenderer, customGroupRenderer} from 'demo/customRenderers';
+import {
+  customItemRenderer,
+  customGroupRenderer,
+  CustomCellRenderer,
+  CustomColumnHeaderRenderer
+} from './demo/customRenderers';
 
-import {Layout, Form, InputNumber, Button, DatePicker, Checkbox, Switch} from 'antd';
+import {Layout, Form, InputNumber, Button, DatePicker, Checkbox, Switch, Icon} from 'antd';
 import 'antd/dist/antd.css';
 import './style.css';
 
@@ -38,7 +43,9 @@ export default class DemoTimeline extends Component {
       endDate,
       message: '',
       timelineMode: TIMELINE_MODES.SELECT | TIMELINE_MODES.DRAG | TIMELINE_MODES.RESIZE,
-      itemStyle: {}
+      itemStyle: {},
+      multipleColumnsMode: false,
+      useMoment: true
     };
     this.reRender = this.reRender.bind(this);
     this.zoomIn = this.zoomIn.bind(this);
@@ -47,24 +54,26 @@ export default class DemoTimeline extends Component {
     this.toggleSelectable = this.toggleSelectable.bind(this);
     this.toggleDraggable = this.toggleDraggable.bind(this);
     this.toggleResizable = this.toggleResizable.bind(this);
+    this.toggleUseMoment = this.toggleUseMoment.bind(this);
+    this.toggleMultipleColumnsMode = this.toggleMultipleColumnsMode.bind(this);
   }
 
   componentWillMount() {
     this.reRender();
   }
 
-  reRender() {
+  reRender(useMoment = this.state.useMoment) {
     const list = [];
     const groups = [];
     const {snap} = this.state;
 
     this.key = 0;
     for (let i = 0; i < this.state.rows; i++) {
-      groups.push({id: i, title: `Row ${i}`});
+      groups.push({id: i, title: `Row ${i}`, description: `Description for row ${i}`});
       for (let j = 0; j < this.state.items_per_row; j++) {
         this.key += 1;
         const colorIndex = (i + j) % (COLORS.length + 1);
-        const color = colorIndex != (COLORS.length + 1) ? COLORS[colorIndex] : '';
+        const color = colorIndex != COLORS.length + 1 ? COLORS[colorIndex] : '';
         const gradientStop = Math.random() * 100;
         let glowOnHover = false;
         if ((i + j) % 3 === 0) {
@@ -72,10 +81,12 @@ export default class DemoTimeline extends Component {
         }
         const duration = ITEM_DURATIONS[Math.floor(Math.random() * ITEM_DURATIONS.length)];
         // let start = last_moment;
-        let start = moment(Math.floor(
-          Math.random() * (this.state.endDate.valueOf() - this.state.startDate.valueOf()) +
-            this.state.startDate.valueOf()
-        ));
+        let start = moment(
+          Math.floor(
+            Math.random() * (this.state.endDate.valueOf() - this.state.startDate.valueOf()) +
+              this.state.startDate.valueOf()
+          )
+        );
         let end = start.clone().add(duration);
 
         // Round to the nearest snap distance
@@ -89,8 +100,8 @@ export default class DemoTimeline extends Component {
           title: duration.humanize(),
           color,
           row: i,
-          start,
-          end,
+          start: useMoment ? start : start.valueOf(),
+          end: useMoment ? end : end.valueOf(),
           glowOnHover,
           gradientStop
         });
@@ -99,10 +110,36 @@ export default class DemoTimeline extends Component {
 
     const itemStyle = {
       opacity: 0.8
-    }
+    };
+
+    const tableColumns = [
+      // default renderers
+      {
+        width: 100,
+        headerLabel: 'Title',
+        labelProperty: 'title'
+      },
+      // custom renderers: react elements
+      {
+        width: 250,
+        cellRenderer: <Checkbox>Checkbox</Checkbox>,
+        headerRenderer: (
+          <span>
+            <Icon type="check-circle" /> Custom check
+          </span>
+        )
+      },
+      // custom renderers: class component
+      {
+        width: 100,
+        headerRenderer: CustomColumnHeaderRenderer,
+        cellRenderer: CustomCellRenderer
+      }
+    ];
+
     // this.state = {selectedItems: [11, 12], groups, items: list};
     this.forceUpdate();
-    this.setState({items: list, groups, itemStyle});
+    this.setState({items: list, groups, tableColumns, useMoment, itemStyle});
   }
 
   handleRowClick = (e, rowNumber, clickedTime, snappedClickedTime) => {
@@ -138,6 +175,14 @@ export default class DemoTimeline extends Component {
     const {timelineMode} = this.state;
     let newMode = timelineMode ^ TIMELINE_MODES.RESIZE;
     this.setState({timelineMode: newMode, message: 'Timeline mode change: ' + timelineMode + ' -> ' + newMode});
+  }
+  toggleUseMoment() {
+    const {useMoment} = this.state;
+    this.reRender(!useMoment);
+  }
+  toggleMultipleColumnsMode() {
+    const {multipleColumnsMode} = this.state;
+    this.setState({multipleColumnsMode: !multipleColumnsMode});
   }
   handleItemClick = (e, key) => {
     const message = `Item Click ${key}`;
@@ -209,7 +254,7 @@ export default class DemoTimeline extends Component {
         });
         if (i) {
           item = i;
-          item.title = moment.duration(item.end.diff(item.start)).humanize();
+          item.title = moment.duration(moment(item.end).diff(moment(item.start))).humanize();
         }
       });
     }
@@ -258,7 +303,10 @@ export default class DemoTimeline extends Component {
       groups,
       message,
       useCustomRenderers,
-      timelineMode
+      timelineMode,
+      useMoment,
+      multipleColumnsMode,
+      tableColumns
     } = this.state;
     const rangeValue = [startDate, endDate];
 
@@ -285,8 +333,13 @@ export default class DemoTimeline extends Component {
         }
 
         rowLayers.push({
-          start: curDate.clone(),
-          end: curDate.clone().add(bandDuration, 'days'),
+          start: this.state.useMoment ? curDate.clone() : curDate.valueOf(),
+          end: this.state.useMoment
+            ? curDate.clone().add(bandDuration, 'days')
+            : curDate
+                .clone()
+                .add(bandDuration, 'days')
+                .valueOf(),
           style: {backgroundColor: color, opacity: '0.3'},
           rowNumber: i
         });
@@ -295,88 +348,98 @@ export default class DemoTimeline extends Component {
     }
 
     return (
-      <Layout className="layout demo-layout">
-        <Layout.Content className="demo-layout-content">
-          <div style={{margin: 24}}>
-            <Form layout="inline">
-              <Form.Item label="No rows">
-                <InputNumber value={rows} onChange={e => this.setState({rows: e})} />
-              </Form.Item>
-              <Form.Item label="No items per row">
-                <InputNumber value={items_per_row} onChange={e => this.setState({items_per_row: e})} />
-              </Form.Item>
-              <Form.Item label="Snap (min)">
-                <InputNumber value={snap} onChange={e => this.setState({snap: e})} />
-              </Form.Item>
-              <Form.Item label="Date Range">
-                <DatePicker.RangePicker
-                  allowClear={false}
-                  value={rangeValue}
-                  showTime
-                  onChange={e => {
-                    this.setState({startDate: e[0], endDate: e[1]}, () => this.reRender());
-                  }}
-                />
-              </Form.Item>
-              <Form.Item>
-                <Button type="primary" onClick={() => this.reRender()}>
-                  Regenerate
-                </Button>
-              </Form.Item>
-              <Form.Item>
-                <Button onClick={this.zoomIn}>Zoom in</Button>
-              </Form.Item>
-              <Form.Item>
-                <Button onClick={this.zoomOut}>Zoom out</Button>
-              </Form.Item>
-              <Form.Item label="Custom Renderers">
-                <Switch onChange={this.toggleCustomRenderers} />
-              </Form.Item>
-              <Form.Item>
-                <Checkbox onChange={this.toggleSelectable} checked={selectable}>
-                  Enable selecting
-                </Checkbox>
-              </Form.Item>
-              <Form.Item>
-                <Checkbox onChange={this.toggleDraggable} checked={draggable}>
-                  Enable dragging
-                </Checkbox>
-              </Form.Item>
-              <Form.Item>
-                <Checkbox onChange={this.toggleResizable} checked={resizeable}>
-                  Enable resizing
-                </Checkbox>
-              </Form.Item>
-            </Form>
-            <div>
-              <span>Debug: </span>
-              {message}
-            </div>
+      <div className="demo">
+        <div style={{margin: 24}}>
+          <Form layout="inline">
+            <Form.Item label="No rows">
+              <InputNumber value={rows} onChange={e => this.setState({rows: e})} />
+            </Form.Item>
+            <Form.Item label="No items per row">
+              <InputNumber value={items_per_row} onChange={e => this.setState({items_per_row: e})} />
+            </Form.Item>
+            <Form.Item label="Snap (min)">
+              <InputNumber value={snap} onChange={e => this.setState({snap: e})} />
+            </Form.Item>
+            <Form.Item label="Date Range">
+              <DatePicker.RangePicker
+                allowClear={false}
+                value={rangeValue}
+                showTime
+                onChange={e => {
+                  this.setState({startDate: e[0], endDate: e[1]}, () => this.reRender());
+                }}
+              />
+            </Form.Item>
+            <Form.Item>
+              <Button type="primary" onClick={() => this.reRender()}>
+                Regenerate
+              </Button>
+            </Form.Item>
+            <Form.Item>
+              <Button onClick={this.zoomIn}>Zoom in</Button>
+            </Form.Item>
+            <Form.Item>
+              <Button onClick={this.zoomOut}>Zoom out</Button>
+            </Form.Item>
+            <Form.Item label="Custom Renderers">
+              <Switch onChange={this.toggleCustomRenderers} />
+            </Form.Item>
+            <Form.Item>
+              <Checkbox onChange={this.toggleSelectable} checked={selectable}>
+                Enable selecting
+              </Checkbox>
+            </Form.Item>
+            <Form.Item>
+              <Checkbox onChange={this.toggleDraggable} checked={draggable}>
+                Enable dragging
+              </Checkbox>
+            </Form.Item>
+            <Form.Item>
+              <Checkbox onChange={this.toggleResizable} checked={resizeable}>
+                Enable resizing
+              </Checkbox>
+            </Form.Item>
+            <Form.Item>
+              <Checkbox onChange={this.toggleUseMoment} checked={useMoment}>
+                Use moment for dates
+              </Checkbox>
+            </Form.Item>
+            <Form.Item>
+              <Checkbox onChange={this.toggleMultipleColumnsMode} checked={multipleColumnsMode}>
+                Multiple columns mode
+              </Checkbox>
+            </Form.Item>
+          </Form>
+          <div>
+            <span>Debug: </span>
+            {message}
           </div>
-          <Timeline
-            shallowUpdateCheck
-            items={items}
-            itemStyle={this.state.itemStyle}
-            groups={groups}
-            startDate={startDate}
-            endDate={endDate}
-            rowLayers={rowLayers}
-            selectedItems={selectedItems}
-            timelineMode={timelineMode}
-            snapMinutes={snap}
-            onItemClick={this.handleItemClick}
-            onItemDoubleClick={this.handleItemDoubleClick}
-            onItemContextClick={this.handleItemContextClick}
-            onInteraction={this.handleInteraction}
-            onRowClick={this.handleRowClick}
-            onRowContextClick={this.handleRowContextClick}
-            onRowDoubleClick={this.handleRowDoubleClick}
-            itemRenderer={useCustomRenderers ? customItemRenderer : undefined}
-            groupRenderer={useCustomRenderers ? customGroupRenderer : undefined}
-            groupTitleRenderer={useCustomRenderers ? () => <div>Group title</div> : undefined}
-          />
-        </Layout.Content>
-      </Layout>
+        </div>
+        <Timeline
+          shallowUpdateCheck
+          items={items}
+          itemStyle={this.state.itemStyle}
+          groups={groups}
+          useMoment={useMoment}
+          startDate={useMoment ? startDate : startDate.valueOf()}
+          endDate={useMoment ? endDate : endDate.valueOf()}
+          tableColumns={multipleColumnsMode ? tableColumns : []}
+          rowLayers={rowLayers}
+          selectedItems={selectedItems}
+          timelineMode={timelineMode}
+          snapMinutes={snap}
+          onItemClick={this.handleItemClick}
+          onItemDoubleClick={this.handleItemDoubleClick}
+          onItemContextClick={this.handleItemContextClick}
+          onInteraction={this.handleInteraction}
+          onRowClick={this.handleRowClick}
+          onRowContextClick={this.handleRowContextClick}
+          onRowDoubleClick={this.handleRowDoubleClick}
+          itemRenderer={useCustomRenderers ? customItemRenderer : undefined}
+          groupRenderer={useCustomRenderers ? customGroupRenderer : undefined}
+          groupTitleRenderer={useCustomRenderers ? () => <div>Group title</div> : undefined}
+        />
+      </div>
     );
   }
 }
