@@ -2,6 +2,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 const Color = require('color');
 
+const DEFAULT_ITEM_RENDERER_CLS = 'rct9k-item-renderer';
 const ITEM_GLOW_CLS = 'rct9k-item-glow';
 
 /**
@@ -39,7 +40,7 @@ export class DefaultItemRenderer extends React.Component {
    * @default DEFAULT_COLOR
    */
   getGradientColor() {
-    return this.props.item.color ? this.props.item.color : DEFAULT_COLOR;
+    return this.props.item.color || DEFAULT_COLOR;
   }
 
   /**
@@ -48,7 +49,7 @@ export class DefaultItemRenderer extends React.Component {
    * @default DEFAULT_GRADIENT_BRIGHTNESS
    */
   getGradientBrightness() {
-    return this.props.item.gradientBrightness ? this.props.item.gradientBrightness : DEFAULT_GRADIENT_BRIGHTNESS;
+    return this.props.item.gradientBrightness || DEFAULT_GRADIENT_BRIGHTNESS;
   }
 
   /**
@@ -56,7 +57,7 @@ export class DefaultItemRenderer extends React.Component {
    * @default DEFAULT_GRADIENT_STOP
    */
   getGradientStop() {
-    return this.props.item.gradientStop ? this.props.item.gradientStop : DEFAULT_GRADIENT_STOP;
+    return this.props.item.gradientStop || DEFAULT_GRADIENT_STOP;
   }
 
   /**
@@ -65,7 +66,7 @@ export class DefaultItemRenderer extends React.Component {
    * @default DEFAULT_REVERSE_DIRECTION
    */
   getReverseDirection() {
-    return this.props.item.reverseDirection ? this.props.item.reverseDirection : DEFAULT_REVERSE_DIRECTION;
+    return this.props.item.reverseDirection || DEFAULT_REVERSE_DIRECTION;
   }
 
   /**
@@ -91,28 +92,36 @@ export class DefaultItemRenderer extends React.Component {
   }
 
   /**
+   * Returns the height of an item.
+   */
+  getItemHeight() {
+    // subtract 10 because of the margin (see rct9k-items-inner class in style.css)
+    return this.props.itemHeight - 10 || 'auto';
+  }
+
+  /**
    * Returns the style of the item.
    */
   getStyle() {
-    // subtract 10 because of the margin (see rct9k-items-inner class in style.css)
-    const itemHeight = this.props.itemHeight ? this.props.itemHeight - 10 : 'auto';
-
     return {
       ...this.props.style,
-      height: itemHeight,
+      height: this.getItemHeight(),
       background: this.getBackgroundGradient()
     };
+  }
+
+  /**
+   * Returns a css class used to apply glow on item hover.
+   */
+  getGlowOnHover() {
+    return this.props.item.glowOnHover ? ITEM_GLOW_CLS : '';
   }
 
   /**
    * Returns the css classes applied on the item.
    */
   getClassName() {
-    let className = this.props.className;
-    if (this.props.item.glowOnHover) {
-      className += ' ' + ITEM_GLOW_CLS;
-    }
-    return className;
+    return DEFAULT_ITEM_RENDERER_CLS + ' ' + this.props.className + ' ' + this.getGlowOnHover();
   }
 
   /**
@@ -122,12 +131,16 @@ export class DefaultItemRenderer extends React.Component {
     return this.props.item.title;
   }
 
+  /**
+   * Returns the text rendered in the tooltip.
+   */
+  getTooltip() {
+    return this.props.item.tooltip;
+  }
+
   render() {
     return (
-      <span
-        className={this.getClassName()}
-        style={this.getStyle()}
-        title={this.props.item.tooltip ? this.props.item.tooltip : ''}>
+      <span className={this.getClassName()} style={this.getStyle()} title={this.getTooltip()}>
         <span className="rct9k-item-renderer-inner">{this.getTitle()}</span>
       </span>
     );

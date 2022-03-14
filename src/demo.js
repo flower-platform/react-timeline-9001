@@ -76,8 +76,10 @@ export default class DemoTimeline extends Component {
         const color = colorIndex != COLORS.length + 1 ? COLORS[colorIndex] : '';
         const gradientStop = Math.random() * 100;
         let glowOnHover = false;
+        let tooltip;
         if ((i + j) % 3 === 0) {
           glowOnHover = true;
+          tooltip = 'Item with key=' + this.key;
         }
         const duration = ITEM_DURATIONS[Math.floor(Math.random() * ITEM_DURATIONS.length)];
         // let start = last_moment;
@@ -103,13 +105,14 @@ export default class DemoTimeline extends Component {
           start: useMoment ? start : start.valueOf(),
           end: useMoment ? end : end.valueOf(),
           glowOnHover,
-          gradientStop
+          gradientStop,
+          tooltip
         });
       }
     }
 
     const itemStyle = {
-      opacity: 0.8
+      opacity: 0.9
     };
 
     const tableColumns = [

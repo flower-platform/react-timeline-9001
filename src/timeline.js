@@ -155,10 +155,7 @@ export default class Timeline extends React.Component {
     onItemHover() {},
     onItemLeave() {},
     interactOptions: {},
-    itemStyle: {
-      opacity: 1,
-      borderRadius: 2
-    },
+    itemStyle: {},
     useMoment: true,
     tableColumns: []
   };

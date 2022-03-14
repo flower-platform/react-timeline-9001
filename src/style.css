@@ -19,7 +19,6 @@
   position: absolute;
   display: flex;
   overflow: visible;
-  overflow: hidden;
   z-index: 3;
 }
 .rct9k-items-inner {
@@ -36,6 +35,13 @@
   width: 2px;
   background: red;
   pointer-events: none;
+}
+.rct9k-item-renderer {
+  opacity: 0.8;
+  border-color: darkgrey;
+  border-width: 1px;
+  border-radius: 3px;
+  border-style: solid;
 }
 .rct9k-item-renderer-inner {
   pointer-events: none;
