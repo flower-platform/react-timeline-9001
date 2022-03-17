@@ -6,7 +6,7 @@ A single style or a single className can be configured for all the items using <
 
 ## Background
 
-The renderer used a gradient as a background. The gradient is configured using two colors: the base color, <code>props.item.color</code>, and for the second color we use <code>props.item.gradientBrightness</code> to lighten the base color. <code>props.item.gradientStop</code> is used to indicate the point when the gradient transitions from the first color to the second color and it is a value between 0 and 100. The default order of the colors is [lighter color, base color], but it can be reverse using <code>props.item.reverseDirection</code>.
+The renderer uses a gradient as a background. The gradient is configured using two colors: the base color, <code>props.item.color</code>, and for the second color we use <code>props.item.gradientBrightness</code> to lighten the base color. <code>props.item.gradientStop</code> is used to indicate the point when the gradient transitions from the first color to the second color and it is a value between 0 and 100. The default order of the colors is [lighter color, base color], but it can be reversed using <code>props.item.reverseDirection</code>.
 
 If the gradient is not wanted, <code>getBackgroundGradient</code> function(see below) can be overriden. In the image below there are two cases:
 1. <code>getBackgroundGradient</code> function is overriden and returns <code>props.item.color</code>
@@ -44,13 +44,29 @@ Create a linear gradient using the base color(calls getGradientColor) and a colo
 
 By default, the background of an item uses a gradient, this method should be overriden if this behaviour is not wanted.
 
+### getGlowOnHover()
+
+Returns a css class used to apply glow on item hover.
+
+### getItemHeight()
+
+Returns the height of an item.
+
 ### getStyle()
 
 Returns the style applied to the item.
 
+### getTextColor()
+
+Returns the color of the text. When darker colors are used for the items, the text is not visible. This method returns 'white' when props.item.color is darker, otherwise returns black.
+
 ### getTitle()
 
 Returns the title of the item.
+
+### getTooltip()
+
+Returns the text rendered in the tooltip.
 
 ### getClassName()
 

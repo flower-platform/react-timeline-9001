@@ -10,7 +10,7 @@ const ITEM_GLOW_CLS = 'rct9k-item-glow';
  * defaultProps couldn't be used in this case because it doesn't merge the value
  * instead it replaces the value.
  */
-const DEFAULT_COLOR = '#2185d0';
+const DEFAULT_COLOR = '#3791D4';
 const DEFAULT_GRADIENT_BRIGHTNESS = 45;
 const DEFAULT_GRADIENT_STOP = 40;
 const DEFAULT_REVERSE_DIRECTION = false;
@@ -22,6 +22,7 @@ const DEFAULT_REVERSE_DIRECTION = false;
  * @param {object} props.item - The item to be rendered
  * @param {string} props.item.title - The item's title
  * @param {string} props.item.color - The color used for gradient
+ * @param {string} props.item.tooltip - The item's tooltip
  * @param {number} props.item.gradientBrightness - Percentage use to lighten the color; the resulted color is used in gradient
  * @param {number} props.item.gradientStop - Percentage; where the first gradient color stops
  * @param {boolean} props.item.reverseDirection - If gradient colors should be reversed
@@ -70,6 +71,15 @@ export class DefaultItemRenderer extends React.Component {
   }
 
   /**
+   * Returns the color of the text. When darker colors are used for the items,
+   * the text is not visible. This method returns 'white' when props.item.color is darker,
+   * otherwise returns black.
+   */
+  getTextColor() {
+    return Color(this.getGradientColor()).light() ? 'black' : 'white';
+  }
+
+  /**
    * Create a linear gradient using the base color(calls getGradientColor) and a color obtained adjusting
    * the brightness of that color using getGradientBrightness(). The default order of the colors is
    * [brighter color, color]; this order can be reversed if getReverseDirection() is true.
@@ -105,6 +115,7 @@ export class DefaultItemRenderer extends React.Component {
   getStyle() {
     return {
       ...this.props.style,
+      color: this.getTextColor(),
       height: this.getItemHeight(),
       background: this.getBackgroundGradient()
     };

@@ -43,7 +43,6 @@ export default class DemoTimeline extends Component {
       endDate,
       message: '',
       timelineMode: TIMELINE_MODES.SELECT | TIMELINE_MODES.DRAG | TIMELINE_MODES.RESIZE,
-      itemStyle: {},
       multipleColumnsMode: false,
       useMoment: true
     };
@@ -111,10 +110,6 @@ export default class DemoTimeline extends Component {
       }
     }
 
-    const itemStyle = {
-      opacity: 0.9
-    };
-
     const tableColumns = [
       // default renderers
       {
@@ -142,7 +137,7 @@ export default class DemoTimeline extends Component {
 
     // this.state = {selectedItems: [11, 12], groups, items: list};
     this.forceUpdate();
-    this.setState({items: list, groups, tableColumns, useMoment, itemStyle});
+    this.setState({items: list, groups, tableColumns, useMoment});
   }
 
   handleRowClick = (e, rowNumber, clickedTime, snappedClickedTime) => {
@@ -421,7 +416,6 @@ export default class DemoTimeline extends Component {
         <Timeline
           shallowUpdateCheck
           items={items}
-          itemStyle={this.state.itemStyle}
           groups={groups}
           useMoment={useMoment}
           startDate={useMoment ? startDate : startDate.valueOf()}

@@ -23,6 +23,7 @@
 }
 .rct9k-items-inner {
   display: flex;
+  padding: 3px;
   margin: 5px 0;
   width: 100%;
   white-space: nowrap;
@@ -38,10 +39,8 @@
 }
 .rct9k-item-renderer {
   opacity: 0.8;
-  border-color: darkgrey;
-  border-width: 1px;
+  border: darkgrey solid 1px;
   border-radius: 3px;
-  border-style: solid;
 }
 .rct9k-item-renderer-inner {
   pointer-events: none;
@@ -164,4 +163,10 @@
   height: 100%;
   display: flex;
   flex-direction: column;
+}
+
+.story-custom-item-class {
+  opacity: 1;
+  border: purple 4px solid;
+  border-radius: 0;
 }
