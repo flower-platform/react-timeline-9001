@@ -115,17 +115,19 @@ See http://react-timeline-9000.s3-website-ap-southeast-2.amazonaws.com/docs/ for
 | selectedItems    |
 
 ## Callbacks
-| Name              |
-| ----------------  |
-| onItemClick       |
-| onItemDoubleClick |
-| onItemContext     |
-| onInteraction     |
-| onRowClick        |
-| onRowContext      |
-| onRowDoubleClick  |
-| onItemHover       |
-| onItemLeave       |
+| Name                  |
+| ----------------      |
+| onItemClick           |
+| onItemDoubleClick     |
+| onItemContext         |
+| onInteraction         |
+| onRowClick            |
+| onRowContext          |
+| onRowDoubleClick      |
+| onItemHover           |
+| onItemLeave           |
+| onGroupRowClick       |
+| onGroupRowDoubleClick |
 
 # Styling
 * View `src/style.css` for styling examples.
