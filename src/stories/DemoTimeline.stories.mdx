@@ -1,0 +1,21 @@
+import { Canvas, Meta, Story, Props, ArgsTable, Description } from '@storybook/addon-docs';
+import moment from 'moment';
+
+import DemoTimeline from '../demo';
+import Timeline from '../timeline';
+import '../style.css'
+
+<Meta
+  title="Timeline/Demo"
+  component={Timeline}/>
+
+export const DemoTemplate = () => <DemoTimeline/>;
+
+<Canvas>
+  <Story name="DemoTimeline">
+    {DemoTemplate.bind({})}
+   </Story>
+</Canvas>
+
+## Timeline props
+<ArgsTable of={Timeline} />

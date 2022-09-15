@@ -1,0 +1,227 @@
+import { Canvas, Meta, Story, ArgsTable, Markdown } from '@storybook/addon-docs';
+import moment from 'moment';
+import DemoTimeline from '../demo';
+import Timeline from '../timeline';
+import '../style.css';
+
+<Meta
+  title="Timeline/DateTypes"
+  component={Timeline}
+/>
+
+export const tasksWithMoment = [
+  {key: 0, row: 0, title: 'T1', color: 'red', start: moment('2018-09-20 8:00'), end: moment('2018-09-20 9:00')},
+  {key: 1, row: 0, title: 'T2', color: 'red', start: moment('2018-09-20 18:00'), end: moment('2018-09-20 19:00')},
+  {key: 2, row: 0, title: 'T3', color: 'red', start: moment('2018-09-20 20:00'), end: moment('2018-09-20 21:00')},
+  {key: 3, row: 1, title: 'T1', color: 'yellow', start: moment('2018-09-20 7:00'), end: moment('2018-09-20 8:00')},
+  {key: 4, row: 1, title: 'T2', color: 'yellow', start: moment('2018-09-20 17:00'), end: moment('2018-09-20 20:00')},
+  {key: 5, row: 1, title: 'T3', color: 'yellow', start: moment('2018-09-20 19:00'), end: moment('2018-09-20 20:00')},
+  {key: 6, row: 2, title: 'T1', color: 'blue', start: moment('2018-09-20 8:00'), end: moment('2018-09-20 10:00')},
+  {key: 7, row: 2, title: 'T2', color: 'blue', start: moment('2018-09-20 18:00'), end: moment('2018-09-20 20:00')},
+  {key: 8, row: 2, title: 'T3', color: 'blue', start: moment('2018-09-20 20:00'), end: moment('2018-09-20 21:00')}
+];
+
+export const TimelineTemplate = (args) => {
+  let {startDate, endDate, ...otherArgs} = args;
+  return <Timeline groups={[
+            {id: 0, title: 'John Doe'},
+            {id: 1, title: 'Alex Randal'},
+            {id: 2, title: 'Mary Danton'}
+          ]}
+          startDate={otherArgs.useMoment ? moment(startDate) : startDate}
+          endDate={otherArgs.useMoment ? moment(endDate) : endDate}
+          {...otherArgs}
+  />;
+};
+
+# Date types
+
+The Timeline was originally designed to handle date/times w/ [Moment.js](https://momentjs.com/),
+a popular lib. However there are 2 drawbacks. **#1**: even the authors/maintainers of Moment.js don't
+quite [recomment](https://momentjs.com/docs/) it any more for use with new projects. The major
+complain seems to be the mutability of "moment" objects. **#2**: "moment" objects are not friendly with 
+[Redux](https://redux.js.org/), a popular framework for state management. Many folk use React for
+state management. And not being able to store the state that feeds the Timeline is a big drawback, since
+additional conversions are necessary.
+
+The **property ```useMoment```** to the rescue! If ```false```, then you when you "talk" date/times to the Timeline, then you use
+plain timestamps (i.e. number of millis, e.g. ```new Date().valueOf()```). And this everywhere where
+a date/time is needed (e.g. for an item, for global start/end, etc.). This is the **recommended** way to
+go, especially if you use Redux. But be aware that this property is by default ```true```, in order
+to maintain backward compatibility.
+
+NOTE: the Timeline still uses "moment" internally. And this because it was quicker to refactor this way.
+This may change in the future, if we find reasons and time to refactor more.  
+
+## Props
+
+<ArgsTable of={Timeline} include={["useMoment", "startDate", "endDate", "items", "rowLayers"]}  />
+
+Default date fields in an item:
+
+* start - moment object or date in milliseconds(number) - start of an item
+* end - moment object or date in milliseconds(number) - end of an item
+
+Default date fields in a row layer:
+
+* start - moment object or date in milliseconds(number) - start of a row layer
+* end - moment object or date in milliseconds(number) - end of a row layer
+
+## Functions
+
+> **WARNING** All operations involving the dates mentioned above should pass through the following functions. It is forbidden to manipulate the dates from props directly. These function can be overriden in order to use other fields or for additional logic. 
+
+### getStartDate()
+
+It returns the start date of the timeline as moment.
+
+### getEndDate()
+
+It returns the end date of the timeline as moment.
+
+### getStartFromItem(item) 
+
+It returns the start date of an item as moment.
+
+Params:
+
+| Name      | Type     | Description                                                 |
+|-----------|----------|-------------------------------------------------------------|
+| item      | Object   | Item that will be rendered in the grid.                     |
+
+### getEndFromItem(item) 
+
+It returns the end date of an item as moment.
+
+Params:
+
+| Name      | Type     | Description                                                 |
+|-----------|----------|-------------------------------------------------------------|
+| item      | Object   | Item that will be rendered in the grid.                     |
+
+### setStartToItem(item, newDateAsMoment)
+
+Sets the start of the item to newDateAsMoment converted to moment or milliseconds depending on props.useMoment.
+
+Params:
+
+| Name            | Type     | Description                                                 |
+|-----------------|----------|-------------------------------------------------------------|
+| item            | Object   | Item that will be rendered in the grid.                     |
+| newDateAsMoment | Object   | The new value of the start date as moment.                  |
+
+### setEndToItem(item, newDateAsMoment)
+
+Sets the end of the item to newDateAsMoment converted to moment or milliseconds depending on props.useMoment.
+
+Params:
+
+| Name            | Type     | Description                                                 |
+|-----------------|----------|-------------------------------------------------------------|
+| item            | Object   | Item that will be rendered in the grid.                     |
+| newDateAsMoment | Object   | The new value of the end date as moment.                    |
+
+### getStartFromRowLayer(layer) 
+
+It returns the start date of a row layer as moment.
+
+Params:
+
+| Name      | Type     | Description                                                 |
+|-----------|----------|-------------------------------------------------------------|
+| layer     | Object   | Row layer that will be rendered in the grid.                |
+
+### getEndFromRowLayer(layer) 
+
+It returns the end date of a row layer as moment.
+
+Params:
+
+| Name      | Type     | Description                                                 |
+|-----------|----------|-------------------------------------------------------------|
+| layer     | Object   | Row layer that will be rendered in the grid.                |
+
+### setStartToRowLayer(layer, newDateAsMoment)
+
+Sets the start of the layer to newDateAsMoment converted to moment or milliseconds depending on props.useMoment.
+
+Params:
+
+| Name            | Type     | Description                                                 |
+|-----------------|----------|-------------------------------------------------------------|
+| layer           | Object   | Row layer that will be rendered in the grid.                |
+| newDateAsMoment | Object   | The new value of the end date as moment.                    |
+
+### setEndToRowLayer(layer, newDateAsMoment)
+
+Sets the end of the layer to newDateAsMoment converted to moment or milliseconds depending on props.useMoment.
+
+Params:
+
+| Name            | Type     | Description                                                 |
+|-----------------|----------|-------------------------------------------------------------|
+| layer           | Object   | Row layer that will be rendered in the grid.                |
+| newDateAsMoment | Object   | The new value of the end date as moment.                    |
+
+## Utils functions
+
+### convertDateToMoment(date, useMoment)
+
+Returns the date as moment object. If useMoment is true, the date is already a moment object. This function is used by all getter functions above.
+
+Params:
+
+| Name       | Type             | Description                                                     |
+|------------|------------------|-----------------------------------------------------------------|
+| date       | Object or number | The date to be converted to moment, it can be already a moment. | 
+| useMoment  | Boolean          | Whether the date is already a moment or should be converted.    |
+
+### convertMomentToDateType(dateAsMoment, useMoment)
+
+Returns the date as moment object if useMoment is true, otherwise returns the date in milliseconds.
+
+Params:
+
+| Name         | Type    | Description                                                             |
+|--------------|---------|-------------------------------------------------------------------------|
+| dateAsMoment | Object  | The new value of the end date as moment.                                | 
+| useMoment    | Boolean | Whether the date returned should be a moment object or in milliseconds. |
+
+## Basic usage without moment
+
+<Canvas>
+  <Story
+    name="Basic usage without moment"
+    args={{
+      startDate: moment('2018-09-20').valueOf(),
+      endDate: moment('2018-09-21').valueOf(),
+      useMoment: false,
+      items: tasksWithMoment.map(t => {
+            return {...t, start: t.start.valueOf(), end: t.end.valueOf()};
+      })
+    }}
+      argTypes={{
+    padding: { table: { disable: true } }
+    }}
+    >
+    {TimelineTemplate.bind({})}
+   </Story>
+</Canvas>
+
+## Basic usage with moment (default)
+
+<Canvas>
+  <Story
+    name="Basic usage with moment"
+    args={{
+      startDate: moment('2018-09-20'),
+      endDate: moment('2018-09-21'),
+      items: tasksWithMoment
+    }}
+          argTypes={{
+    padding: { table: { disable: true } }
+    }}
+    >
+    {TimelineTemplate.bind({})}
+   </Story>
+</Canvas>
