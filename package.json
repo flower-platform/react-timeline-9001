@@ -22,10 +22,6 @@
       "git add"
     ]
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/React9k/react-timeline-9000.git"
-  },
   "keywords": [
     "react",
     "timeline"
@@ -87,6 +83,7 @@
   "dependencies": {
     "@storybook/addon-storysource": "^6.5.12",
     "core-js": "^2.4.0",
+    "esdoc-inject-style-plugin": "^1.0.0",
     "interactjs": "^1.6.2",
     "lodash": "^4.17.19",
     "moment": "^2.22.2",
