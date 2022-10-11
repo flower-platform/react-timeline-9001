@@ -1,5 +1,6 @@
 import { Meta, ArgsTable } from '@storybook/addon-docs';
 import Timeline from '../../timeline';
+import {encodeApiDocURIForSubpath} from '../StorybookUtils';
 
 <Meta title="Features/Use moment/Doc"
   parameters={{
@@ -47,15 +48,15 @@ Default date fields in a **row layer**:
 > **WARNING!**
 > It is **forbidden** to manipulate the dates directly from props. In case you want to modify/override the code
 that involve the dates you should read the documentation from [API Doc](?path=/docs/api-doc--page) for the following functions:
-* Timeline.getStartDate()
-* Timeline.getEndDate()
-* Timeline.getStartFromItem(item)
-* Timeline.getEndFromItem(item)
-* Timeline.setStartToItem(item, newDateAsMoment)
-* Timeline.setEndToItem(item, newDateAsMoment)
-* Timeline.getStartFromRowLayer(layer)
-* Timeline.getEndFromRowLayer(layer)
-* Timeline.setStartToRowLayer(layer, newDateAsMoment)
-* Timeline.setEndToRowLayer(layer, newDateAsMoment)
-* utils: convertDateToMoment(date, useMoment)
-* utils: convertMomentToDateType(dateAsMoment, useMoment)
+* <a href={encodeApiDocURIForSubpath("/class/src/timeline.js~Timeline.html#instance-method-getStartDate")}>Timeline.getStartDate()</a>
+* <a href={encodeApiDocURIForSubpath("/class/src/timeline.js~Timeline.html#instance-method-getEndDate")}>Timeline.getEndDate()</a>
+* <a href={encodeApiDocURIForSubpath("/class/src/timeline.js~Timeline.html#instance-method-getStartFromItem")}>Timeline.getStartFromItem(item)</a>
+* <a href={encodeApiDocURIForSubpath("/class/src/timeline.js~Timeline.html#instance-method-getEndFromItem")}>Timeline.getEndFromItem(item)</a>
+* <a href={encodeApiDocURIForSubpath("/class/src/timeline.js~Timeline.html#instance-method-setStartToItem")}>Timeline.setStartToItem(item, newDateAsMoment)</a>
+* <a href={encodeApiDocURIForSubpath("/class/src/timeline.js~Timeline.html#instance-method-setEndToItem")}>Timeline.setEndToItem(item, newDateAsMoment)</a>
+* <a href={encodeApiDocURIForSubpath("/class/src/timeline.js~Timeline.html#instance-method-getStartFromRowLayer")}>Timeline.getStartFromRowLayer(layer)</a>
+* <a href={encodeApiDocURIForSubpath("/class/src/timeline.js~Timeline.html#instance-method-getEndFromRowLayer")}>Timeline.getEndFromRowLayer(layer)</a>
+* <a href={encodeApiDocURIForSubpath("/class/src/timeline.js~Timeline.html#instance-method-setStartToRowLayer")}>Timeline.setStartToRowLayer(layer, newDateAsMoment)</a>
+* <a href={encodeApiDocURIForSubpath("/class/src/timeline.js~Timeline.html#instance-method-setEndToRowLayer")}>Timeline.setEndToRowLayer(layer, newDateAsMoment)</a>
+* <a href={encodeApiDocURIForSubpath("function/index.html#static-function-convertDateToMoment")}>utils: convertDateToMoment(date, useMoment)</a>
+* <a href={encodeApiDocURIForSubpath("function/index.html#static-function-convertMomentToDateType")}>utils: convertMomentToDateType(dateAsMoment, useMoment)</a>
