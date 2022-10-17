@@ -37,7 +37,11 @@ export default {
     },
     viewMode: 'story',
     controls: {
+      disable: true,
       include: ['startDate', 'endDate', ...TIMELINE_EVENTS]
+    },
+    actions: {
+      disable: true
     }
   },
   argTypes
@@ -87,6 +91,11 @@ export const Main = TimelineWithMomentTemplate.bind({});
 Main.args = {
   startDate: '2018-09-20',
   endDate: '2018-09-21'
+};
+Main.parameters = {
+  controls: {
+    disable: false
+  }
 };
 
 const TimelineWithoutMomentTemplate = args => {

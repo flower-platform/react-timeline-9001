@@ -55,6 +55,7 @@
     "enzyme-adapter-react-16": "^1.1.1",
     "esdoc": "^1.1.0",
     "esdoc-ecmascript-proposal-plugin": "^1.0.0",
+    "esdoc-inject-style-plugin": "^1.0.0",
     "esdoc-jsx-plugin": "^1.0.0",
     "esdoc-standard-plugin": "^1.0.0",
     "eslint": "^5.0.1",
@@ -83,7 +84,6 @@
   "dependencies": {
     "@storybook/addon-storysource": "^6.5.12",
     "core-js": "^2.4.0",
-    "esdoc-inject-style-plugin": "^1.0.0",
     "interactjs": "^1.6.2",
     "lodash": "^4.17.19",
     "moment": "^2.22.2",
