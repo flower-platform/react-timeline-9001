@@ -4,7 +4,7 @@ import {shallow, mount} from 'enzyme';
 import {expect} from 'chai';
 
 import setup from 'setupTests';
-import {DefaultItemRenderer, DefaultGroupRenderer} from './renderers';
+import DefaultItemRenderer, {DefaultGroupRenderer} from './renderers';
 
 describe('Item renderer', () => {
   it('should render the item', () => {
