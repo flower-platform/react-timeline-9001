@@ -78,6 +78,12 @@ export default class Timeline extends React.Component {
      *
      * `start` and `stop` are dates (numeric/millis or moment objects, cf. `useMoment`).
      *
+     * All the props of an item are copied to the props of the item renderer. E.g. `<ItemRenderer {...props.defaultItemRendererProps } {...item}` ... />. See its
+     * doc, to see what props are known/rendered by `ItemRenderer` (such as `title`, `color`, etc.). The item renderer can be
+     * customized using the `itemRenderer` prop.
+     *
+     * TODO CSR: vom sterge de aici astea de mai jos. Ele se vor muta ca doc asociate props lui ItemRenderer
+     *
      * The next properties are used by the default renderer. They are optional, i.e. you may use these and/or other fields, provided
      * you have a custom renderer.
      *
@@ -95,6 +101,8 @@ export default class Timeline extends React.Component {
         // are being used and they can be overriden to use other fields
         start: PropTypes.oneOfType([PropTypes.number, PropTypes.object]),
         end: PropTypes.oneOfType([PropTypes.number, PropTypes.object]),
+
+        // TODO CSR: de sters toate de aici in jos
         title: PropTypes.string,
         tooltip: PropTypes.string,
         color: PropTypes.string,
@@ -105,6 +113,8 @@ export default class Timeline extends React.Component {
       })
     ).isRequired,
     selectedItems: PropTypes.arrayOf(PropTypes.number),
+
+    // TODO CSR: de sters de aici in jos; caci vor fi bagabile e.g. defaultItemProps={{ className: "cls" }}
     /**
      * Custom css class that is applied on all the items (segments).
      */
@@ -113,10 +123,29 @@ export default class Timeline extends React.Component {
      * Custom style that is applied on all the items (segments).
      */
     itemStyle: PropTypes.object,
+
+    // TODO CSR: pana aici
+
     /**
-     * Custom item (segment) renderer.
+     * The component that is the item (segment) renderer. You can change the default component (i.e. `ItemRenderer`). We
+     * recommend to create a subclass of it, rather than creating one from scratch.
      */
-    itemRenderer: PropTypes.func,
+    itemRenderer: PropTypes.object | PropTypes.func,
+
+    /**
+     * This is used more or less like this:
+     *
+     * ```jsx
+     * <ItemRenderer {...props.defaultItemRendererProps } {...item}` ... />
+     * ```
+     *
+     * This is the way to go if you want to set a property for all segments (items). E.g. `color`. Take a look at the props
+     * of `ItemRenderer` to see what are the possible options. If you override the item renderer, and it will accept additional
+     * props, you can of course specify them here.
+     */
+    // itemRendererDefaultProps: PropTypes.object,
+
+    // TODO CSR: eu cred ca si pe el il putem sterge, intrand in defaultProps; sunt un pic nedumerit, caci am vazut calcule care se fac asupra lui
     /**
      * The height of the items (segments) in pixels.
      */

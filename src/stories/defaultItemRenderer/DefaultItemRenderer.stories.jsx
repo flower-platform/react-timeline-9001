@@ -8,6 +8,16 @@ export default {
   title: 'Features/Default Item Renderer'
 };
 
+export const ItemRendererProps = () => {
+  return (
+    <>
+      <div className="demo">
+        <Timeline startDate={d('2018-09-20')} endDate={d('2018-09-21')} groups={humanResources} items={tasks} />
+      </div>
+    </>
+  );
+};
+
 export const Main = () => {
   // utility function
   const d = str => moment(str).valueOf();

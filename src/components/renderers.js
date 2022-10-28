@@ -1,6 +1,12 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+// TODO CSR: de folosit import, pt uniformitate
 const Color = require('color');
+
+// TODO CSR: (cam) toate componentele din renderers.js de fapt noi le-am facut sau modernizat. Nu vad cum s-ar putea intampla in viitor sa vina din ac fisier o modificare din upstream.
+// vreau deci sa renuntam la el si sa folosim modul standard de 1 fisier = 1 comp (clasa in cazul nostru). Cum ar fi asta. De facut similar si pt ceilalti rendereri.
+// apoi din nume scapam de "Default". Nu recomandam userului sa il suprascrie. Insa suntem perfect compatibili daca cineva vrea treaba asta. "default" lasa sa se inteleaga ca am recomanda oarecum un "custom"/non default
+// va exista deci ItemRenderer.js, care contine clasa ItemRenderer. Idem pt celelalte
 
 const DEFAULT_ITEM_RENDERER_CLS = 'rct9k-item-renderer';
 const ITEM_GLOW_CLS = 'rct9k-item-glow';
@@ -41,6 +47,10 @@ export default class DefaultItemRenderer extends React.Component {
      * `glowOnHover` is a boolean, used to show a glow effect arround the segment (item) when the mouse is moved over the segment
      */
     item: PropTypes.shape({
+      // TODO CSR: devin proprietati ale renderului. Renderul nu va mai folosi ".item". @see ce am zis in timeline.js.
+      // Le dublam cu functii, e.g. getGradientStop(). Motivul: sa poate modifica cineva acest lucru,
+      // daca suprascrie clasa. Caci o subclasa nu poate "override" props; decat daca se trece prin astfel de functii. Nu dublam doc la functii. Zicem doar:
+      // Getter for the corresponding prop, to allow override by subclass.
       title: PropTypes.string,
       color: PropTypes.string,
       tooltip: PropTypes.string,
@@ -68,6 +78,7 @@ export default class DefaultItemRenderer extends React.Component {
    * @default DEFAULT_COLOR
    */
   getGradientColor() {
+    // TODO CSR: defaulturile nu vor sta in getter; ci in propDefaults
     return this.props.item.color || DEFAULT_COLOR;
   }
 

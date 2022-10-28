@@ -161,6 +161,9 @@
   flex-direction: column;
 }
 
+/*
+ * De mutat clasa asta de aici; sa o punem in fisierul storybook.css.
+ */
 .demo {
   height: 100%;
   display: flex;
@@ -168,6 +171,10 @@
   flex-direction: column;
 }
 
+/* 
+ * TODO CSR: imi pare suspecta; dupa nume pare sa nu fie folosita de lib; ci de storybook; va trebui sa facem un stil separat, storybook.css, acolo. Caci acest fisier e (sper) inclus in lib
+ * insa celalalt nu va fi. Zic sper, caci vad ca am mai intrebat odata asta in review-ul vechi.
+ */
 .story-custom-item-class {
   opacity: 1;
   border: #d47b37 3px solid;
