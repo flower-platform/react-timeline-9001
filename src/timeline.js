@@ -31,7 +31,7 @@ import {
 } from './utils/timeUtils';
 import Timebar from './components/timebar';
 import SelectBox from './components/selector';
-import {DefaultGroupRenderer, DefaultItemRenderer} from './components/renderers';
+import DefaultItemRenderer, {DefaultGroupRenderer} from './components/renderers';
 import TimelineBody from './components/body';
 import Marker from './components/marker';
 
@@ -77,6 +77,16 @@ export default class Timeline extends React.Component {
      * `key` is also needed and has the React standard meaning.
      *
      * `start` and `stop` are dates (numeric/millis or moment objects, cf. `useMoment`).
+     *
+     * The next properties are used by the default renderer. They are optional, i.e. you may use these and/or other fields, provided
+     * you have a custom renderer.
+     *
+     * `title` and `tooltip` are strings
+     *
+     * `color` is a string, `gradientBrightness` and `gradientStop` are numbers that can have values between 0 and 100, `reverseDirection` is a boolean.
+     * These properties are used to show the background of the segment as a gradient.
+     *
+     * `glowOnHover` is a boolean, used to show a glow effect arround the segment (item) when the mouse is moved over the segment
      */
     items: PropTypes.arrayOf(
       PropTypes.shape({
@@ -84,12 +94,33 @@ export default class Timeline extends React.Component {
         // start and end are not required because getStartFromItem() and getEndFromItem() functions
         // are being used and they can be overriden to use other fields
         start: PropTypes.oneOfType([PropTypes.number, PropTypes.object]),
-        end: PropTypes.oneOfType([PropTypes.number, PropTypes.object])
+        end: PropTypes.oneOfType([PropTypes.number, PropTypes.object]),
+        title: PropTypes.string,
+        tooltip: PropTypes.string,
+        color: PropTypes.string,
+        gradientBrightness: PropTypes.number,
+        gradientStop: PropTypes.number,
+        reverseDirection: PropTypes.bool,
+        glowOnHover: PropTypes.bool
       })
     ).isRequired,
     selectedItems: PropTypes.arrayOf(PropTypes.number),
+    /**
+     * Custom css class that is applied on all the items (segments).
+     */
     itemClassName: PropTypes.string,
+    /**
+     * Custom style that is applied on all the items (segments).
+     */
     itemStyle: PropTypes.object,
+    /**
+     * Custom item (segment) renderer.
+     */
+    itemRenderer: PropTypes.func,
+    /**
+     * The height of the items (segments) in pixels.
+     */
+    itemHeight: PropTypes.number,
     /**
      * List of layers that will be rendered for a row.
      */
@@ -164,8 +195,6 @@ export default class Timeline extends React.Component {
      * Multiple columns mode: the default renderer of a header cell, which may be overridden on a per column basis.
      */
     groupTitleRenderer: PropTypes.func,
-    itemRenderer: PropTypes.func,
-    itemHeight: PropTypes.number,
     snap: PropTypes.number, //like snapMinutes, but for seconds; couldn't get it any lower because the pixels are not calculated correctly
     snapMinutes: PropTypes.number,
     /**

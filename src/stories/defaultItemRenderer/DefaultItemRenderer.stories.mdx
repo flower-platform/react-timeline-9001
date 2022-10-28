@@ -1,0 +1,36 @@
+import { Meta, ArgsTable } from '@storybook/addon-docs';
+import Timeline from '../../timeline';
+import DefaultItemRenderer from '../../components/renderers'
+import { encodeApiDocURIForSubpath, parametersDocPage } from '../StorybookUtils';
+
+<Meta title="Features/Default Item Renderer/Doc"  />
+
+## Timeline props for items
+
+<ArgsTable of={Timeline} sort="none" include={["items", "itemRenderer", "itemClassName", "itemStyle", "itemHeight"]}/>
+
+## DefaultItemRenderer
+
+### Props
+<ArgsTable of={DefaultItemRenderer} sort="none"/>
+
+### Background
+
+The renderer uses a **linear gradient** (top to bottom) as a background. The gradient is configured using two colors: a base color 
+(see <a href={encodeApiDocURIForSubpath("class/src/components/renderers.js~DefaultItemRenderer.html#instance-method-getGradientColor")}>getGradientColor()</a>)
+and the base color lightened by a percentage (see <a href={encodeApiDocURIForSubpath("class/src/components/renderers.js~DefaultItemRenderer.html#instance-method-getGradientBrightness")}>getGradientBrightness()</a>).
+
+The default order of the colors is lighter color, base color; but the order of the colors can be reversed (see <a href={encodeApiDocURIForSubpath("class/src/components/renderers.js~DefaultItemRenderer.html#instance-method-getReverseDirection")}>getReverseDirection()</a>).
+A gradient stop is used to indicate the point when the gradient transitions from the first color to the second color
+(see <a href={encodeApiDocURIForSubpath("class/src/components/renderers.js~DefaultItemRenderer.html#instance-method-getGradientStop")}>getGradientStop()</a>).
+
+You may override this behaviour by extending **DefaultItemRenderer**.
+
+## Extending `DefaultItemRenderer` / overriding renderer
+
+If you create your **own subclass of `DefaultItemRenderer`**, you may override its functions (see <a href={encodeApiDocURIForSubpath("class/src/components/renderers.js~DefaultItemRenderer.html")}>DefaultItemRenderer API Doc</a>). Some possible scenarios:
+* the fields are named differently for all the items;
+* or the background of the items should be a solid color, not be a gradient;
+* or maybe depending on the type of item, some should use a gradient, and some should not;
+* or the title of item is based on multiple fiels, i.e. the duration of the item should be shown in the title;
+* or maybe some items need different style or class name depending on the type of item.

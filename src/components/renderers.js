@@ -28,16 +28,43 @@ const DEFAULT_REVERSE_DIRECTION = false;
  * @param {boolean} props.item.reverseDirection - If gradient colors should be reversed
  * @param {boolean} props.item.glowOnHover - If the item should glow on item hover
  */
-export class DefaultItemRenderer extends React.Component {
+export default class DefaultItemRenderer extends React.Component {
   static propTypes = {
-    item: PropTypes.object.isRequired,
+    /**
+     * The properties from item are optional, i.e. you may use these and/or other fields, provided you extend this class.
+     *
+     * `title` and `tooltip` are strings
+     *
+     * `color` is a string, `gradientBrightness` and `gradientStop` are numbers that can have values between 0 and 100, `reverseDirection` is a boolean.
+     * These properties are used to show the background of the segment as a gradient.
+     *
+     * `glowOnHover` is a boolean, used to show a glow effect arround the segment (item) when the mouse is moved over the segment
+     */
+    item: PropTypes.shape({
+      title: PropTypes.string,
+      color: PropTypes.string,
+      tooltip: PropTypes.string,
+      gradientBrightness: PropTypes.number,
+      gradientStop: PropTypes.number,
+      reverseDirection: PropTypes.bool,
+      glowOnHover: PropTypes.bool
+    }).isRequired,
+    /**
+     * The style of the segment used to render the segment (item).
+     */
     style: PropTypes.object,
+    /**
+     * Class name segment used to render the segment (item).
+     */
     className: PropTypes.string,
+    /**
+     * The height of the segment (item) in pixels.
+     */
     itemHeight: PropTypes.number
   };
 
   /**
-   * Returns the color used for gradient.
+   * Returns the base color (item.color) used for gradient.
    * @default DEFAULT_COLOR
    */
   getGradientColor() {
@@ -45,8 +72,8 @@ export class DefaultItemRenderer extends React.Component {
   }
 
   /**
-   * Returns the gradient brightness. The gradient uses two colors; one is props.color and the other one
-   * is the color brightened by props.item.gradientBrightness percentage. Is a number between 0 and 100.
+   * Returns the gradient brightness (a number between 0 and 100). The gradient uses two colors; one is getGradientColor() and the other one
+   * is the color brightened by props.item.gradientBrightness percentage.
    * @default DEFAULT_GRADIENT_BRIGHTNESS
    */
   getGradientBrightness() {
@@ -54,7 +81,7 @@ export class DefaultItemRenderer extends React.Component {
   }
 
   /**
-   * Returns a number between 0 and 100 (percentage), where the first gradient color stops.
+   * Returns a number between 0 and 100 (percentage from the height of the item) and it represents the point where the first color stops in the gradient.
    * @default DEFAULT_GRADIENT_STOP
    */
   getGradientStop() {
@@ -63,16 +90,16 @@ export class DefaultItemRenderer extends React.Component {
 
   /**
    * If the colors in the gradient should be reversed.
-   * Default order of the colors in the gradient: [brighter item.color, item.color]
+   * Default order of the colors in the gradient: brighter gradient color, gradient color.
    * @default DEFAULT_REVERSE_DIRECTION
+   * @return boolean
    */
   getReverseDirection() {
     return this.props.item.reverseDirection || DEFAULT_REVERSE_DIRECTION;
   }
 
   /**
-   * Returns the color of the text. When darker colors are used for the items,
-   * the text is not visible. This method returns 'white' when props.item.color is darker,
+   * Returns the color of the text. This method returns 'white' when the background is darker,
    * otherwise returns black.
    */
   getTextColor() {
@@ -80,11 +107,11 @@ export class DefaultItemRenderer extends React.Component {
   }
 
   /**
-   * Create a linear gradient using the base color(calls getGradientColor) and a color obtained adjusting
+   * Create a linear gradient using the base color (calls getGradientColor()) and a color obtained adjusting
    * the brightness of that color using getGradientBrightness(). The default order of the colors is
-   * [brighter color, color]; this order can be reversed if getReverseDirection() is true.
+   * [brighter gradient color, gradient color]; this order can be reversed if getReverseDirection() is true.
    *
-   * By default, the background of an item uses a gradient, this method should be overriden if this behaviour is not wanted.
+   * By default, the background of an item uses a linear gradient, this method should be overriden if this behaviour is not wanted.
    * @returns {string} linear gradient
    */
   getBackgroundGradient() {
