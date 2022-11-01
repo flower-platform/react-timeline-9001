@@ -1,6 +1,6 @@
 import {Alert} from 'antd';
 import React from 'react';
-import DefaultItemRenderer from '../../components/renderers';
+import ItemRenderer from '../../components/itemRenderer';
 import Timeline from '../../timeline';
 import {d, someHumanResources, someTasks} from '../sampleData';
 
@@ -18,6 +18,7 @@ export const PropsForItemRenderer = () => {
       start: d('2018-09-20 7:00'),
       end: d('2018-09-20 8:00'),
       // TODO CSR: asta si urmatoarea nu functioneaza deocamdata; vor functiona dupa ce vei face modificarile
+      // EM: functioneaza acum
       style: {
         opacity: 0.5,
         border: '2px blue solid',
@@ -47,12 +48,11 @@ export const PropsForItemRenderer = () => {
       title: 'With gradient, but w/o glow',
       start: d('2018-09-20 13:00'),
       end: d('2018-09-20 15:25'),
-      // TODO CSR: de pus default glow = true; si de schimbat aici; vad la glow ca nu are animatie de mouse out; s-ar putea adauta fara efort?
       color: 'red',
       gradientStop: 10,
       gradientBrightness: 70,
       reverseDirection: true,
-      glowOnHover: true
+      glowOnHover: false
     }
   ];
   return (
@@ -70,6 +70,7 @@ export const PropsForItemRenderer = () => {
 };
 
 // TODO CSR: nu merge deocamdata
+// EM: functioneaza acum
 export const DefaultPropsForItemRenderer = () => {
   return (
     <>
@@ -108,7 +109,7 @@ export const CustomItemRenderer = () => {
   tasks[4].allTestsPassed = false;
 
   // custom item renderer that delegates to other renders based on the type of task
-  class CustomItemRenderer extends DefaultItemRenderer {
+  class CustomItemRenderer extends ItemRenderer {
     render() {
       const {type} = this.props.item;
       if (!type) {
@@ -124,7 +125,7 @@ export const CustomItemRenderer = () => {
     }
   }
 
-  class AnalysisItemRenderer extends DefaultItemRenderer {
+  class AnalysisItemRenderer extends ItemRenderer {
     // we override the actual renderer of the title
     getTitle() {
       return (
@@ -140,10 +141,10 @@ export const CustomItemRenderer = () => {
     }
   }
 
-  class DevelopmentItemRenderer extends DefaultItemRenderer {
+  class DevelopmentItemRenderer extends ItemRenderer {
     // override to return a solid color
     getBackgroundGradient() {
-      return this.getGradientColor();
+      return this.getColor();
     }
 
     getClassName() {
@@ -151,8 +152,8 @@ export const CustomItemRenderer = () => {
     }
   }
 
-  class TestingItemRenderer extends DefaultItemRenderer {
-    getGradientColor() {
+  class TestingItemRenderer extends ItemRenderer {
+    getColor() {
       return this.props.item.allTestsPassed ? 'green' : 'red';
     }
 

@@ -46,10 +46,14 @@
   pointer-events: none;
   align-self: center;
 }
+
+.rct9k-item-glow {
+  box-shadow: 0;
+  transition: opacity 0.5s ease-in-out, box-shadow 0.5s ease-in-out;
+}
 .rct9k-item-glow:hover {
   box-shadow: 0 0 12px #2d618c;
   opacity: 1 !important;
-  transition: opacity 0.5s ease-in-out, box-shadow 0.5s ease-out;
 }
 .rct9k-row {
   /* white-space: nowrap; */
@@ -99,12 +103,9 @@
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  outline: 1px solid black;
-  outline-offset: -1px;
-  border: 0px;
 }
 .rct9k-timebar-outer {
-  border-left: none;
+  border-left: 1px solid black;
 }
 .rct9k-timebar-inner {
   height: 30px;
@@ -162,21 +163,12 @@
 }
 
 /*
- * De mutat clasa asta de aici; sa o punem in fisierul storybook.css.
+ * TODO CSR: De mutat clasa asta de aici; sa o punem in fisierul storybook.css.
+ * EM: am mutat
  */
-.demo {
-  height: 100%;
-  display: flex;
-  gap: 5px;
-  flex-direction: column;
-}
 
 /* 
  * TODO CSR: imi pare suspecta; dupa nume pare sa nu fie folosita de lib; ci de storybook; va trebui sa facem un stil separat, storybook.css, acolo. Caci acest fisier e (sper) inclus in lib
  * insa celalalt nu va fi. Zic sper, caci vad ca am mai intrebat odata asta in review-ul vechi.
+ * EM: Fisierul asta e inclus in lib. Am mutat 
  */
-.story-custom-item-class {
-  opacity: 1;
-  border: #d47b37 3px solid;
-  border-radius: 0;
-}

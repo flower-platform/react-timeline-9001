@@ -25,8 +25,7 @@ export function rowItemsRenderer(
   itemHeight,
   itemRenderer,
   selectedItems = [],
-  itemStyle,
-  itemClassName,
+  itemRendererDefaultProps,
   getStartFromItem,
   getEndFromItem
 ) {
@@ -57,11 +56,16 @@ export function rowItemsRenderer(
   return _.map(displayItems, i => {
     const Comp = itemRenderer;
     let top = itemHeight * i['rowOffset'];
+    // itemHeight is also used to calculate the row height; the row height is the maximum number of overlapping items
+    // in a row multiplied with itemHeight.
+    // If the max overlapping items is 1, then itemHeight = row height,
+    // but we need to subtract 10 because of the margin (see rct9k-items-inner class in style.css)
+    const adjustedItemHeight = itemHeight - 10;
     let item_offset_mins = getStartFromItem(i).diff(vis_start, 'milliseconds');
     let item_duration_mins = getEndFromItem(i).diff(getStartFromItem(i), 'milliseconds');
     let left = Math.round(item_offset_mins * pixels_per_ms);
     let width = Math.round(item_duration_mins * pixels_per_ms);
-    let compClassnames = itemClassName + ' rct9k-items-inner';
+    let compClassnames = (i.className || itemRendererDefaultProps.className) + ' rct9k-items-inner';
     let outerClassnames = 'rct9k-items-outer item_draggable';
     let style = {};
     let isSelected = selectedItems.indexOf(Number(i.key)) > -1;
@@ -84,7 +88,13 @@ export function rowItemsRenderer(
         data-item-index={i.key}
         className={outerClassnames}
         style={{left, width, top, backgroundColor: 'transparent'}}>
-        <Comp key={i.key} item={i} style={itemStyle} className={compClassnames} itemHeight={itemHeight} />
+        <Comp
+          {...itemRendererDefaultProps}
+          {...i}
+          item={i}
+          className={compClassnames}
+          itemHeight={adjustedItemHeight}
+        />
       </span>
     );
   });

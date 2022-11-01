@@ -31,7 +31,8 @@ import {
 } from './utils/timeUtils';
 import Timebar from './components/timebar';
 import SelectBox from './components/selector';
-import DefaultItemRenderer, {DefaultGroupRenderer} from './components/renderers';
+import ItemRenderer from './components/itemRenderer';
+import {GroupRenderer} from './components/groupRenderer';
 import TimelineBody from './components/body';
 import Marker from './components/marker';
 
@@ -78,21 +79,12 @@ export default class Timeline extends React.Component {
      *
      * `start` and `stop` are dates (numeric/millis or moment objects, cf. `useMoment`).
      *
-     * All the props of an item are copied to the props of the item renderer. E.g. `<ItemRenderer {...props.defaultItemRendererProps } {...item}` ... />. See its
+     * All the props of an item are copied to the props of the item renderer. E.g. `<ItemRenderer {...props.itemRendererDefaultProps } {...item}` ... />. See its
      * doc, to see what props are known/rendered by `ItemRenderer` (such as `title`, `color`, etc.). The item renderer can be
      * customized using the `itemRenderer` prop.
      *
      * TODO CSR: vom sterge de aici astea de mai jos. Ele se vor muta ca doc asociate props lui ItemRenderer
-     *
-     * The next properties are used by the default renderer. They are optional, i.e. you may use these and/or other fields, provided
-     * you have a custom renderer.
-     *
-     * `title` and `tooltip` are strings
-     *
-     * `color` is a string, `gradientBrightness` and `gradientStop` are numbers that can have values between 0 and 100, `reverseDirection` is a boolean.
-     * These properties are used to show the background of the segment as a gradient.
-     *
-     * `glowOnHover` is a boolean, used to show a glow effect arround the segment (item) when the mouse is moved over the segment
+     * EM: am sters
      */
     items: PropTypes.arrayOf(
       PropTypes.shape({
@@ -100,31 +92,17 @@ export default class Timeline extends React.Component {
         // start and end are not required because getStartFromItem() and getEndFromItem() functions
         // are being used and they can be overriden to use other fields
         start: PropTypes.oneOfType([PropTypes.number, PropTypes.object]),
-        end: PropTypes.oneOfType([PropTypes.number, PropTypes.object]),
+        end: PropTypes.oneOfType([PropTypes.number, PropTypes.object])
 
         // TODO CSR: de sters toate de aici in jos
-        title: PropTypes.string,
-        tooltip: PropTypes.string,
-        color: PropTypes.string,
-        gradientBrightness: PropTypes.number,
-        gradientStop: PropTypes.number,
-        reverseDirection: PropTypes.bool,
-        glowOnHover: PropTypes.bool
+        // EM: am sters
       })
     ).isRequired,
     selectedItems: PropTypes.arrayOf(PropTypes.number),
 
     // TODO CSR: de sters de aici in jos; caci vor fi bagabile e.g. defaultItemProps={{ className: "cls" }}
-    /**
-     * Custom css class that is applied on all the items (segments).
-     */
-    itemClassName: PropTypes.string,
-    /**
-     * Custom style that is applied on all the items (segments).
-     */
-    itemStyle: PropTypes.object,
-
     // TODO CSR: pana aici
+    // EM: am sters
 
     /**
      * The component that is the item (segment) renderer. You can change the default component (i.e. `ItemRenderer`). We
@@ -136,16 +114,18 @@ export default class Timeline extends React.Component {
      * This is used more or less like this:
      *
      * ```jsx
-     * <ItemRenderer {...props.defaultItemRendererProps } {...item}` ... />
+     * <ItemRenderer {...props.itemRendererDefaultProps } {...item}` ... />
      * ```
      *
      * This is the way to go if you want to set a property for all segments (items). E.g. `color`. Take a look at the props
      * of `ItemRenderer` to see what are the possible options. If you override the item renderer, and it will accept additional
      * props, you can of course specify them here.
      */
-    // itemRendererDefaultProps: PropTypes.object,
+    itemRendererDefaultProps: PropTypes.object,
 
     // TODO CSR: eu cred ca si pe el il putem sterge, intrand in defaultProps; sunt un pic nedumerit, caci am vazut calcule care se fac asupra lui
+    // EM: itemHeight se foloseste si pentru calculul inaltimii randului. Calculeaza cate segmente se suprapun si apoi inmulteste cu itemHeight,
+    // rezultand astfel inaltimea randului.
     /**
      * The height of the items (segments) in pixels.
      */
@@ -276,8 +256,8 @@ export default class Timeline extends React.Component {
     cursorTimeFormat: 'D MMM YYYY HH:mm',
     componentId: 'r9k1',
     showCursorTime: true,
-    groupRenderer: DefaultGroupRenderer,
-    itemRenderer: DefaultItemRenderer,
+    groupRenderer: GroupRenderer,
+    itemRenderer: ItemRenderer,
     timelineMode: Timeline.TIMELINE_MODES.SELECT | Timeline.TIMELINE_MODES.DRAG | Timeline.TIMELINE_MODES.RESIZE,
     // in rtl9k
     // shallowUpdateCheck: false,
@@ -290,7 +270,8 @@ export default class Timeline extends React.Component {
     // in rtl9k:
     // useMoment: true,
     useMoment: false,
-    tableColumns: []
+    tableColumns: [],
+    itemRendererDefaultProps: {}
   };
 
   /**
@@ -1088,8 +1069,7 @@ export default class Timeline extends React.Component {
               this.props.itemHeight,
               this.props.itemRenderer,
               canSelect ? this.props.selectedItems : [],
-              this.props.itemStyle,
-              this.props.itemClassName,
+              this.props.itemRendererDefaultProps,
               this.getStartFromItem,
               this.getEndFromItem
             )}

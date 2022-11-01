@@ -6,8 +6,8 @@ import _ from 'lodash';
 
 import Timeline from './timeline';
 import {
-  customItemRenderer,
-  customGroupRenderer,
+  CustomItemRenderer,
+  CustomGroupRenderer,
   CustomCellRenderer,
   CustomColumnHeaderRenderer
 } from './demo/customRenderers';
@@ -15,6 +15,7 @@ import {
 import {Layout, Form, InputNumber, Button, DatePicker, Checkbox, Switch, Icon} from 'antd';
 import 'antd/dist/antd.css';
 import './style.css';
+import './stories/storybook.css';
 
 const {TIMELINE_MODES} = Timeline;
 
@@ -432,8 +433,8 @@ export default class DemoTimeline extends Component {
           onRowClick={this.handleRowClick}
           onRowContextClick={this.handleRowContextClick}
           onRowDoubleClick={this.handleRowDoubleClick}
-          itemRenderer={useCustomRenderers ? customItemRenderer : undefined}
-          groupRenderer={useCustomRenderers ? customGroupRenderer : undefined}
+          itemRenderer={useCustomRenderers ? CustomItemRenderer : undefined}
+          groupRenderer={useCustomRenderers ? CustomGroupRenderer : undefined}
           groupTitleRenderer={useCustomRenderers ? () => <div>Group title</div> : undefined}
         />
       </div>

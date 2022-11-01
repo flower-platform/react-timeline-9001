@@ -1,14 +1,14 @@
-import React, {Component} from 'react';
-import DefaultItemRenderer from '../components/renderers';
+import React from 'react';
+import ItemRenderer from '../components/itemRenderer';
 
-export class customItemRenderer extends DefaultItemRenderer {
+export class CustomItemRenderer extends ItemRenderer {
   getBackgroundGradient() {
-    return this.getGradientColor();
+    return this.getColor();
   }
 
   getStyle() {
     let style = super.getStyle();
-    if (this.props.item.row % 5 === 0) {
+    if (this.props.row % 5 === 0) {
       style.border = '1px solid black';
     }
     return style;
@@ -19,7 +19,7 @@ export class customItemRenderer extends DefaultItemRenderer {
   }
 }
 
-export function customGroupRenderer(props) {
+export function CustomGroupRenderer(props) {
   const {group, ...rest} = props;
 
   return (
