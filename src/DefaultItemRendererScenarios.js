@@ -1,4 +1,3 @@
-// TODO CSR: notitele astea sunt pt mine; nu tr facut nimic deocamdata
 export const defaultItemRendererScenarios = {
   // ?
   givenBasicSegmentsThenRender:

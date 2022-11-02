@@ -17,8 +17,6 @@ export const PropsForItemRenderer = () => {
       title: 'With style',
       start: d('2018-09-20 7:00'),
       end: d('2018-09-20 8:00'),
-      // TODO CSR: asta si urmatoarea nu functioneaza deocamdata; vor functiona dupa ce vei face modificarile
-      // EM: functioneaza acum
       style: {
         opacity: 0.5,
         border: '2px blue solid',
@@ -69,8 +67,6 @@ export const PropsForItemRenderer = () => {
   );
 };
 
-// TODO CSR: nu merge deocamdata
-// EM: functioneaza acum
 export const DefaultPropsForItemRenderer = () => {
   return (
     <>
@@ -189,5 +185,3 @@ export const CustomItemRenderer = () => {
     </>
   );
 };
-
-// TODO CSR: am reusit sa concentrez functionalitatile in mai putine stories/cod. Daca mi-a scapat ceva, poti te rog completa? Si apoi de sters celalalt story.

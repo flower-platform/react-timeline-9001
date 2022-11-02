@@ -76,12 +76,6 @@ export function rowItemsRenderer(
       style = {};
     }
 
-    // TODO CSR: intentia e 1) sa nu mai alegem aici (si in functia parinte) proprietati din item
-    // 2) nici in renderer sa nu le pescuim din item (dupa cum se vede din e am scris si acolo). In revansa,
-    // "varsam" tot ce are item in el, ca props in Comp. Deci daca avem item.color el intra in props.color al renderului
-    // astfel am sters/scapat key (sigur); style (sunt aproape sigur); teoretic si de itemHeight, insa vad o procesare mai sus legata de rowOffset; nu stiam de asta; ce face? Nu-mi dau seama
-    // className ramane, caci tr sa injectam clasele noastre. Ar arata asa
-    // <Comp {...i} item={i} className={compClassnames} itemHeight={itemHeight} />
     return (
       <span
         key={i.key}

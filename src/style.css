@@ -161,14 +161,3 @@
   display: flex;
   flex-direction: column;
 }
-
-/*
- * TODO CSR: De mutat clasa asta de aici; sa o punem in fisierul storybook.css.
- * EM: am mutat
- */
-
-/* 
- * TODO CSR: imi pare suspecta; dupa nume pare sa nu fie folosita de lib; ci de storybook; va trebui sa facem un stil separat, storybook.css, acolo. Caci acest fisier e (sper) inclus in lib
- * insa celalalt nu va fi. Zic sper, caci vad ca am mai intrebat odata asta in review-ul vechi.
- * EM: Fisierul asta e inclus in lib. Am mutat 
- */

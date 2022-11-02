@@ -82,9 +82,6 @@ export default class Timeline extends React.Component {
      * All the props of an item are copied to the props of the item renderer. E.g. `<ItemRenderer {...props.itemRendererDefaultProps } {...item}` ... />. See its
      * doc, to see what props are known/rendered by `ItemRenderer` (such as `title`, `color`, etc.). The item renderer can be
      * customized using the `itemRenderer` prop.
-     *
-     * TODO CSR: vom sterge de aici astea de mai jos. Ele se vor muta ca doc asociate props lui ItemRenderer
-     * EM: am sters
      */
     items: PropTypes.arrayOf(
       PropTypes.shape({
@@ -93,16 +90,9 @@ export default class Timeline extends React.Component {
         // are being used and they can be overriden to use other fields
         start: PropTypes.oneOfType([PropTypes.number, PropTypes.object]),
         end: PropTypes.oneOfType([PropTypes.number, PropTypes.object])
-
-        // TODO CSR: de sters toate de aici in jos
-        // EM: am sters
       })
     ).isRequired,
     selectedItems: PropTypes.arrayOf(PropTypes.number),
-
-    // TODO CSR: de sters de aici in jos; caci vor fi bagabile e.g. defaultItemProps={{ className: "cls" }}
-    // TODO CSR: pana aici
-    // EM: am sters
 
     /**
      * The component that is the item (segment) renderer. You can change the default component (i.e. `ItemRenderer`). We
@@ -123,9 +113,6 @@ export default class Timeline extends React.Component {
      */
     itemRendererDefaultProps: PropTypes.object,
 
-    // TODO CSR: eu cred ca si pe el il putem sterge, intrand in defaultProps; sunt un pic nedumerit, caci am vazut calcule care se fac asupra lui
-    // EM: itemHeight se foloseste si pentru calculul inaltimii randului. Calculeaza cate segmente se suprapun si apoi inmulteste cu itemHeight,
-    // rezultand astfel inaltimea randului.
     /**
      * The height of the items (segments) in pixels.
      */
