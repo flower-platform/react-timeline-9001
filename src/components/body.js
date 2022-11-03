@@ -7,6 +7,9 @@ import PropTypes from 'prop-types';
 
 import {Grid} from 'react-virtualized';
 
+/**
+ * @extends Component<TimelineBodyPropTypes>
+ */
 class TimelineBody extends Component {
   componentDidMount() {
     this.forceUpdate();
@@ -52,18 +55,60 @@ class TimelineBody extends Component {
   }
 }
 
-TimelineBody.propTypes = {
+const TimelineBodyPropTypes = {
+  /**
+   * The total width of the body; mandatory field.
+   * @type { number }
+   */
   width: PropTypes.number.isRequired,
+  /**
+   * Function that returns the width of each column, mandatory field.
+   * @type { Function }
+   */
   columnWidth: PropTypes.func.isRequired,
+  /**
+   * The total number of columns, including the timeline (gantt).
+   * @type { number }
+   */
   columnCount: PropTypes.number,
+  /**
+   * The total height of the body (without timebar), mandatory field.
+   * @type { number }
+   */
   height: PropTypes.number.isRequired,
+  /**
+   * Function that returns the height for each row, mandatory field.
+   * @type { Function }
+   */
   rowHeight: PropTypes.func.isRequired,
+  /**
+   * Number of rows in timeline, mandatory field.
+   * @type { number }
+   */
   rowCount: PropTypes.number.isRequired,
+  /**
+   * @type { Function }
+   */
   grid_ref_callback: PropTypes.func.isRequired,
+  /**
+   * Renderer for each cell of the grid.
+   * @type { Function }
+   */
   cellRenderer: PropTypes.func.isRequired,
+  /**
+   * If true timeline will try to minimize re-renders. Set to false if items don't show up/update on prop change.
+   * @type { boolean }
+   */
   shallowUpdateCheck: PropTypes.bool,
+  /**
+   * Function called when shallowUpdateCheck==true. If returns true the timeline will be redrawn.
+   * If false the library will decide if redrawing is required,
+   * @type { Function }
+   */
   forceRedrawFunc: PropTypes.func
 };
+
+TimelineBody.propTypes = TimelineBodyPropTypes;
 
 TimelineBody.defaultProps = {
   columnCount: 2,

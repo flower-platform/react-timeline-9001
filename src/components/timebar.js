@@ -9,7 +9,8 @@ import {DefaultColumnHeaderRenderer} from './renderers';
 import {timebarFormat as defaultTimebarFormat} from '../consts/timebarConsts';
 
 /**
- * Timebar component - displays the current time on top of the timeline
+ * Timebar component - displays the current time on top of the timeline.
+ * @extends React.Component<TimebarPropTypes>
  */
 export default class Timebar extends React.Component {
   constructor(props) {
@@ -283,23 +284,73 @@ export default class Timebar extends React.Component {
   }
 }
 
-Timebar.propTypes = {
+const TimebarPropTypes = {
+  /**
+   * @type { any }
+   */
   cursorTime: PropTypes.any,
+  /**
+   * Single column mode: the renderer of the header cell.
+   * Multiple columns mode: the default renderer of a header cell, which may be overridden on a per column basis.
+   * @type { Function }
+   */
   groupTitleRenderer: PropTypes.func,
-  start: PropTypes.object.isRequired, //moment
-  end: PropTypes.object.isRequired, //moment
+  /**
+   * Start of the displayed interval, as moment object.
+   * @type { object }
+   */
+  start: PropTypes.object.isRequired,
+  /**
+   * End of the displayed interval, as moment object.
+   * @type { object }
+   */
+  end: PropTypes.object.isRequired,
+  /**
+   * Total width of the timeline (gantt), mandatory field.
+   * @type { number }
+   */
   width: PropTypes.number.isRequired,
+  /**
+   * The left side offset, this offset is subtracted from the total width of the timeline
+   * to obtain the width of the timebar.
+   * @type { number }
+   */
   leftOffset: PropTypes.number,
+  /**
+   * The time unit for the top timebar.
+   * @type { string }
+   */
   top_resolution: PropTypes.string,
+  /**
+   * The time unit for the bottom timebar.
+   * @type { string }
+   */
   bottom_resolution: PropTypes.string,
+  /**
+   * @type { Array.<object> }
+   */
   selectedRanges: PropTypes.arrayOf(PropTypes.object), // [start: moment ,end: moment (end)]
+  /**
+   * Formats for each time unit (@see defaultTimebarFormat)
+   * @type { object }
+   */
   timeFormats: PropTypes.object,
+  /**
+   * @type { Array.<object> }
+   */
   tableColumns: PropTypes.arrayOf(PropTypes.object)
 };
+
+Timebar.propTypes = TimebarPropTypes;
+
 Timebar.defaultProps = {
   selectedRanges: [],
   groupTitleRenderer: DefaultColumnHeaderRenderer,
   leftOffset: 0,
   timeFormats: defaultTimebarFormat,
-  tableColumns: []
+  tableColumns: [],
+  top_resolution: undefined,
+  bottom_resolution: undefined,
+  leftOffset: undefined,
+  cursorTime: undefined
 };

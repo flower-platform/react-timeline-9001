@@ -7,8 +7,17 @@ const Marker = props => {
 };
 
 Marker.propTypes = {
+  /**
+   * @type { number }
+   */
   height: PropTypes.number.isRequired,
+  /**
+   * @type { number }
+   */
   left: PropTypes.number.isRequired,
+  /**
+   * @type { number }
+   */
   top: PropTypes.number.isRequired
 };
 
