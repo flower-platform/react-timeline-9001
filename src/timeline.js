@@ -73,7 +73,7 @@ export default class Timeline extends React.Component {
     ).isRequired,
 
     /**
-     * The segments. A segment is associated with a row. Hence `row` is mandatory, pointing to an `id` of a row (group).
+     * The segments (aka items). An item is associated with a row. Hence `row` is mandatory, pointing to an `id` of a row (group).
      *
      * `key` is also needed and has the React standard meaning.
      *
@@ -104,7 +104,7 @@ export default class Timeline extends React.Component {
      * This is used more or less like this:
      *
      * ```jsx
-     * <ItemRenderer {...props.itemRendererDefaultProps } {...item}` ... />
+     * <ItemRenderer {...props.itemRendererDefaultProps } {...item} ... />
      * ```
      *
      * This is the way to go if you want to set a property for all segments (items). E.g. `color`. Take a look at the props

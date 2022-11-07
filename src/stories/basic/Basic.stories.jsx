@@ -1,7 +1,6 @@
 import React from 'react';
-import moment from 'moment';
 import Timeline from '../../timeline';
-import {timelineScenarios} from '../../TimelineScenarios';
+import {timelineScenarios} from '../TimelineScenarios';
 import {d, someHumanResources, someTasks} from '../sampleData';
 
 export default {
@@ -35,8 +34,8 @@ export const Main = () => {
 
 Main.parameters = {
   scenarios: [
-    timelineScenarios.givenRowsThenRender,
-    timelineScenarios.givenSegmentsThenRender,
+    timelineScenarios.rendererForGroups,
+    timelineScenarios.rendererForItems,
     timelineScenarios.whenMouseMovesThenRedBar
   ]
 };

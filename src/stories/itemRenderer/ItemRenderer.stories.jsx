@@ -3,6 +3,8 @@ import React from 'react';
 import ItemRenderer from '../../components/itemRenderer';
 import Timeline from '../../timeline';
 import {d, someHumanResources, someTasks} from '../sampleData';
+import {itemRendererScenarios} from './ItemRendererScenarios';
+import {timelineScenarios} from '../TimelineScenarios';
 
 export default {
   title: 'Features/Item Renderer'
@@ -49,7 +51,7 @@ export const PropsForItemRenderer = () => {
       color: 'red',
       gradientStop: 10,
       gradientBrightness: 70,
-      reverseDirection: true,
+      gradientReverseDirection: true,
       glowOnHover: false
     }
   ];
@@ -65,6 +67,20 @@ export const PropsForItemRenderer = () => {
       <Timeline startDate={d('2018-09-20')} endDate={d('2018-09-21')} groups={someHumanResources} items={tasks} />
     </>
   );
+};
+
+PropsForItemRenderer.parameters = {
+  scenarios: [
+    itemRendererScenarios.title,
+    itemRendererScenarios.tooltip,
+    itemRendererScenarios.glowOnHover,
+    itemRendererScenarios.color,
+    itemRendererScenarios.gradientBrightness,
+    itemRendererScenarios.gradientStop,
+    itemRendererScenarios.gradientReverseDirection,
+    itemRendererScenarios.className,
+    itemRendererScenarios.style
+  ]
 };
 
 export const DefaultPropsForItemRenderer = () => {
@@ -89,6 +105,10 @@ export const DefaultPropsForItemRenderer = () => {
       />
     </>
   );
+};
+
+DefaultPropsForItemRenderer.parameters = {
+  scenarios: [timelineScenarios.propertyItemRendererDefaultProps]
 };
 
 export const CustomItemRenderer = () => {
@@ -184,4 +204,8 @@ export const CustomItemRenderer = () => {
       />
     </>
   );
+};
+
+CustomItemRenderer.parameters = {
+  scenarios: [timelineScenarios.propertyItemRenderer]
 };
