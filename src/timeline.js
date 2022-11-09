@@ -32,7 +32,7 @@ import {
 import Timebar from './components/timebar';
 import SelectBox from './components/selector';
 import ItemRenderer from './components/ItemRenderer';
-import GroupRenderer from './components/GroupRenderer';
+import {GroupRenderer} from './components/GroupRenderer';
 import TimelineBody from './components/body';
 import Marker from './components/marker';
 
