@@ -10,7 +10,7 @@ import {timebarFormat as defaultTimebarFormat} from '../consts/timebarConsts';
 
 /**
  * Timebar component - displays the current time on top of the timeline.
- * @extends React.Component<TimebarPropTypes>
+ * @extends React.Component<Timebar.propTypes>
  */
 export default class Timebar extends React.Component {
   constructor(props) {
@@ -284,7 +284,7 @@ export default class Timebar extends React.Component {
   }
 }
 
-const TimebarPropTypes = {
+Timebar.propTypes = {
   /**
    * @type { any }
    */
@@ -340,8 +340,6 @@ const TimebarPropTypes = {
    */
   tableColumns: PropTypes.arrayOf(PropTypes.object)
 };
-
-Timebar.propTypes = TimebarPropTypes;
 
 Timebar.defaultProps = {
   selectedRanges: [],

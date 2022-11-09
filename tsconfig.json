@@ -9,7 +9,7 @@
         "allowJs": true,
         "declaration": true,
         "emitDeclarationOnly": true,
-        "outDir": "dist",
+        "outDir": "types",
         "declarationMap": true,
         "esModuleInterop": true
     }

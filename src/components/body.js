@@ -8,7 +8,7 @@ import PropTypes from 'prop-types';
 import {Grid} from 'react-virtualized';
 
 /**
- * @extends Component<TimelineBodyPropTypes>
+ * @extends Component<TimelineBody.propTypes>
  */
 class TimelineBody extends Component {
   componentDidMount() {
@@ -55,7 +55,7 @@ class TimelineBody extends Component {
   }
 }
 
-const TimelineBodyPropTypes = {
+TimelineBody.propTypes = {
   /**
    * The total width of the body; mandatory field.
    * @type { number }
@@ -107,8 +107,6 @@ const TimelineBodyPropTypes = {
    */
   forceRedrawFunc: PropTypes.func
 };
-
-TimelineBody.propTypes = TimelineBodyPropTypes;
 
 TimelineBody.defaultProps = {
   columnCount: 2,

@@ -45,7 +45,7 @@ const SINGLE_COLUMN_LABEL_PROPERTY = 'title';
  * Timeline class
  * @reactProps {!number} items - this is prop1
  * @reactProps {string} prop2 - this is prop2
- * @extends React.Component<TimelinePropTypes>
+ * @extends React.Component<Timeline.propTypes>
  */
 export default class Timeline extends React.Component {
   /**
@@ -166,6 +166,7 @@ export default class Timeline extends React.Component {
      * NOTE 2: The upstream repo, had this `true` by default, in order to maintain backward compatibility. But we discovered that w/ `false`, the component
      * actually works both w/ timestamps AND moment objects. And this is because we convert using `moment(date)`, which works in the 2 cases. Obviously it's
      * not a good idea to mix the date types, one of the reasons being that maybe in the future moment won't be used internally any more.
+     *
      * @type { boolean }
      */
     useMoment: PropTypes.bool,
@@ -177,7 +178,7 @@ export default class Timeline extends React.Component {
     groupOffset: PropTypes.number.isRequired,
     /**
      * The columns that will be rendered using data from groups.
-     * @type {Array.<object>}
+     * @type { Array.<object> }
      */
     tableColumns: PropTypes.arrayOf(
       PropTypes.shape({
@@ -343,6 +344,7 @@ export default class Timeline extends React.Component {
     onRowClick() {},
     onRowContext() {},
     onRowDoubleClick() {},
+    onInteraction() {},
     itemRendererDefaultProps: {}
   };
 

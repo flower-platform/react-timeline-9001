@@ -11,21 +11,25 @@ const ITEM_RENDERER_GLOW_CLS = 'rct9k-item-glow';
  *
  * All the properties have corresponding getter methods. We "OOP-ize" them, for the case where a subclass wants to "override" a property.
  * Without this pattern, such an override is not doable in React.
+ * @extends React.Component<ItemRenderer.propTypes>
  */
 export default class ItemRenderer extends React.Component {
   static propTypes = {
     /**
      * It's passed by the parent. Though not used by this component. It exists because maybe subclasses want to use it.
+     * @type { object }
      */
     item: PropTypes.object,
 
     /**
      * The title (label) of the segment (item).
+     * @type { string }
      */
     title: PropTypes.string,
 
     /**
      * Tooltip displayed on mouse over the segment (item).
+     * @type { string }
      */
     tooltip: PropTypes.string,
 
@@ -36,43 +40,51 @@ export default class ItemRenderer extends React.Component {
      * (@see rct9k-items-inner class) which must be subtracted from `itemHeight` resulting in `height`.
      *
      * NOTE: If you override the getter, the maximum `height` can be `itemHeight` minus the padding.
+     * @type { string | number }
      */
     height: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
 
     /**
      * Used to show a glow effect around the segment (item) when the mouse is moved over the segment (item).
+     * @type { boolean }
      */
     glowOnHover: PropTypes.bool,
 
     /**
      * The renderer uses a **linear gradient** (top to bottom) as a background. The gradient is configured
      * using two colors: a base color (`color`) and the base color lightened by a percentage (`gradientBrightness`).
+     * @type { string }
      */
     color: PropTypes.string,
 
     /**
      * A number between 0 and 100; it represents the percentage by which `color` is lightened to obtain the second color used in the gradient.
-     */
+     * @type { number }
+     * /
     gradientBrightness: PropTypes.number,
 
     /**
      * A number between 0 and 100 (percentage from the height of the item) and it represents the point where the first color stops in the gradient.
-     */
+     * @type { number }
+     * /
     gradientStop: PropTypes.number,
 
     /**
      * Default order of the colors in the gradient: lighter color, base color.
      * If `true`, the order of the colors will be reversed.
+     * @type { boolean }
      */
     gradientReverseDirection: PropTypes.bool,
 
     /**
      * The style of the segment used to render the segment (item).
+     * @type { object }
      */
     style: PropTypes.object,
 
     /**
      * Class name used to render the segment (item).
+     * @type { string }
      */
     className: PropTypes.string
   };
@@ -82,7 +94,11 @@ export default class ItemRenderer extends React.Component {
     glowOnHover: true,
     gradientBrightness: 45,
     gradientStop: 40,
-    gradientReverseDirection: false
+    gradientReverseDirection: false,
+    title: undefined,
+    tooltip: undefined,
+    className: undefined,
+    style: {}
   };
 
   /**
