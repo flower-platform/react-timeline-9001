@@ -114,7 +114,10 @@ export default class Timeline extends React.Component {
     itemRendererDefaultProps: PropTypes.object,
 
     /**
-     * The height of the items (segments) in pixels.
+     * The height of the items (segments) in pixels, it is used to calculate the height of the row.
+     *
+     * Items (segments) that are overlapping are displayed one below the other. In this case, the height of the row will
+     * be the maximum number of overlapping items (segments) multiplied by `itemHeight`.
      */
     itemHeight: PropTypes.number,
     /**

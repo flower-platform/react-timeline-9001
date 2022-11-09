@@ -82,13 +82,7 @@ export function rowItemsRenderer(
         data-item-index={i.key}
         className={outerClassnames}
         style={{left, width, top, backgroundColor: 'transparent'}}>
-        <Comp
-          {...itemRendererDefaultProps}
-          {...i}
-          item={i}
-          className={compClassnames}
-          itemHeight={adjustedItemHeight}
-        />
+        <Comp {...itemRendererDefaultProps} {...i} item={i} className={compClassnames} height={adjustedItemHeight} />
       </span>
     );
   });

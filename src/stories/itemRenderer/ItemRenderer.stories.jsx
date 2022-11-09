@@ -180,7 +180,7 @@ export const CustomItemRenderer = () => {
       };
     }
 
-    getItemHeight() {
+    getHeight() {
       return '20px';
     }
   }

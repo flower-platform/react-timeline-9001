@@ -1,7 +1,7 @@
 export const itemRendererScenarios = {
   title: 'PROPERTY title',
   tooltip: 'PROPERTY tooltip',
-  itemHeight: 'PROPERTY itemHeight',
+  height: 'PROPERTY height',
   glowOnHover: 'PROPERTY glowOnHover',
   color: 'PROPERTY color',
   gradientBrightness: 'PROPERTY gradientBrightness',
