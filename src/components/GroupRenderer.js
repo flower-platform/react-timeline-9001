@@ -7,7 +7,7 @@ import React from 'react';
  * @param {object} props.group - The group to be rendered
  * @param {string} props.group.id - The group's id
  */
-export default class GroupRenderer extends React.Component {
+export class GroupRenderer extends React.Component {
   /**
    * Returns the label of the cell.
    */
