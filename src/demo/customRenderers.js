@@ -1,5 +1,5 @@
 import React from 'react';
-import ItemRenderer from '../components/itemRenderer';
+import ItemRenderer from '../components/ItemRenderer';
 
 export class CustomItemRenderer extends ItemRenderer {
   getBackgroundGradient() {

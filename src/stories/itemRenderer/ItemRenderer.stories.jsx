@@ -1,6 +1,6 @@
 import {Alert} from 'antd';
 import React from 'react';
-import ItemRenderer from '../../components/itemRenderer';
+import ItemRenderer from '../../components/ItemRenderer';
 import Timeline from '../../timeline';
 import {d, someHumanResources, someTasks} from '../sampleData';
 import {itemRendererScenarios} from './ItemRendererScenarios';

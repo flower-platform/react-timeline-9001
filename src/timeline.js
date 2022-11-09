@@ -31,8 +31,8 @@ import {
 } from './utils/timeUtils';
 import Timebar from './components/timebar';
 import SelectBox from './components/selector';
-import ItemRenderer from './components/itemRenderer';
-import {GroupRenderer} from './components/groupRenderer';
+import ItemRenderer from './components/ItemRenderer';
+import GroupRenderer from './components/GroupRenderer';
 import TimelineBody from './components/body';
 import Marker from './components/marker';
 
@@ -98,7 +98,7 @@ export default class Timeline extends React.Component {
      * The component that is the item (segment) renderer. You can change the default component (i.e. `ItemRenderer`). We
      * recommend to create a subclass of it, rather than creating one from scratch.
      */
-    itemRenderer: PropTypes.object | PropTypes.func,
+    itemRenderer: PropTypes.oneOfType([PropTypes.object, PropTypes.func]),
 
     /**
      * This is used more or less like this:

@@ -2,7 +2,7 @@
 import React from 'react';
 import {shallow} from 'enzyme';
 import {expect} from 'chai';
-import {GroupRenderer} from './groupRenderer';
+import {GroupRenderer} from './GroupRenderer';
 
 describe('Group renderer', () => {
   it('should render the group w/o label property', () => {

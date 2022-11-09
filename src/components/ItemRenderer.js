@@ -31,8 +31,13 @@ export default class ItemRenderer extends React.Component {
 
     /**
      * The height of the segment (item).
+     *
+     * This property is received from the parent and its based on `itemHeight` from `Timeline`. The parent adds a padding
+     * (@see rct9k-items-inner class) which must be subtracted from `itemHeight` resulting in `height`.
+     *
+     * NOTE: If you override the getter, the maximum `height` can be `itemHeight` minus the padding.
      */
-    itemHeight: PropTypes.string,
+    height: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
 
     /**
      * Used to show a glow effect around the segment (item) when the mouse is moved over the segment (item).
@@ -73,7 +78,6 @@ export default class ItemRenderer extends React.Component {
   };
 
   static defaultProps = {
-    itemHeight: 'auto',
     color: '#3791D4',
     glowOnHover: true,
     gradientBrightness: 45,
@@ -98,8 +102,8 @@ export default class ItemRenderer extends React.Component {
   /**
    * Getter for the corresponding prop, to allow override by subclass.
    */
-  getItemHeight() {
-    return this.props.itemHeight;
+  getHeight() {
+    return this.props.height;
   }
 
   /**
@@ -167,7 +171,7 @@ export default class ItemRenderer extends React.Component {
     return {
       ...this.props.style,
       color: this.getTextColor(),
-      height: this.getItemHeight(),
+      height: this.getHeight(),
       background: this.getBackgroundGradient()
     };
   }

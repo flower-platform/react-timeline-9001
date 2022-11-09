@@ -3,7 +3,7 @@ import React from 'react';
 import {shallow} from 'enzyme';
 import {expect} from 'chai';
 
-import ItemRenderer from './itemRenderer';
+import ItemRenderer from './ItemRenderer';
 
 describe('Item renderer', () => {
   it('should render the item', () => {
