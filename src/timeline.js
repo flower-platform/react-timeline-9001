@@ -31,7 +31,8 @@ import {
 } from './utils/timeUtils';
 import Timebar from './components/timebar';
 import SelectBox from './components/selector';
-import {DefaultGroupRenderer, DefaultItemRenderer} from './components/renderers';
+import ItemRenderer from './components/ItemRenderer';
+import {GroupRenderer} from './components/GroupRenderer';
 import TimelineBody from './components/body';
 import Marker from './components/marker';
 
@@ -56,6 +57,257 @@ export default class Timeline extends React.Component {
     RESIZE: 4
   });
 
+  static propTypes = {
+    /**
+     * The rows (aka groups) of the Timeline.
+     *
+     * `id` is mandatory, it should: be numeric, start with 0 and have consecutive values.
+     *
+     * `title` is used displayed by the default renderer. This is optional, i.e. you may use this and/or other fields, provided
+     * you have a custom renderer.
+     * @type { Array.<object> }
+     */
+    groups: PropTypes.arrayOf(
+      PropTypes.shape({
+        id: PropTypes.number.isRequired,
+        title: PropTypes.string
+      })
+    ).isRequired,
+
+    /**
+     * The segments (aka items). An item is associated with a row. Hence `row` is mandatory, pointing to an `id` of a row (group).
+     *
+     * `key` is also needed and has the React standard meaning.
+     *
+     * `start` and `stop` are dates (numeric/millis or moment objects, cf. `useMoment`).
+     *
+     * All the props of an item are copied to the props of the item renderer. E.g. `<ItemRenderer {...props.itemRendererDefaultProps } {...item}` ... />. See its
+     * doc, to see what props are known/rendered by `ItemRenderer` (such as `title`, `color`, etc.). The item renderer can be
+     * customized using the `itemRenderer` prop.
+     * @type { Array.<object> }
+     */
+    items: PropTypes.arrayOf(
+      PropTypes.shape({
+        key: PropTypes.oneOfType([PropTypes.number, PropTypes.string]).isRequired,
+        // start and end are not required because getStartFromItem() and getEndFromItem() functions
+        // are being used and they can be overriden to use other fields
+        start: PropTypes.oneOfType([PropTypes.number, PropTypes.object]),
+        end: PropTypes.oneOfType([PropTypes.number, PropTypes.object])
+      })
+    ).isRequired,
+    /**
+     * @type { Array.<number> }
+     */
+    selectedItems: PropTypes.arrayOf(PropTypes.number),
+
+    /**
+     * The component that is the item (segment) renderer. You can change the default component (i.e. `ItemRenderer`). We
+     * recommend to create a subclass of it, rather than creating one from scratch.
+     * @type { object | Function }
+     */
+    itemRenderer: PropTypes.oneOfType([PropTypes.object, PropTypes.func]),
+
+    /**
+     * This is used more or less like this:
+     *
+     * ```jsx
+     * <ItemRenderer {...props.itemRendererDefaultProps } {...item} ... />
+     * ```
+     *
+     * This is the way to go if you want to set a property for all segments (items). E.g. `color`. Take a look at the props
+     * of `ItemRenderer` to see what are the possible options. If you override the item renderer, and it will accept additional
+     * props, you can of course specify them here.
+     * @type { object }
+     */
+    itemRendererDefaultProps: PropTypes.object,
+
+    /**
+     * The height of the items (segments) in pixels, it is used to calculate the height of the row.
+     *
+     * Items (segments) that are overlapping are displayed one below the other. In this case, the height of the row will
+     * be the maximum number of overlapping items (segments) multiplied by `itemHeight`.
+     * @type { number }
+     */
+    itemHeight: PropTypes.number,
+    /**
+     * List of layers that will be rendered for a row.
+     * @type { Array.<object> }
+     */
+    rowLayers: PropTypes.arrayOf(
+      PropTypes.shape({
+        // start and end are not required because getStartFromItem() and getEndFromItem() functions
+        // are being used and they can be overriden to use other fields
+        start: PropTypes.oneOfType([PropTypes.object, PropTypes.number]),
+        end: PropTypes.oneOfType([PropTypes.object, PropTypes.number]),
+        rowNumber: PropTypes.number.isRequired,
+        style: PropTypes.object.isRequired
+      })
+    ),
+
+    /**
+     * Start of the displayed interval, as date (numeric/millis or moment object, cf. `useMoment`).
+     * @type { number | object }
+     */
+    startDate: PropTypes.oneOfType([PropTypes.number, PropTypes.object]).isRequired,
+
+    /**
+     * End of the displayed interval, as date (numeric/millis or moment object, cf. `useMoment`).
+     * @type { number | object }
+     */
+    endDate: PropTypes.oneOfType([PropTypes.number, PropTypes.object]).isRequired,
+
+    /** If `false`, then when you "talk" dates/times to the Timeline, then you use
+     * plain timestamps (i.e. number of millis, e.g. `new Date().valueOf()`). And this everywhere where
+     * a date/time is needed (e.g. for an item, for global start/end, etc.). This is the **recommended** (and the default) way to go, especially if you use Redux.
+     *
+     * NOTE 1: the Timeline still uses "moment" internally. And this because it was quicker to refactor this way.
+     * This may change in the future, if we find reasons and time to refactor more.
+     *
+     * NOTE 2: The upstream repo, had this `true` by default, in order to maintain backward compatibility. But we discovered that w/ `false`, the component
+     * actually works both w/ timestamps AND moment objects. And this is because we convert using `moment(date)`, which works in the 2 cases. Obviously it's
+     * not a good idea to mix the date types, one of the reasons being that maybe in the future moment won't be used internally any more.
+     * @type { boolean }
+     */
+    useMoment: PropTypes.bool,
+    /**
+     * Single column mode: the width of the column.
+     * Multiple columns mode: the default width of the columns (if column.width is not configured), which may be overridden on a per column basis.
+     * @type { number }
+     */
+    groupOffset: PropTypes.number.isRequired,
+    /**
+     * The columns that will be rendered using data from groups.
+     * @type {Array.<object>}
+     */
+    tableColumns: PropTypes.arrayOf(
+      PropTypes.shape({
+        /**
+         * The default renderer for a cell is props.groupRenderer that renders labelProperty from group.
+         * The renderer for a column can be overriden using cellRenderer. cellRenderer can be a React element
+         * or a function or a class component that generates a React element.
+         */
+        labelProperty: PropTypes.string,
+        cellRenderer: PropTypes.oneOfType([PropTypes.func, PropTypes.element]),
+        // The default renderer for a header is props.groupTitleRenderer that renders headerLabel.
+        // The renderer for a header column can be overriden using headerRenderer. headerRenderer can be a React element
+        // or a function or a class component that generates a React element.
+        headerLabel: PropTypes.string,
+        headerRenderer: PropTypes.oneOfType([PropTypes.func, PropTypes.element]),
+        /**
+         * Width of the column in px.
+         */
+        width: PropTypes.number
+      })
+    ),
+    /**
+     * Single column mode: the renderer of a cell.
+     * Multiple columns mode: the default renderer of a cell, which may be overridden on a per column basis.
+     * @type { Function }
+     */
+    groupRenderer: PropTypes.func,
+    /**
+     * Single column mode: the renderer of the header cell.
+     * Multiple columns mode: the default renderer of a header cell, which may be overridden on a per column basis.
+     * @type { Function }
+     */
+    groupTitleRenderer: PropTypes.func,
+    /**
+     * @type { number }
+     */
+    snap: PropTypes.number, //like snapMinutes, but for seconds; couldn't get it any lower because the pixels are not calculated correctly
+    /**
+     * @type { number }
+     */
+    snapMinutes: PropTypes.number,
+    /**
+     * Shows the cursor time in the timebar and a red marker in the grid indicating the cursor time.
+     * @type { boolean }
+     */
+    showCursorTime: PropTypes.bool,
+    /**
+     * The format of the cursor time displayed in the timebar.
+     * @type { string }
+     */
+    cursorTimeFormat: PropTypes.string,
+    /**
+     * A unique key to identify the component. Only needed when 2 grids are mounted.
+     * @type { string }
+     */
+    componentId: PropTypes.string,
+    /**
+     * @type { number }
+     */
+    timelineMode: PropTypes.number,
+    /**
+     * @type { object }
+     */
+    timebarFormat: PropTypes.object,
+    /**
+     * @type { string }
+     */
+    bottomResolution: PropTypes.string,
+    /**
+     * @type { string }
+     */
+    topResolution: PropTypes.string,
+    /**
+     * If true timeline will try to minimize re-renders . Set to false if items don't show up/update on prop change.
+     * @type { boolean }
+     */
+    shallowUpdateCheck: PropTypes.bool,
+    /**
+     * Function called when shallowUpdateCheck==true. If returns true the timeline will be redrawn.
+     * If false the library will decide if redrawing is required.
+     * @type { Function }
+     */
+    forceRedrawFunc: PropTypes.func,
+    /**
+     * @type { object }
+     */
+    interactOptions: PropTypes.shape({
+      draggable: PropTypes.object,
+      pointerEvents: PropTypes.object,
+      // TODO: this doesn't seem used; originally it was w/ "required"; I removed this to avoid warnings in console
+      resizable: PropTypes.object
+    }),
+    /**
+     * @type { Function }
+     */
+    onItemClick: PropTypes.func,
+    /**
+     * @type { Function }
+     */
+    onItemDoubleClick: PropTypes.func,
+    /**
+     * @type { Function }
+     */
+    onItemContext: PropTypes.func,
+    /**
+     * @type { Function }
+     */
+    onInteraction: PropTypes.func,
+    /**
+     * @type { Function }
+     */
+    onRowClick: PropTypes.func,
+    /**
+     * @type { Function }
+     */
+    onRowContext: PropTypes.func,
+    /**
+     * @type { Function }
+     */
+    onRowDoubleClick: PropTypes.func,
+    /**
+     * @type { Function }
+     */
+    onItemHover: PropTypes.func,
+    /**
+     * @type { Function }
+     */
+    onItemLeave: PropTypes.func
+  };
+
   static defaultProps = {
     rowLayers: [],
     groupOffset: 150,
@@ -64,8 +316,8 @@ export default class Timeline extends React.Component {
     cursorTimeFormat: 'D MMM YYYY HH:mm',
     componentId: 'r9k1',
     showCursorTime: true,
-    groupRenderer: DefaultGroupRenderer,
-    itemRenderer: DefaultItemRenderer,
+    groupRenderer: GroupRenderer,
+    itemRenderer: ItemRenderer,
     timelineMode: Timeline.TIMELINE_MODES.SELECT | Timeline.TIMELINE_MODES.DRAG | Timeline.TIMELINE_MODES.RESIZE,
     // in rtl9k
     // shallowUpdateCheck: false,
@@ -74,6 +326,7 @@ export default class Timeline extends React.Component {
     onItemHover() {},
     onItemLeave() {},
     interactOptions: {},
+    itemStyle: {},
     // in rtl9k:
     // useMoment: true,
     useMoment: false,
@@ -89,7 +342,8 @@ export default class Timeline extends React.Component {
     onItemContext() {},
     onRowClick() {},
     onRowContext() {},
-    onRowDoubleClick() {}
+    onRowDoubleClick() {},
+    itemRendererDefaultProps: {}
   };
 
   /**
@@ -887,6 +1141,7 @@ export default class Timeline extends React.Component {
               this.props.itemHeight,
               this.props.itemRenderer,
               canSelect ? this.props.selectedItems : [],
+              this.props.itemRendererDefaultProps,
               this.getStartFromItem,
               this.getEndFromItem
             )}
@@ -1131,231 +1386,3 @@ export default class Timeline extends React.Component {
     );
   }
 }
-
-export const TimelinePropTypes = {
-  /**
-   * The rows (aka groups) of the Timeline.
-   *
-   * `id` is mandatory, it should: be numeric, start with 0 and have consecutive values.
-   *
-   * `title` is used displayed by the default renderer. This is optional, i.e. you may use this and/or other fields, provided
-   * you have a custom renderer.
-   * @type { Array.<object> }
-   */
-  groups: PropTypes.arrayOf(
-    PropTypes.shape({
-      id: PropTypes.number.isRequired,
-      title: PropTypes.string
-    })
-  ).isRequired,
-
-  /**
-   * The segments. A segment is associated with a row. Hence `row` is mandatory, pointing to an `id` of a row (group).
-   *
-   * `key` is also needed and has the React standard meaning.
-   *
-   * `start` and `stop` are dates (numeric/millis or moment objects, cf. `useMoment`).
-   * @type { Array.<object> }
-   */
-  items: PropTypes.arrayOf(
-    PropTypes.shape({
-      key: PropTypes.oneOfType([PropTypes.number, PropTypes.string]).isRequired,
-      // start and end are not required because getStartFromItem() and getEndFromItem() functions
-      // are being used and they can be overriden to use other fields
-      start: PropTypes.oneOfType([PropTypes.number, PropTypes.object]),
-      end: PropTypes.oneOfType([PropTypes.number, PropTypes.object])
-    })
-  ).isRequired,
-  /**
-   * @type { Array.<number> }
-   */
-  selectedItems: PropTypes.arrayOf(PropTypes.number),
-  /**
-   * List of layers that will be rendered for a row.
-   * @type { Array.<object> }
-   */
-  rowLayers: PropTypes.arrayOf(
-    PropTypes.shape({
-      // start and end are not required because getStartFromItem() and getEndFromItem() functions
-      // are being used and they can be overriden to use other fields
-      start: PropTypes.oneOfType([PropTypes.object, PropTypes.number]),
-      end: PropTypes.oneOfType([PropTypes.object, PropTypes.number]),
-      rowNumber: PropTypes.number.isRequired,
-      style: PropTypes.object.isRequired
-    })
-  ),
-
-  /**
-   * Start of the displayed interval, as date (numeric/millis or moment object, cf. `useMoment`).
-   * @type { number | object }
-   */
-  startDate: PropTypes.oneOfType([PropTypes.number, PropTypes.object]).isRequired,
-
-  /**
-   * End of the displayed interval, as date (numeric/millis or moment object, cf. `useMoment`).
-   * @type { number | object }
-   */
-  endDate: PropTypes.oneOfType([PropTypes.number, PropTypes.object]).isRequired,
-
-  /** If `false`, then when you "talk" dates/times to the Timeline, then you use
-   * plain timestamps (i.e. number of millis, e.g. `new Date().valueOf()`). And this everywhere where
-   * a date/time is needed (e.g. for an item, for global start/end, etc.). This is the **recommended** (and the default) way to go, especially if you use Redux.
-   *
-   * NOTE 1: the Timeline still uses "moment" internally. And this because it was quicker to refactor this way.
-   * This may change in the future, if we find reasons and time to refactor more.
-   *
-   * NOTE 2: The upstream repo, had this `true` by default, in order to maintain backward compatibility. But we discovered that w/ `false`, the component
-   * actually works both w/ timestamps AND moment objects. And this is because we convert using `moment(date)`, which works in the 2 cases. Obviously it's
-   * not a good idea to mix the date types, one of the reasons being that maybe in the future moment won't be used internally any more.
-   *
-   * @type { boolean }
-   */
-  useMoment: PropTypes.bool,
-  /**
-   * Single column mode: the width of the column.
-   * Multiple columns mode: the default width of the columns (if column.width is not configured), which may be overridden on a per column basis.
-   * @type { number }
-   */
-  groupOffset: PropTypes.number.isRequired,
-  /**
-   * The columns that will be rendered using data from groups.
-   * @type { Array.<object> }
-   */
-  tableColumns: PropTypes.arrayOf(
-    PropTypes.shape({
-      /**
-       * The default renderer for a cell is props.groupRenderer that renders labelProperty from group.
-       * The renderer for a column can be overriden using cellRenderer. cellRenderer can be a React element
-       * or a function or a class component that generates a React element.
-       */
-      labelProperty: PropTypes.string,
-      cellRenderer: PropTypes.oneOfType([PropTypes.func, PropTypes.element]),
-      // The default renderer for a header is props.groupTitleRenderer that renders headerLabel.
-      // The renderer for a header column can be overriden using headerRenderer. headerRenderer can be a React element
-      // or a function or a class component that generates a React element.
-      headerLabel: PropTypes.string,
-      headerRenderer: PropTypes.oneOfType([PropTypes.func, PropTypes.element]),
-      /**
-       * Width of the column in px.
-       */
-      width: PropTypes.number
-    })
-  ),
-  /**
-   * Single column mode: the renderer of a cell.
-   * Multiple columns mode: the default renderer of a cell, which may be overridden on a per column basis.
-   * @type { Function }
-   */
-  groupRenderer: PropTypes.func,
-  /**
-   * Single column mode: the renderer of the header cell.
-   * Multiple columns mode: the default renderer of a header cell, which may be overridden on a per column basis.
-   * @type { Function }
-   */
-  groupTitleRenderer: PropTypes.func,
-  /**
-   * @type { Function }
-   */
-  itemRenderer: PropTypes.func,
-  /**
-   * @type { number }
-   */
-  itemHeight: PropTypes.number,
-  /**
-   * @type { number }
-   */
-  snap: PropTypes.number, //like snapMinutes, but for seconds; couldn't get it any lower because the pixels are not calculated correctly
-  /**
-   * @type { number }
-   */
-  snapMinutes: PropTypes.number,
-  /**
-   * Shows the cursor time in the timebar and a red marker in the grid indicating the cursor time.
-   * @type { boolean }
-   */
-  showCursorTime: PropTypes.bool,
-  /**
-   * The format of the cursor time displayed in the timebar.
-   * @type { string }
-   */
-  cursorTimeFormat: PropTypes.string,
-  /**
-   * A unique key to identify the component. Only needed when 2 grids are mounted.
-   * @type { string }
-   */
-  componentId: PropTypes.string,
-  /**
-   * @type { number }
-   */
-  timelineMode: PropTypes.number,
-  /**
-   * @type { object }
-   */
-  timebarFormat: PropTypes.object,
-  /**
-   * @type { string }
-   */
-  bottomResolution: PropTypes.string,
-  /**
-   * @type { string }
-   */
-  topResolution: PropTypes.string,
-  /**
-   * If true timeline will try to minimize re-renders . Set to false if items don't show up/update on prop change.
-   * @type { boolean }
-   */
-  shallowUpdateCheck: PropTypes.bool,
-  /**
-   * Function called when shallowUpdateCheck==true. If returns true the timeline will be redrawn.
-   * If false the library will decide if redrawing is required.
-   * @type { Function }
-   */
-  forceRedrawFunc: PropTypes.func,
-  /**
-   * @type { object }
-   */
-  interactOptions: PropTypes.shape({
-    draggable: PropTypes.object,
-    pointerEvents: PropTypes.object,
-    // TODO: this doesn't seem used; originally it was w/ "required"; I removed this to avoid warnings in console
-    resizable: PropTypes.object
-  }),
-  /**
-   * @type { Function }
-   */
-  onItemClick: PropTypes.func,
-  /**
-   * @type { Function }
-   */
-  onItemDoubleClick: PropTypes.func,
-  /**
-   * @type { Function }
-   */
-  onItemContext: PropTypes.func,
-  /**
-   * @type { Function }
-   */
-  onInteraction: PropTypes.func,
-  /**
-   * @type { Function }
-   */
-  onRowClick: PropTypes.func,
-  /**
-   * @type { Function }
-   */
-  onRowContext: PropTypes.func,
-  /**
-   * @type { Function }
-   */
-  onRowDoubleClick: PropTypes.func,
-  /**
-   * @type { Function }
-   */
-  onItemHover: PropTypes.func,
-  /**
-   * @type { Function }
-   */
-  onItemLeave: PropTypes.func
-};
-
-Timeline.propTypes = TimelinePropTypes;
