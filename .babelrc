@@ -1,7 +1,3 @@
 {
-  "presets": ["@babel/preset-env", "@babel/preset-react"],
-  "ignore": [
-    "**/demo.js","**/demo_index.js","**/demo.html","**/demo/",
-    "**/setupTests.js","**/*/*.test.js","**/stories/"
-  ]
+  "presets": ["@babel/preset-env", "@babel/preset-react"]
 }
