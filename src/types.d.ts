@@ -7,7 +7,7 @@ export type Column = {
 }
 
 export type Group = {
-    id: number
+    id: number,
     title?: string
 }
 
@@ -26,7 +26,7 @@ export type Item = {
 
 export type RowLayer = {
     start?: number | object,
-    end?: number | object
+    end?: number | object,
     rowNumber: number,
     style: object
 }

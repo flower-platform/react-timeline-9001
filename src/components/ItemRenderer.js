@@ -98,7 +98,8 @@ export default class ItemRenderer extends React.Component {
     title: undefined,
     tooltip: undefined,
     className: undefined,
-    style: {}
+    style: {},
+    item: {}
   };
 
   /**
