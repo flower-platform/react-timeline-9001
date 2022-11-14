@@ -39,6 +39,14 @@ import Marker from './components/marker';
 // startsWith polyfill for IE11 support
 import 'core-js/fn/string/starts-with';
 
+/**
+ * @typedef { import("./types").Column } Column
+ * @typedef { import("./types").Group } Group
+ * @typedef { import("./types").Item } Item
+ * @typedef { import("./types").RowLayer } RowLayer
+ * @typedef { import('./types').InteractOption } InteractOption
+ */
+
 const SINGLE_COLUMN_LABEL_PROPERTY = 'title';
 
 /**
@@ -65,7 +73,7 @@ export default class Timeline extends React.Component {
      *
      * `title` is used displayed by the default renderer. This is optional, i.e. you may use this and/or other fields, provided
      * you have a custom renderer.
-     * @type { Array.<object> }
+     * @type { Array.<Group> }
      */
     groups: PropTypes.arrayOf(
       PropTypes.shape({
@@ -84,11 +92,12 @@ export default class Timeline extends React.Component {
      * All the props of an item are copied to the props of the item renderer. E.g. `<ItemRenderer {...props.itemRendererDefaultProps } {...item}` ... />. See its
      * doc, to see what props are known/rendered by `ItemRenderer` (such as `title`, `color`, etc.). The item renderer can be
      * customized using the `itemRenderer` prop.
-     * @type { Array.<object> }
+     * @type { Array.<Item> }
      */
     items: PropTypes.arrayOf(
       PropTypes.shape({
         key: PropTypes.oneOfType([PropTypes.number, PropTypes.string]).isRequired,
+        row: PropTypes.number.isRequired,
         // start and end are not required because getStartFromItem() and getEndFromItem() functions
         // are being used and they can be overriden to use other fields
         start: PropTypes.oneOfType([PropTypes.number, PropTypes.object]),
@@ -103,7 +112,7 @@ export default class Timeline extends React.Component {
     /**
      * The component that is the item (segment) renderer. You can change the default component (i.e. `ItemRenderer`). We
      * recommend to create a subclass of it, rather than creating one from scratch.
-     * @type { object | Function }
+     * @type { Function }
      */
     itemRenderer: PropTypes.oneOfType([PropTypes.object, PropTypes.func]),
 
@@ -131,7 +140,7 @@ export default class Timeline extends React.Component {
     itemHeight: PropTypes.number,
     /**
      * List of layers that will be rendered for a row.
-     * @type { Array.<object> }
+     * @type { Array.<RowLayer> }
      */
     rowLayers: PropTypes.arrayOf(
       PropTypes.shape({
@@ -146,7 +155,7 @@ export default class Timeline extends React.Component {
 
     /**
      * Start of the displayed interval, as date (numeric/millis or moment object, cf. `useMoment`).
-     * @type { number | object }
+     * @type {number | object}
      */
     startDate: PropTypes.oneOfType([PropTypes.number, PropTypes.object]).isRequired,
 
@@ -178,7 +187,7 @@ export default class Timeline extends React.Component {
     groupOffset: PropTypes.number.isRequired,
     /**
      * The columns that will be rendered using data from groups.
-     * @type { Array.<object> }
+     * @type { Array.<Column> }
      */
     tableColumns: PropTypes.arrayOf(
       PropTypes.shape({
@@ -263,7 +272,7 @@ export default class Timeline extends React.Component {
      */
     forceRedrawFunc: PropTypes.func,
     /**
-     * @type { object }
+     * @type { InteractOption }
      */
     interactOptions: PropTypes.shape({
       draggable: PropTypes.object,
@@ -679,6 +688,7 @@ export default class Timeline extends React.Component {
 
   /**
    * Get the snap in milliseconds from snapMinutes or snap
+   * @returns { number }
    */
   getTimelineSnap() {
     if (this.props.snap) {
@@ -697,6 +707,11 @@ export default class Timeline extends React.Component {
     this._grid.recomputeGridSize(config);
   };
 
+  /**
+   * @param { boolean } canSelect
+   * @param { boolean } canDrag
+   * @param { boolean } canResize
+   */
   setUpDragging(canSelect, canDrag, canResize) {
     // No need to setUpDragging during SSR
     if (typeof window === 'undefined') {
@@ -1293,10 +1308,18 @@ export default class Timeline extends React.Component {
     if (bottomResolution) varTimebarProps['bottom_resolution'] = bottomResolution;
     if (topResolution) varTimebarProps['top_resolution'] = topResolution;
 
+    /**
+     * @param { Column } column
+     * @returns { number } width of a column
+     */
     function getColumnWidth(column) {
       return column.width ? column.width : groupOffset;
     }
 
+    /**
+     * @param { number } width
+     * @returns { Function }
+     */
     function columnWidth(width) {
       return ({index}) => {
         // The width of the first column when tableColumns is not defined is groupOffset.
@@ -1320,6 +1343,10 @@ export default class Timeline extends React.Component {
       };
     }
 
+    /**
+     * @param { number } height
+     * @returns { number } height of the timeline w/o timebar
+     */
     function calculateHeight(height) {
       if (typeof window === 'undefined') {
         return 0;

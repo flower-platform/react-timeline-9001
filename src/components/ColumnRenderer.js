@@ -9,6 +9,7 @@ import React from 'react';
 export class ColumnHeaderRenderer extends React.Component {
   /**
    * Returns the label of the header.
+   * @returns { string }
    */
   getLabel() {
     return this.props.column ? this.props.column.headerLabel : '';

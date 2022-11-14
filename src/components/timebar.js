@@ -9,6 +9,10 @@ import {ColumnHeaderRenderer} from './ColumnRenderer';
 import {timebarFormat as defaultTimebarFormat} from '../consts/timebarConsts';
 
 /**
+ * @typedef {import('./types').Column} Column
+ */
+
+/**
  * Timebar component - displays the current time on top of the timeline.
  * @extends React.Component<Timebar.propTypes>
  */
@@ -336,7 +340,7 @@ Timebar.propTypes = {
    */
   timeFormats: PropTypes.object,
   /**
-   * @type { Array.<object> }
+   * @type { Array.<Column> }
    */
   tableColumns: PropTypes.arrayOf(PropTypes.object)
 };

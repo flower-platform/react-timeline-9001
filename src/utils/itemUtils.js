@@ -14,6 +14,7 @@ import moment from 'moment';
  * @param  {number} itemHeight The height of the item in px
  * @param  {function} itemRenderer The renderer of the item
  * @param  {Object[]} selectedItems
+ * @param  {Object} itemRendererDefaultProps
  * @param  {function} getStartFromItem Function that returns the start of an item
  * @param  {function} getEndFromItem Function that returns the end of an item
  */

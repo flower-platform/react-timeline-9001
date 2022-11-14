@@ -66,7 +66,7 @@ export default class ItemRenderer extends React.Component {
     /**
      * A number between 0 and 100 (percentage from the height of the item) and it represents the point where the first color stops in the gradient.
      * @type { number }
-     * /
+     */
     gradientStop: PropTypes.number,
 
     /**
@@ -103,6 +103,7 @@ export default class ItemRenderer extends React.Component {
 
   /**
    * Getter for the corresponding prop, to allow override by subclass.
+   * @returns { string | JSX.Element }
    */
   getTitle() {
     return this.props.title;
@@ -110,6 +111,7 @@ export default class ItemRenderer extends React.Component {
 
   /**
    * Getter for the corresponding prop, to allow override by subclass.
+   * @returns { string }
    */
   getTooltip() {
     return this.props.tooltip;
@@ -117,6 +119,7 @@ export default class ItemRenderer extends React.Component {
 
   /**
    * Getter for the corresponding prop, to allow override by subclass.
+   * @returns { string | number }
    */
   getHeight() {
     return this.props.height;
@@ -124,6 +127,7 @@ export default class ItemRenderer extends React.Component {
 
   /**
    * Getter for the corresponding prop, to allow override by subclass.
+   * @returns { string }
    */
   getColor() {
     return this.props.color;
@@ -131,6 +135,7 @@ export default class ItemRenderer extends React.Component {
 
   /**
    * Getter for the corresponding prop, to allow override by subclass.
+   * @returns { number }
    */
   getGradientBrightness() {
     return this.props.gradientBrightness;
@@ -138,6 +143,7 @@ export default class ItemRenderer extends React.Component {
 
   /**
    * Getter for the corresponding prop, to allow override by subclass.
+   * @returns { number }
    */
   getGradientStop() {
     return this.props.gradientStop;
@@ -145,6 +151,7 @@ export default class ItemRenderer extends React.Component {
 
   /**
    * Getter for the corresponding prop, to allow override by subclass.
+   * @returns { boolean }
    */
   getGradientReverseDirection() {
     return this.props.gradientReverseDirection;
@@ -153,6 +160,7 @@ export default class ItemRenderer extends React.Component {
   /**
    * Returns the color of the text. This method returns 'white' when the background is darker,
    * otherwise returns black.
+   * @returns {string}
    */
   getTextColor() {
     return Color(this.getColor()).light() ? 'black' : 'white';
@@ -182,6 +190,7 @@ export default class ItemRenderer extends React.Component {
 
   /**
    * Returns the style of the item.
+   * @returns { object }
    */
   getStyle() {
     return {
@@ -194,6 +203,7 @@ export default class ItemRenderer extends React.Component {
 
   /**
    * Returns a css class used to apply glow on item hover.
+   * @returns { string }
    */
   getGlowOnHoverClassName() {
     return this.props.glowOnHover ? ITEM_RENDERER_GLOW_CLS : '';
@@ -201,6 +211,7 @@ export default class ItemRenderer extends React.Component {
 
   /**
    * Returns the css classes applied on the item.
+   * @returns { string }
    */
   getClassName() {
     return ITEM_RENDERER_CLS + ' ' + this.props.className + ' ' + this.getGlowOnHoverClassName();

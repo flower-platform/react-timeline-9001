@@ -10,6 +10,7 @@ import React from 'react';
 export class GroupRenderer extends React.Component {
   /**
    * Returns the label of the cell.
+   * @returns { string }
    */
   getLabel() {
     return this.props.group[this.props.labelProperty];

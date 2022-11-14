@@ -1,9 +1,22 @@
 import moment from 'moment';
+import { Group, Item } from '../types';
+
+export type Task = Item & {
+  title?: string,
+  style?: object,
+  className?: string,
+  color?: string,
+  tooltip?: string,
+  gradientStop?: number,
+  gradientBrightness?: number,
+  gradientReverseDirection?: boolean,
+  glowOnHover?: boolean
+}
 
 // utility function used for hardcoding our sample data
-export const d = str => moment(str).valueOf();
+export const d = (str: moment.MomentInput) => moment(str).valueOf();
 
-export const someHumanResources = [
+export const someHumanResources: Group[] = [
   {id: 0, title: 'John Doe'},
   {id: 1, title: 'Alex Randal'},
   {id: 2, title: 'Mary Danton'},
@@ -11,7 +24,7 @@ export const someHumanResources = [
 ];
 
 // 10 rows, so it's easy to remember in stories: new tasks start from 11
-export const someTasks = [
+export const someTasks: Task[] = [
   {key: 0, row: 0, title: 'Task JD1', start: d('2018-09-20 8:00'), end: d('2018-09-20 11:00')},
   {key: 1, row: 0, title: 'Task JD2', start: d('2018-09-20 18:00'), end: d('2018-09-20 19:00')},
   {key: 2, row: 0, title: 'Task JD3', start: d('2018-09-20 20:00'), end: d('2018-09-20 21:00')},
