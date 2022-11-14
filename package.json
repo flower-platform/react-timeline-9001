@@ -6,7 +6,7 @@
   "types": "./types/index.d.ts",
   "scripts": {
     "build": "tsc && cp src/types.d.ts types/types.d.ts && webpack --config webpack.prod.js",
-    "build_lib": "babel src --out-dir lib -x '.js,.jsx,.mdx,.html,.tsx' --copy-files --source-maps inline --no-copy-ignored",
+    "build_lib": "babel src --out-dir lib -x '.js,.jsx,.mdx,.html,.tsx' --ignore **/demo.js,**/demo_index.js,**/demo.html,**/demo/,**/setupTests.js,**/*/*.test.js,**/stories/ --copy-files --source-maps inline --no-copy-ignored",
     "build_demo": "webpack --config webpack.demo.prod.js",
     "start": "webpack-dev-server --open --config webpack.dev.js",
     "docs": "esdoc && mv docs/index.html docs/index-docs.html",
