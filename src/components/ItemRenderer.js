@@ -11,13 +11,14 @@ const ITEM_RENDERER_GLOW_CLS = 'rct9k-item-glow';
  *
  * All the properties have corresponding getter methods. We "OOP-ize" them, for the case where a subclass wants to "override" a property.
  * Without this pattern, such an override is not doable in React.
+ * @typedef { import('../types').Item } Item
  * @extends React.Component<ItemRenderer.propTypes>
  */
 export default class ItemRenderer extends React.Component {
   static propTypes = {
     /**
      * It's passed by the parent. Though not used by this component. It exists because maybe subclasses want to use it.
-     * @type { object }
+     * @type { Item }
      */
     item: PropTypes.object,
 

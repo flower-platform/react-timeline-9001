@@ -9,11 +9,8 @@ import {ColumnHeaderRenderer} from './ColumnRenderer';
 import {timebarFormat as defaultTimebarFormat} from '../consts/timebarConsts';
 
 /**
- * @typedef {import('./types').Column} Column
- */
-
-/**
  * Timebar component - displays the current time on top of the timeline.
+ * @typedef { import('./types').Column } Column
  * @extends React.Component<Timebar.propTypes>
  */
 export default class Timebar extends React.Component {
@@ -30,6 +27,7 @@ export default class Timebar extends React.Component {
   componentWillMount() {
     this.guessResolution();
   }
+
   /**
    * On new props we check if a resolution is given, and if not we guess one
    * @param {Object} nextProps Props coming in
@@ -79,6 +77,7 @@ export default class Timebar extends React.Component {
     let res = this.state.resolution.top;
     return this.renderBar({format: this.props.timeFormats.majorLabels[res], type: res});
   }
+
   /**
    * Renderer for bottom bar.
    * @returns {Object} JSX for bottom menu bar - based of time format & resolution
@@ -87,6 +86,7 @@ export default class Timebar extends React.Component {
     let res = this.state.resolution.bottom;
     return this.renderBar({format: this.props.timeFormats.minorLabels[res], type: res});
   }
+
   /**
    * Gets the number of pixels per segment of the timebar section (using the resolution)
    * @param {moment} date The date being rendered. This is used to figure out how many days are in the month
@@ -131,6 +131,7 @@ export default class Timebar extends React.Component {
     }
     return Math.min(inc, width);
   }
+
   /**
    * Renders an entire segment of the timebar (top or bottom)
    * @param {string} resolution The resolution to render at [Year; Month...]
@@ -293,52 +294,61 @@ Timebar.propTypes = {
    * @type { any }
    */
   cursorTime: PropTypes.any,
+
   /**
-   * Single column mode: the renderer of the header cell.
-   * Multiple columns mode: the default renderer of a header cell, which may be overridden on a per column basis.
+   * As e.g. @see Timeline.props.groupTitleRenderer
    * @type { Function }
    */
   groupTitleRenderer: PropTypes.func,
+
   /**
    * Start of the displayed interval, as moment object.
    * @type { object }
    */
   start: PropTypes.object.isRequired,
+
   /**
    * End of the displayed interval, as moment object.
    * @type { object }
    */
   end: PropTypes.object.isRequired,
+
   /**
    * Total width of the timeline (gantt), mandatory field.
    * @type { number }
    */
   width: PropTypes.number.isRequired,
+
   /**
    * The left side offset, this offset is subtracted from the total width of the timeline
    * to obtain the width of the timebar.
    * @type { number }
    */
   leftOffset: PropTypes.number,
+
   /**
    * The time unit for the top timebar.
    * @type { string }
    */
   top_resolution: PropTypes.string,
+
   /**
    * The time unit for the bottom timebar.
    * @type { string }
    */
   bottom_resolution: PropTypes.string,
+
   /**
    * @type { Array.<object> }
    */
   selectedRanges: PropTypes.arrayOf(PropTypes.object), // [start: moment ,end: moment (end)]
+
   /**
    * Formats for each time unit (@see defaultTimebarFormat)
    * @type { object }
    */
   timeFormats: PropTypes.object,
+
   /**
    * @type { Array.<Column> }
    */

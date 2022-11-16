@@ -5,17 +5,18 @@
   "private": false,
   "types": "./types/index.d.ts",
   "scripts": {
-    "build": "tsc && cp src/types.d.ts types/types.d.ts && webpack --config webpack.prod.js",
-    "build_lib": "babel src --out-dir lib -x '.js,.jsx,.mdx,.html,.tsx' --ignore **/demo.js,**/demo_index.js,**/demo.html,**/demo/,**/setupTests.js,**/*/*.test.js,**/stories/ --copy-files --source-maps inline --no-copy-ignored",
+    "build": "npm run tsc && webpack --config webpack.prod.js",
+    "build_lib": "npm run tsc && babel src --out-dir lib -x '.js,.jsx,.mdx,.html,.tsx' --ignore **/demo.js,**/demo_index.js,**/demo.html,**/demo/,**/setupTests.js,**/*/*.test.js,**/stories/ --copy-files --source-maps inline --no-copy-ignored",
     "build_demo": "webpack --config webpack.demo.prod.js",
     "start": "webpack-dev-server --open --config webpack.dev.js",
     "docs": "esdoc && mv docs/index.html docs/index-docs.html",
     "pretty": "prettier --write --tab-width 4 \"src/**/*.js\"",
     "precommit": "lint-staged",
-    "storybook": "start-storybook -p 6006",
+    "storybook": "npm run tsc && start-storybook -p 6006",
     "storybook-build": "build-storybook",
     "storybook-move": "rm -r ../flower-platform.github.io/foundation-react-gantt; mv storybook-static ../flower-platform.github.io/foundation-react-gantt",
-    "storybook-build-move": "yarn storybook-build && yarn storybook-move"
+    "storybook-build-move": "yarn storybook-build && yarn storybook-move",
+    "tsc": "tsc && cp src/types.d.ts types/types.d.ts"
   },
   "lint-staged": {
     "src/**/*.{js,jsx,json,css}": [

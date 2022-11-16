@@ -2,10 +2,11 @@ import {Alert} from 'antd';
 import React from 'react';
 import ItemRenderer from '../../components/ItemRenderer';
 import Timeline from '../../timeline';
-import {d, someHumanResources, someTasks, Task} from '../sampleData';
+import {d, someHumanResources, someTasks} from '../sampleData';
 import {itemRendererScenarios} from './ItemRendererScenarios';
 import {timelineScenarios} from '../TimelineScenarios';
 import { ComponentStory } from '@storybook/react';
+import { Item } from '../../types';
 
 export default {
   title: 'Features/Item Renderer',
@@ -13,7 +14,7 @@ export default {
 };
 
 export const PropsForItemRenderer: ComponentStory<typeof Timeline> = () => {
-  const tasks: Task[] = [
+  const tasks: Item[] = [
     ...someTasks,
     {
       key: 11,
@@ -113,7 +114,7 @@ DefaultPropsForItemRenderer.parameters = {
   scenarios: [timelineScenarios.propertyItemRendererDefaultProps]
 };
 
-type CustomTask = Task & {
+type CustomTask = Item & {
   type?: string,
   spentHours?: number,
   allTestsPassed?: boolean
@@ -134,8 +135,8 @@ export const CustomItemRenderer: ComponentStory<typeof Timeline> = () => {
 
   // custom item renderer that delegates to other renders based on the type of task
   class CustomItemRenderer extends ItemRenderer {
-    render(): JSX.Element {
-      const {type} = this.props.item;
+    render() {
+      const {type}: CustomTask = this.props.item;
       if (!type) {
         return super.render();
       }
@@ -151,44 +152,45 @@ export const CustomItemRenderer: ComponentStory<typeof Timeline> = () => {
 
   class AnalysisItemRenderer extends ItemRenderer {
     // we override the actual renderer of the title
-    getTitle(): string | JSX.Element {
+    getTitle() {
       return (
         <>
-          <b>[A]</b> {super.getTitle()} <u>{this.props.item.spentHours}</u>
+          <b>[A]</b> {super.getTitle()} <u>{(this.props.item as CustomTask).spentHours}</u>
         </>
       );
     }
 
     // text color depending data in the item
-    getTextColor(): string {
-      return this.props.item.spentHours > 10 ? 'yellow' : 'black';
+    getTextColor() {
+      const { spentHours } = this.props.item as CustomTask;
+      return (spentHours && spentHours > 10) ? 'yellow' : 'black';
     }
   }
 
   class DevelopmentItemRenderer extends ItemRenderer {
     // override to return a solid color
-    getBackgroundGradient(): string {
+    getBackgroundGradient() {
       return this.getColor();
     }
 
-    getClassName(): string {
+    getClassName() {
       return super.getClassName() + ' story-custom-item-class';
     }
   }
 
   class TestingItemRenderer extends ItemRenderer {
-    getColor(): string {
-      return this.props.item.allTestsPassed ? 'green' : 'red';
+    getColor() {
+      return (this.props.item as CustomTask).allTestsPassed ? 'green' : 'red';
     }
 
-    getStyle(): object {
+    getStyle() {
       return {
         ...super.getStyle(),
         borderRadius: '8px'
       };
     }
 
-    getHeight(): string | number {
+    getHeight() {
       return '20px';
     }
   }

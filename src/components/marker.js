@@ -2,7 +2,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 
 /**
- * @param {Marker.propTypes} props
+ * @param { Marker.propTypes } props
  */
 const Marker = props => {
   const {height, left, top} = props;
@@ -14,10 +14,12 @@ Marker.propTypes = {
    * @type { number }
    */
   height: PropTypes.number.isRequired,
+
   /**
    * @type { number }
    */
   left: PropTypes.number.isRequired,
+
   /**
    * @type { number }
    */

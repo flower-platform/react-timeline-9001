@@ -1,3 +1,8 @@
+/**
+ * Most of the JS classes/functions have type information as JSDoc (included in the corresponding comments).
+ * For some types this was not possible (e.g. because we didn't have actual classes), hence we define them here.
+ * They are "included" by the class Timeline.
+ */
 export type Column = {
     labelProperty: string,
     cellRenderer: Function | JSX.Element,
@@ -21,7 +26,16 @@ export type Item = {
     key: number | string,
     row: number,
     start?: number | object,
-    end?: number | object
+    end?: number | object,
+    title?: string,
+    style?: object,
+    className?: string,
+    color?: string,
+    tooltip?: string,
+    gradientStop?: number,
+    gradientBrightness?: number,
+    gradientReverseDirection?: boolean,
+    glowOnHover?: boolean
 }
 
 export type RowLayer = {
