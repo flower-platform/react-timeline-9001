@@ -72,7 +72,7 @@ export default class Timebar extends React.Component {
     /// 1ms -> 1s
     if (durationMilliSecs <= 1000) this.setState({resolution: {top: 'second', bottom: 'millisecond'}});
     // 1s  -> 2m
-    else if (durationMilliSecs <= 60 * 2 * 1000) resolution = {top: 'minute', bottom: 'second'};
+    else if (durationMilliSecs <= 60 * 2 * 1000) this.setState({resolution: {top: 'minute', bottom: 'second'}});
     // 2m -> 2h
     else if (durationMilliSecs <= 60 * 60 * 2 * 1000) this.setState({resolution: {top: 'hour', bottom: 'minute'}});
     // 2h -> 3d
