@@ -5,8 +5,31 @@
   flex-direction: column;
 }
 
+.story-custom-highlighted-interval-class {
+  background: #f6bea3 !important;
+  opacity: 0.5 !important;
+}
+
+.story-custom-highlighted-weekends-class {
+  opacity: 0.8 !important;
+  background: #ceefed !important;
+}
+
 .story-custom-item-class {
   opacity: 1;
   border: #d47b37 3px solid;
   border-radius: 0;
+}
+
+.story-custom-marker-class {
+  background: #f8efad !important;
+  width: 2px;
+}
+
+.story-custom-now-marker-class {
+  background: #f28de6 !important;
+}
+
+.story-custom-vertical-grid-class {
+  border-left: 1px solid #209ad8 !important;
 }

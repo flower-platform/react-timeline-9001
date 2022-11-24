@@ -1,0 +1,25 @@
+import { Meta, ArgsTable } from '@storybook/addon-docs';
+import Timeline from '../../timeline';
+import { BackgroundLayer } from '../../components/BackgroundLayer';
+import { HighlightedInterval } from '../../components/HighlightedInterval';
+import { Marker } from '../../components/Marker';
+
+<Meta title="Features/Background Layer/Doc" />
+
+## Timeline props for items
+
+<ArgsTable of={Timeline} include={["backgroundLayer"]} />
+
+## Background Layer
+
+We have the possibility to add a background layer to the timeline that has the following interesting props:
+
+<ArgsTable of={BackgroundLayer} />
+
+## HighlightedInterval
+
+<ArgsTable of={HighlightedInterval} />
+
+## Marker
+
+<ArgsTable of={Marker} />
