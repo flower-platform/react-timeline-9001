@@ -340,16 +340,10 @@ export default class Timeline extends React.Component {
     onItemLeave: PropTypes.func,
 
     /**
-     * This property will be used like this:
+     * This property should be used like this:
      *
      * ```jsx
-     * <Timeline ... // some props
-     * backgroundLayer={<BackgroundLayer
-     *  highlightWeekends highlightWeekendsClassName="myClass"
-     *  nowMarker nowMarkerClassName="..."
-     *  verticalGrid verticalGridClassName="..."
-     *  markers={[<Marker start={moment(...)} />, <Marker start=... className="..." /> ]}
-     *  highlightedIntervals={[<HighlightedInterval start={...} end={...} />, <HighlightedInterval start={...} end={...} className={...} /> ]}/>/>
+     * <Timeline backgroundLayer={<BackgroundLayer ... /> ... />
      * ```
      * @type { JSX.Element }
      */

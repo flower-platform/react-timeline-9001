@@ -12,40 +12,49 @@ import moment from 'moment';
 export class BackgroundLayer extends React.Component {
   static propTypes = {
     /**
-     * If true, it highlights the weekends.
+     * If `true`, it highlights the weekends.
+     *
      * @type { boolean }
      */
     highlightWeekends: PropTypes.bool,
 
     /**
      * Custom class name for highlighting the weekends.
+     *
      * NOTE: No need to provide this; because it has a default class. If a custom class is provided, `!important` should be used to override properties from the default class.
+     *
      * @type { string }
      */
     highlightWeekendsClassName: PropTypes.string,
 
     /**
-     * If true, it draws a marker (vertical line) that indicates the current time.
+     * If `true`, it draws a marker (vertical line) that indicates the current time.
+     *
      * @type { boolean }
      */
     nowMarker: PropTypes.bool,
 
     /**
      * Custom class name for now marker.
+     *
      * NOTE: No need to provide this; because it has a default class. If a custom class is provided, `!important` should be used to override properties from the default class.
+     *
      * @type { string }
      */
     nowMarkerClassName: PropTypes.string,
 
     /**
-     * If true, it draws vertical lines, according to the intervals defined by the bottom `Timebar`.
+     * If `true`, it draws vertical lines, according to the intervals defined by the bottom `Timebar`.
+     *
      * @type { boolean }
      */
     verticalGrid: PropTypes.bool,
 
     /**
      * Custom class name for vertical grid.
+     *
      * NOTE: No need to provide this; because it has a default class. If a custom class is provided, `!important` should be used to override properties from the default class.
+     *
      * @type { string }
      */
     verticalGridClassName: PropTypes.string,
@@ -61,43 +70,50 @@ export class BackgroundLayer extends React.Component {
     highlightedIntervals: PropTypes.arrayOf(PropTypes.object),
 
     /**
-     * It's passed by parent. Start of the timeline display interval, as date (moment object).
+     * Internal (passed by parent). Start of the timeline display interval, as date (moment object).
+     *
      * @type { object }
      */
     startDateTimeline: PropTypes.object,
 
     /**
-     * It's passed by parent. End of the timeline display interval, as date (moment object).
+     * Internal (passed by parent). End of the timeline display interval, as date (moment object).
+     *
      * @type { object }
      */
     endDateTimeline: PropTypes.object,
 
     /**
-     * It's passed by parent. The height of the background layer.
+     * Internal (passed by parent). The height of the background layer.
+     *
      * @type { number }
      */
     height: PropTypes.number,
 
     /**
-     * It's passed by parent. The position of the top edge of background layer.
+     * Internal (passed by parent). The position of the top edge of background layer.
+     *
      * @type { number }
      */
     topOffset: PropTypes.number,
 
     /**
-     * It's passed by parent. Total width of the timeline.
+     * Internal (passed by parent). Total width of the timeline.
+     *
      * @type { number }
      */
     width: PropTypes.number,
 
     /**
-     * It's passed by parent. The position of the left edge of background layer.
+     * Internal (passed by parent). The position of the left edge of background layer.
+     *
      * @type { number }
      */
     leftOffset: PropTypes.number,
 
     /**
-     * It's passed by parent. The vertical lines of the grid are already calculated by `Timerbar`.
+     * Internal (passed by parent). The vertical lines of the grid are already calculated by `Timerbar`.
+     *
      * @type { Array.<object>}
      */
     verticalGridLines: PropTypes.arrayOf(PropTypes.object)

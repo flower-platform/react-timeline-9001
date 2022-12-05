@@ -9,43 +9,50 @@ export class HighlightedInterval extends React.Component {
   static propTypes = {
     /**
      * Start of the highlighted interval, as date (numeric/millis or moment object, cf. `Timeline.props.useMoment`).
+     *
      * @type { object | number }
      */
     start: PropTypes.oneOfType([PropTypes.object, PropTypes.number]).isRequired,
 
     /**
      * End of the highlighted interval, as date (numeric/millis or moment object, cf. `Timeline.props.useMoment`).
+     *
      * @type { object | number}
      */
     end: PropTypes.oneOfType([PropTypes.object, PropTypes.number]).isRequired,
 
     /**
      * Class name used to render the interval.
+     *
      * @type { string }
      */
     className: PropTypes.string,
 
     /**
-     * The height of the highlighted interval; it's passed by the parent.
+     * Internal (passed by parent). The height of the highlighted interval.
+     *
      * @type { number }
      */
     height: PropTypes.number,
 
     /**
-     * `HighlightedInterval` uses absolute positioning, thus it needs the `top` property
-     * to set the top edge if the element. It's passed by the parent.
+     * Internal (passed by parent). `HighlightedInterval` uses absolute positioning, thus it needs the `top` property
+     * to set the top edge if the element.
+     *
      * @type { number }
      */
     top: PropTypes.number,
 
     /**
-     * It's passed by parent. This function allows the conversion of `start`/`end` (time) properties to pixels.
+     * Internal (passed by parent). This function allows the conversion of `start`/`end` (time) properties to pixels.
+     *
      * @type { Function }
      */
     calculateHorizontalPosition: PropTypes.func.isRequired,
 
     /**
-     * It's passed by parent. If true timeline will try to minimize re-renders (e.g: the displayed timeline interval changes).
+     * Internal (passed by parent). If true timeline will try to minimize re-renders (e.g: the displayed timeline interval changes).
+     *
      * @type { boolean }
      */
     shouldUpdate: PropTypes.bool

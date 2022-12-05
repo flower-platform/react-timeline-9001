@@ -10,7 +10,7 @@ export default {
   title: 'Features/Background Layer'
 };
 
-export const PropsForBackgroundLayer = () => {
+export const Main = () => {
   return (
     <Timeline startDate={startOfCurrentMonth()}
       endDate={endOfCurrentMonth()} groups={someHumanResources} items={[]}
@@ -29,7 +29,7 @@ export const PropsForBackgroundLayer = () => {
   );
 };
 
-PropsForBackgroundLayer.parameters = {
+Main.parameters = {
   scenarios: [
     backgroundLayerScenarios.verticalGrid,
     backgroundLayerScenarios.nowMarker,
@@ -39,10 +39,10 @@ PropsForBackgroundLayer.parameters = {
   ]
 }
 
-export const CustomClassNamesForBackgroundLayer = () => {
+export const CustomClassNamesAndStyles = () => {
   return (
     <Timeline startDate={startOfCurrentMonth()}
-      endDate={endOfCurrentMonth()} groups={someHumanResources} items={someTasks}
+      endDate={endOfCurrentMonth()} groups={someHumanResources} items={[]}
       backgroundLayer={
         <BackgroundLayer verticalGrid verticalGridClassName='story-custom-vertical-grid-class'
           nowMarker nowMarkerClassName='story-custom-now-marker-class'
@@ -60,17 +60,12 @@ export const CustomClassNamesForBackgroundLayer = () => {
   );
 };
 
-CustomClassNamesForBackgroundLayer.parameters = {
+CustomClassNamesAndStyles.parameters = {
   scenarios: [
-    backgroundLayerScenarios.verticalGrid,
     backgroundLayerScenarios.verticalGridClassName,
-    backgroundLayerScenarios.nowMarker,
     backgroundLayerScenarios.nowMarkerClassName,
-    backgroundLayerScenarios.highlightWeekends,
     backgroundLayerScenarios.highlightWeekendsClassName,
-    backgroundLayerScenarios.markers,
     backgroundLayerScenarios.classNameForMarker,
-    backgroundLayerScenarios.highlightedIntervals,
-    backgroundLayerScenarios.classNameForHighlightedInterval
+    backgroundLayerScenarios.highlightedIntervalClassName
   ]
 }

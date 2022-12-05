@@ -6,20 +6,29 @@ import { Marker } from '../../components/Marker';
 
 <Meta title="Features/Background Layer/Doc" />
 
-## Timeline props for items
+## Background layer
+
+A background layer contains 2 types of elements: 
+* markers (a vertical line),
+* and highlight intervals (a rectangle spanning from top to bottom). 
+
+You can add as many such items as you wish. Additionnaly, there are properties that generate:
+
+* a marker for the current date/time, 
+* and intervals for weekends.
+
+## `Timeline`
 
 <ArgsTable of={Timeline} include={["backgroundLayer"]} />
 
-## Background Layer
+## `BackgroundLayer`
 
-We have the possibility to add a background layer to the timeline that has the following interesting props:
+<ArgsTable of={BackgroundLayer} exclude={["startDateTimeline", "endDateTimeline", "height", "topOffset", "width", "leftOffset", "verticalGridLines"]}  />
 
-<ArgsTable of={BackgroundLayer} />
+## `HighlightedInterval`
 
-## HighlightedInterval
+<ArgsTable of={HighlightedInterval} exclude={["height", "top", "calculateHorizontalPosition", "shouldUpdate"]} />
 
-<ArgsTable of={HighlightedInterval} />
+## `Marker`
 
-## Marker
-
-<ArgsTable of={Marker} />
+<ArgsTable of={Marker} exclude={["height", "top", "calculateHorizontalPosition", "shouldUpdate"]} />

@@ -10,7 +10,7 @@ export const backgroundLayerScenarios = {
   highlightedIntervals: 'PROPERTY highlightedIntervals',
 
   // HighlightedInterval
-  classNameForHighlightedInterval: 'PROPERTY className FOR HighlightedInterval',
+  highlightedIntervalClassName: 'PROPERTY className FOR HighlightedInterval',
 
   // Marker
   classNameForMarker: 'PROPERTY className FOR Marker'
