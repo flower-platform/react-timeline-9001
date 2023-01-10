@@ -12,6 +12,7 @@ import {Column, Group, InteractOption, Item, RowLayer} from './index';
 
 import {pixToInt, intToPix} from './utils/commonUtils';
 import {
+  adjustRowTopPositionToViewport,
   rowItemsRenderer,
   rowLayerRenderer,
   getNearestRowNumber,
@@ -1084,7 +1085,8 @@ export default class Timeline extends React.Component {
 
           // this._selectBox.start(e.clientX, e.clientY);
           // this._selectBox.start(e.clientX, topRowObj.style.top);
-          this._selectBox.start(e.clientX, nearestRowObject.getBoundingClientRect().y);
+          const startY = adjustRowTopPositionToViewport(nearestRowObject, nearestRowObject.getBoundingClientRect().y);
+          this._selectBox.start(e.clientX, startY);
           // const bottomRow = Number(getNearestRowNumber(left + width, top + height));
         })
         .on('dragmove', e => {
@@ -1104,7 +1106,8 @@ export default class Timeline extends React.Component {
             if (startRowNumber <= currentRowNumber) {
               // select box for selection going down
               // get the first selected rows top
-              const startTop = Math.ceil(startRowObject.getBoundingClientRect().top + rowMarginBorder);
+              let startTop = Math.ceil(startRowObject.getBoundingClientRect().top + rowMarginBorder);
+              startTop = adjustRowTopPositionToViewport(startRowObject, startTop);
               // get the currently selected rows bottom
               const currentBottom = Math.floor(getTrueBottom(currentRowObject) - magicalConstant - rowMarginBorder);
               this._selectBox.start(startX, startTop);
@@ -1130,11 +1133,9 @@ export default class Timeline extends React.Component {
             const topRowNumber = Number(getNearestRowNumber(left, top));
             const topRowLoc = topRowObject.getBoundingClientRect();
             const rowMarginBorder = getVerticalMarginBorder(topRowObject);
+            const y = Math.floor(topRowLoc.top - rowMarginBorder) + Math.floor(height - rowMarginBorder);
             const bottomRow = Number(
-              getNearestRowNumber(
-                left + width,
-                Math.floor(topRowLoc.top - rowMarginBorder) + Math.floor(height - rowMarginBorder)
-              )
+              getNearestRowNumber(left + width, adjustRowTopPositionToViewport(topRowObject, y))
             );
             //Get the start and end time of the selection rectangle
             left = left - topRowLoc.left;
@@ -1509,7 +1510,7 @@ export default class Timeline extends React.Component {
                     key={m.key}
                     height={height}
                     top={0}
-                    start={0}
+                    date={0}
                     shouldUpdate={true}
                     calculateHorizontalPosition={() => {
                       return {left: m.left};

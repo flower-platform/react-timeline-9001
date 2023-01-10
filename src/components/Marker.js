@@ -14,7 +14,7 @@ export class Marker extends React.Component {
      *
      * @type { object | number }
      */
-    start: PropTypes.oneOfType([PropTypes.object, PropTypes.number]).isRequired,
+    date: PropTypes.oneOfType([PropTypes.object, PropTypes.number]).isRequired,
 
     /**
      * Class name used to render the marker.
@@ -39,7 +39,7 @@ export class Marker extends React.Component {
     top: PropTypes.number,
 
     /**
-     * Internal (passed by parent). This function allows the conversion of `start` (time) property to pixels.
+     * Internal (passed by parent). This function allows the conversion of `date` (time) property to pixels.
      *
      * @type { Function }
      */
@@ -66,7 +66,7 @@ export class Marker extends React.Component {
       nextProps.shouldUpdate ||
       this.props.height !== nextProps.height ||
       this.props.top !== nextProps.top ||
-      !convertDateToMoment(this.props.start).isSame(convertDateToMoment(nextProps.start).valueOf())
+      !convertDateToMoment(this.props.date).isSame(convertDateToMoment(nextProps.date).valueOf())
     ) {
       return true;
     }
@@ -77,7 +77,7 @@ export class Marker extends React.Component {
    * @returns { object } style
    */
   getStyle() {
-    const {left} = this.props.calculateHorizontalPosition(this.props.start);
+    const {left} = this.props.calculateHorizontalPosition(this.props.date);
     return {
       top: this.props.top,
       height: this.props.height,

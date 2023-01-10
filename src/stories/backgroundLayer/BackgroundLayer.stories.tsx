@@ -21,8 +21,8 @@ export const Main = () => {
             <HighlightedInterval start={dateAndHourOfCurrentMonth(20, 19)} end={dateAndHourOfCurrentMonth(21, 10)} />
           ]}
           markers={[
-            <Marker start={dateAndHourOfCurrentMonth(10, 12)} />,
-            <Marker start={dateAndHourOfCurrentMonth(15, 12)} />
+            <Marker date={dateAndHourOfCurrentMonth(10, 12)} />,
+            <Marker date={dateAndHourOfCurrentMonth(15, 12)} />
           ]}
         />}
     />
@@ -52,8 +52,8 @@ export const CustomClassNamesAndStyles = () => {
             <HighlightedInterval className='story-custom-highlighted-interval-class' start={dateAndHourOfCurrentMonth(20, 19)} end={dateAndHourOfCurrentMonth(21, 10)} />
           ]}
           markers={[
-            <Marker className='story-custom-marker-class' start={dateAndHourOfCurrentMonth(10, 12)} />,
-            <Marker className='story-custom-marker-class' start={dateAndHourOfCurrentMonth(15, 12)} />
+            <Marker className='story-custom-marker-class' date={dateAndHourOfCurrentMonth(10, 12)} />,
+            <Marker className='story-custom-marker-class' date={dateAndHourOfCurrentMonth(15, 12)} />
           ]}
         />}
     />

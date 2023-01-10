@@ -290,7 +290,7 @@ export class BackgroundLayer extends React.Component {
       <Fragment>
         {nowMarker && overlappsDisplayedInterval && (
           <Marker
-            start={currentDate}
+            date={currentDate}
             top={0}
             height={height + topOffset}
             shouldUpdate={this.state.shouldUpdate}
