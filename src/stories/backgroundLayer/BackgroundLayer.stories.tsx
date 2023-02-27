@@ -44,16 +44,16 @@ export const CustomClassNamesAndStyles = () => {
     <Timeline startDate={startOfCurrentMonth()}
       endDate={endOfCurrentMonth()} groups={someHumanResources} items={[]}
       backgroundLayer={
-        <BackgroundLayer verticalGrid verticalGridClassName='story-custom-vertical-grid-class'
-          nowMarker nowMarkerClassName='story-custom-now-marker-class'
-          highlightWeekends highlightWeekendsClassName='story-custom-highlighted-weekends-class'
+        <BackgroundLayer verticalGrid verticalGridClassName='story-custom-vertical-grid-class' verticalGridStyle={{opacity: 0.5}}
+          nowMarker nowMarkerClassName='story-custom-now-marker-class' nowMarkerStyle={{opacity: 0.7}}
+          highlightWeekends highlightWeekendsClassName='story-custom-highlighted-weekends-class' highlightWeekendsStyle={{opacity: 0.8}}
           highlightedIntervals={[
-            <HighlightedInterval className='story-custom-highlighted-interval-class' start={dateAndHourOfCurrentMonth(15)} end={dateAndHourOfCurrentMonth(18)} />,
-            <HighlightedInterval className='story-custom-highlighted-interval-class' start={dateAndHourOfCurrentMonth(20, 19)} end={dateAndHourOfCurrentMonth(21, 10)} />
+            <HighlightedInterval className='story-custom-highlighted-interval-class' style={{background: '#f6bea3'}} start={dateAndHourOfCurrentMonth(15)} end={dateAndHourOfCurrentMonth(18)} />,
+            <HighlightedInterval className='story-custom-highlighted-interval-class' style={{background: '#f6bea3'}} start={dateAndHourOfCurrentMonth(20, 19)} end={dateAndHourOfCurrentMonth(21, 10)} />
           ]}
           markers={[
-            <Marker className='story-custom-marker-class' date={dateAndHourOfCurrentMonth(10, 12)} />,
-            <Marker className='story-custom-marker-class' date={dateAndHourOfCurrentMonth(15, 12)} />
+            <Marker className='story-custom-marker-class' style={{width: '2px'}} date={dateAndHourOfCurrentMonth(10, 12)} />,
+            <Marker className='story-custom-marker-class' style={{width: '2px'}} date={dateAndHourOfCurrentMonth(15, 12)} />
           ]}
         />}
     />

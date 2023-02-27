@@ -28,6 +28,15 @@ export class BackgroundLayer extends React.Component {
     highlightWeekendsClassName: PropTypes.string,
 
     /**
+     * Custom style for highlighting the weekends.
+     *
+     * NOTE: No need to provide this; because it has a default class.
+     *
+     * @type { object }
+     */
+    highlightWeekendsStyle: PropTypes.object,
+
+    /**
      * If `true`, it draws a marker (vertical line) that indicates the current time.
      *
      * @type { boolean }
@@ -44,6 +53,15 @@ export class BackgroundLayer extends React.Component {
     nowMarkerClassName: PropTypes.string,
 
     /**
+     * Custom style for now marker.
+     *
+     * NOTE: No need to provide this; because it has a default class.
+     *
+     * @type { object }
+     */
+    nowMarkerStyle: PropTypes.object,
+
+    /**
      * If `true`, it draws vertical lines, according to the intervals defined by the bottom `Timebar`.
      *
      * @type { boolean }
@@ -58,6 +76,15 @@ export class BackgroundLayer extends React.Component {
      * @type { string }
      */
     verticalGridClassName: PropTypes.string,
+
+    /**
+     * Custom style for vertical grid.
+     *
+     * NOTE: No need to provide this; because it has a default class.
+     *
+     * @type { object }
+     */
+    verticalGridStyle: PropTypes.object,
 
     /**
      * @type { Array.<JSX.Element> }
@@ -122,10 +149,13 @@ export class BackgroundLayer extends React.Component {
   static defaultProps = {
     highlightWeekends: false,
     highlightWeekendsClassName: undefined,
+    highlightWeekendsStyle: undefined,
     nowMarker: false,
     nowMarkerClassName: undefined,
+    nowMarkerStyle: undefined,
     verticalGrid: false,
     verticalGridClassName: undefined,
+    verticalGridStyle: undefined,
     verticalGridLines: [],
     markers: [],
     highlightedIntervals: [],
@@ -231,6 +261,7 @@ export class BackgroundLayer extends React.Component {
                 start={weekend.start}
                 end={weekend.end}
                 className={weekend.className}
+                style={this.props.highlightWeekendsStyle}
                 top={this.props.topOffset}
                 height={this.props.height}
                 shouldUpdate={this.state.shouldUpdate}
@@ -271,7 +302,7 @@ export class BackgroundLayer extends React.Component {
                 <span
                   key={index}
                   className={`rct9k-background-layer-vertical-line ${verticalGridClassName}`}
-                  style={{width: verticalLine.size}}
+                  style={{...this.props.verticalGridStyle, width: verticalLine.size}}
                 />
               );
             })}
@@ -296,6 +327,7 @@ export class BackgroundLayer extends React.Component {
             shouldUpdate={this.state.shouldUpdate}
             calculateHorizontalPosition={this.calculateHorizontalPosition}
             className={`rct9k-background-layer-now-marker ${nowMarkerClassName}`}
+            style={this.props.nowMarkerStyle}
           />
         )}
       </Fragment>

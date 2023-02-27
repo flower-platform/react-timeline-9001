@@ -29,6 +29,13 @@ export class HighlightedInterval extends React.Component {
     className: PropTypes.string,
 
     /**
+     * Style used to render the interval.
+     *
+     * @type { object }
+     */
+    style: PropTypes.object,
+
+    /**
      * Internal (passed by parent). The height of the highlighted interval.
      *
      * @type { number }
@@ -85,6 +92,7 @@ export class HighlightedInterval extends React.Component {
   getStyle() {
     const {left, width} = this.props.calculateHorizontalPosition(this.props.start, this.props.end);
     return {
+      ...this.props.style,
       left,
       width,
       top: this.props.top,

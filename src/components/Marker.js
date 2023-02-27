@@ -24,6 +24,13 @@ export class Marker extends React.Component {
     className: PropTypes.string,
 
     /**
+     * Style used to render the marker.
+     *
+     * @type { object }
+     */
+    style: PropTypes.object,
+
+    /**
      * Internal (passed by parent). The height of the marker.
      *
      * @type { number }
@@ -55,6 +62,7 @@ export class Marker extends React.Component {
 
   static defaultProps = {
     className: '',
+    style: undefined,
     height: undefined,
     top: undefined,
     calculateHorizontalPosition: () => {},
@@ -79,6 +87,7 @@ export class Marker extends React.Component {
   getStyle() {
     const {left} = this.props.calculateHorizontalPosition(this.props.date);
     return {
+      ...this.props.style,
       top: this.props.top,
       height: this.props.height,
       left,
