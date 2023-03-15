@@ -43,7 +43,6 @@ import 'core-js/fn/string/starts-with';
 
 const SINGLE_COLUMN_LABEL_PROPERTY = 'title';
 const EMPTY_GROUP_KEY = 'empty-group';
-const GRID_CLASS = componentId => `.rct9k-id-${componentId} .ReactVirtualized__Grid`;
 
 /**
  * Timeline class
@@ -668,14 +667,15 @@ export default class Timeline extends React.Component {
     }
     const height = this._grid.props.height;
 
-    // compute the total height of the actual rows
+    // compute the total height of the actual rows;
+    // if there are items that are overlapping, then the total height of a row is the maximum number
+    // of items that are overlapping on that row, multiplied by props.itemHeight
     let totalItemsHeight = 0;
-    _.forEach(this.rowHeightCache, row => {
-      totalItemsHeight += row * this.props.itemHeight;
+    let that = this;
+    _.forEach(groups, group => {
+      totalItemsHeight += (that.rowHeightCache[group.id] || 1) * that.props.itemHeight;
     });
     let rowsToFillIn = (height - totalItemsHeight) / this.props.itemHeight;
-
-    let overflowStyle = 'auto';
     let fillInGroups = [];
     if (rowsToFillIn > 0) {
       let groupId = groups.length;
@@ -688,14 +688,7 @@ export default class Timeline extends React.Component {
         rowsToFillIn--;
         groupId++;
       }
-      overflowStyle = 'hidden';
     }
-
-    const parentElement = document.querySelector(GRID_CLASS(this.props.componentId));
-    if (parentElement !== null) {
-      parentElement.style.overflow = overflowStyle;
-    }
-
     this.setState({groups: [...groups, ...fillInGroups]});
   }
 
