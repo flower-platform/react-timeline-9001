@@ -12,7 +12,8 @@ export default {
 
 const tasks: Item[] = [
   {key: 11, row: 1, title: 'Task JD1', start: dateAndHourOfCurrentMonth(20, 8), end: dateAndHourOfCurrentMonth(28, 11)},
-  {key: 12, row: 3, title: 'Task JD3', start: dateAndHourOfCurrentMonth(11, 18), end: dateAndHourOfCurrentMonth(18, 19)}
+  {key: 12, row: 3, title: 'Task KP1', start: dateAndHourOfCurrentMonth(3, 0), end: dateAndHourOfCurrentMonth(6, 23)},
+  {key: 13, row: 3, title: 'Task KP2', start: dateAndHourOfCurrentMonth(11, 18), end: dateAndHourOfCurrentMonth(18, 19)}
 ];
 
 export const Main = () => {
