@@ -38,6 +38,16 @@ import ItemRenderer from './components/ItemRenderer';
 import {GroupRenderer} from './components/GroupRenderer';
 import TimelineBody from './components/body';
 import {Marker} from './components/Marker';
+import {createTestids, TestsAreDemoCheat} from '@famiprog-foundation/tests-are-demo';
+
+const testids = createTestids('Timeline', {
+  menu: '',
+  menuButton: '',
+  dragToCreateButton: '',
+  dragToCreatePopup: '',
+  dragToCreateCancelButton: ''
+});
+export const timelineTestids = testids;
 
 // startsWith polyfill for IE11 support
 import 'core-js/fn/string/starts-with';
@@ -1466,20 +1476,23 @@ export default class Timeline extends React.Component {
   renderMenuContent() {
     return (
       <Fragment>
-        {this.props.onDragToCreateEnded && (
-          <Button
-            className="no-margin"
-            content={this.state.dragToCreateMode ? 'Cancel: Add (drag to create)' : 'Add (drag to create)'}
-            icon={this.state.dragToCreateMode ? 'cancel' : 'plus'}
-            positive={!this.state.dragToCreateMode}
-            negative={this.state.dragToCreateMode}
-            size="mini"
-            onClick={() => {
-              this.setDragToCreateMode(!this.state.dragToCreateMode);
-              this.setState({openMenu: false});
-            }}
-          />
-        )}
+        <div data-testid={testids.menu}>
+          {this.props.onDragToCreateEnded && (
+            <Button
+              data-testid={testids.dragToCreateButton}
+              className="no-margin"
+              content={this.state.dragToCreateMode ? 'Cancel: Add (drag to create)' : 'Add (drag to create)'}
+              icon={this.state.dragToCreateMode ? 'cancel' : 'plus'}
+              positive={!this.state.dragToCreateMode}
+              negative={this.state.dragToCreateMode}
+              size="mini"
+              onClick={() => {
+                this.setDragToCreateMode(!this.state.dragToCreateMode);
+                this.setState({openMenu: false});
+              }}
+            />
+          )}
+        </div>
       </Fragment>
     );
   }
@@ -1491,11 +1504,13 @@ export default class Timeline extends React.Component {
     return (
       this.props.renderMenuButton && (
         <Popup
+          data-testid={testids.dragToCreatePopup}
           trigger={
             <Popup
               className="rct9k-menu"
               trigger={
                 <Button
+                  data-testid={testids.menuButton}
                   size="mini"
                   circular
                   primary
@@ -1517,6 +1532,7 @@ export default class Timeline extends React.Component {
           <div>
             <div>Drag to create mode</div>
             <Button
+              data-testid={testids.dragToCreateCancelButton}
               content="Cancel"
               icon="cancel"
               negative
@@ -1695,6 +1711,7 @@ export default class Timeline extends React.Component {
           }}
         </AutoSizer>
         <div style={{position: 'absolute', right: 0, top: 1}}>{this.renderMenuButton()}</div>
+        <TestsAreDemoCheat objectToPublish={this} />
       </div>
     );
   }

@@ -18,7 +18,7 @@ Main.parameters = {
     scenarios: Object.keys(dragToCreateScenarios).map(key => dragToCreateScenarios[key])
 };
 
-class DragToCreateDemo extends React.Component {
+export class DragToCreateDemo extends React.Component {
     someTasks = [...someTasks];
     render() {
         return <Timeline startDate={d('2018-09-20')} endDate={d('2018-09-21')} groups={someHumanResources} items={this.someTasks} onDragToCreateEnded={(groupIndex: number, itemIndex: number | string, itemStart: number | object, itemEnd: number | object) => {

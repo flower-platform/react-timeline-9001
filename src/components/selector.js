@@ -79,6 +79,6 @@ export default class SelectBox extends React.Component {
     const width = Math.abs(startX - curX);
     const height = Math.abs(startY - curY);
     let style = {left, top, width, height};
-    return <div className={'rct9k-selector-outer ' + this.props.className} style={style} />;
+    return <div className={`rct9k-selector-outer ${this.props.className}`} style={style} />;
   }
 }
