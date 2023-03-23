@@ -3,7 +3,7 @@
 import React, {Fragment} from 'react';
 import PropTypes from 'prop-types';
 import ReactDOM from 'react-dom';
-import {Grid, AutoSizer} from 'react-virtualized';
+import Measure from 'react-measure';
 
 import moment from 'moment';
 import interact from 'interactjs';
@@ -44,7 +44,6 @@ import 'core-js/fn/string/starts-with';
 
 const SINGLE_COLUMN_LABEL_PROPERTY = 'title';
 const EMPTY_GROUP_KEY = 'empty-group';
-const GRID_CLASS = componentId => `.rct9k-id-${componentId} .ReactVirtualized__Grid`;
 
 /**
  * Timeline class
@@ -444,6 +443,8 @@ export default class Timeline extends React.Component {
       cursorTime: null,
       groups: this.props.groups,
       verticalGridLines: [],
+      width: 0,
+      height: 0,
       dragToCreateMode: false,
       openMenu: false,
       dragCancel: false
@@ -482,7 +483,6 @@ export default class Timeline extends React.Component {
     const canDrag = Timeline.isBitSet(Timeline.TIMELINE_MODES.DRAG, this.props.timelineMode);
     const canResize = Timeline.isBitSet(Timeline.TIMELINE_MODES.RESIZE, this.props.timelineMode);
     this.setUpDragging(canSelect, canDrag, canResize);
-    this.refDiv = React.createRef();
   }
 
   componentDidMount() {
@@ -693,36 +693,32 @@ export default class Timeline extends React.Component {
       this.setState({groups: groups});
       return;
     }
-    const height = this._grid.props.height;
 
-    // compute the total height of the actual rows
+    // compute the total height of the actual rows;
+    // if there are items that are overlapping, then the total height of a row is the maximum number
+    // of items that are overlapping on that row, multiplied by props.itemHeight
     let totalItemsHeight = 0;
-    _.forEach(this.rowHeightCache, row => {
-      totalItemsHeight += row * this.props.itemHeight;
+    let that = this;
+    _.forEach(groups, group => {
+      totalItemsHeight += (that.rowHeightCache[group.id] || 1) * that.props.itemHeight;
     });
-    let rowsToFillIn = (height - totalItemsHeight) / this.props.itemHeight;
-
-    let overflowStyle = 'auto';
+    let heightToFillIn = this._grid.props.height - totalItemsHeight;
     let fillInGroups = [];
-    if (rowsToFillIn > 0) {
-      let groupId = groups.length;
-      while (rowsToFillIn > 0) {
-        // create new empty group
-        fillInGroups.push({
-          id: groupId,
-          key: EMPTY_GROUP_KEY + groupId
-        });
-        rowsToFillIn--;
-        groupId++;
+
+    let groupId = groups.length;
+    while (heightToFillIn > 0) {
+      // create new empty group;
+      // if the last row would be only partially visible, then we set the height of the row as the remaining
+      // height (add `rowHeight` in group, which will be used in rowHeight() function)
+      let emptyGroup = {id: groupId, key: EMPTY_GROUP_KEY + groupId};
+      if (heightToFillIn < this.props.itemHeight) {
+        emptyGroup.rowHeight = heightToFillIn;
       }
-      overflowStyle = 'hidden';
-    }
 
-    const parentElement = document.querySelector(GRID_CLASS(this.props.componentId));
-    if (parentElement !== null) {
-      parentElement.style.overflow = overflowStyle;
+      fillInGroups.push(emptyGroup);
+      heightToFillIn -= this.props.itemHeight;
+      groupId++;
     }
-
     this.setState({groups: [...groups, ...fillInGroups]});
   }
 
@@ -1367,9 +1363,15 @@ export default class Timeline extends React.Component {
   }
 
   /**
-   * Helper for react virtuaized to get the row height given a row index
+   * Helper for react virtualized to get the row height given a row index.
    */
   rowHeight({index}) {
+    let group = _.find(this.state.groups, g => g.id == index);
+    // only for empty rows (EMPTY_GROUP_KEY), if the group has a custom row height,
+    // we will return that height
+    if (group.rowHeight && group.key.startsWith(EMPTY_GROUP_KEY)) {
+      return group.rowHeight;
+    }
     let rh = this.rowHeightCache[index] ? this.rowHeightCache[index] : 1;
     return rh * this.props.itemHeight;
   }
@@ -1629,13 +1631,20 @@ export default class Timeline extends React.Component {
       });
     }
     return (
-      <div className={divCssClass} ref={this.refDiv}>
-        <AutoSizer className="rct9k-autosizer" onResize={this.refreshGrid}>
-          {({height, width}) => {
-            const leftOffset = this.calculateLeftOffset();
-            const bodyHeight = calculateHeight(height);
-            const timebarHeight = getTimebarHeight();
-            return (
+      // Instead of <Measure .../>, in the past <AutoSizer ... /> was used. However it would round with/height, which generated and endless
+      // scrollbar appear/disappear, depending on the parent, depending on the resolution.
+      <Measure
+        bounds
+        onResize={contentRect => {
+          this.setState({width: contentRect.bounds?.width || 0, height: contentRect.bounds?.height || 0});
+          this.refreshGrid();
+        }}>
+        {({measureRef}) => {
+          const leftOffset = this.calculateLeftOffset();
+          const bodyHeight = calculateHeight(this.state.height);
+          const timebarHeight = getTimebarHeight();
+          return (
+            <div ref={measureRef} className={divCssClass}>
               <div className="parent-div" onMouseMove={this.mouseMoveFunc}>
                 <SelectBox
                   ref={this.select_ref_callback}
@@ -1645,7 +1654,7 @@ export default class Timeline extends React.Component {
                   cursorTime={this.getCursor()}
                   start={this.getStartDate()}
                   end={this.getEndDate()}
-                  width={width}
+                  width={this.state.width}
                   leftOffset={leftOffset}
                   selectedRanges={this.state.selection}
                   groupTitleRenderer={groupTitleRenderer}
@@ -1657,7 +1666,7 @@ export default class Timeline extends React.Component {
                 {markers.map(m => (
                   <Marker
                     key={m.key}
-                    height={height}
+                    height={this.state.height}
                     top={0}
                     date={0}
                     shouldUpdate={true}
@@ -1668,13 +1677,13 @@ export default class Timeline extends React.Component {
                   />
                 ))}
                 <TimelineBody
-                  width={width}
-                  columnWidth={columnWidth(width)}
+                  width={this.state.width}
+                  columnWidth={columnWidth(this.state.width)}
                   height={bodyHeight}
                   rowHeight={this.rowHeight}
                   rowCount={this.state.groups.length}
                   columnCount={(tableColumns && tableColumns.length > 0 ? tableColumns.length : 1) + 1}
-                  cellRenderer={this.cellRenderer(this.getTimelineWidth(width))}
+                  cellRenderer={this.cellRenderer(this.getTimelineWidth(this.state.width))}
                   grid_ref_callback={this.grid_ref_callback}
                   shallowUpdateCheck={shallowUpdateCheck}
                   forceRedrawFunc={forceRedrawFunc}
@@ -1683,18 +1692,18 @@ export default class Timeline extends React.Component {
                   React.cloneElement(backgroundLayer, {
                     startDateTimeline: this.getStartDate(),
                     endDateTimeline: this.getEndDate(),
-                    width: width,
+                    width: this.state.width,
                     leftOffset: leftOffset,
                     height: bodyHeight,
-                    topOffset: timebarHeight,
+                    topOffset: timebarHeisght,
                     verticalGridLines: this.state.verticalGridLines
                   })}
               </div>
-            );
-          }}
-        </AutoSizer>
-        <div style={{position: 'absolute', right: 0, top: 1}}>{this.renderMenuButton()}</div>
-      </div>
+              <div style={{position: 'absolute', right: 0, top: 1}}>{this.renderMenuButton()}</div>
+            </div>
+          );
+        }}
+      </Measure>
     );
   }
 }
