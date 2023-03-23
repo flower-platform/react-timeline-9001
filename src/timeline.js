@@ -1606,6 +1606,18 @@ export default class Timeline extends React.Component {
     }
 
     /**
+     * @returns { number } width of the menu button
+     */
+    function getMenuButtonWidth() {
+      let menuButton = document.querySelector(`.button.ui.mini.circular.icon.primary.button`);
+      if (!menuButton) {
+        return 0;
+      }
+      // substract menu button width from total width
+      return menuButton.getBoundingClientRect().width;
+    }
+
+    /**
      * @param { number } height (total height of the timeline)
      * @returns { number } height of the timeline w/o timebar
      */
@@ -1704,8 +1716,10 @@ export default class Timeline extends React.Component {
                     timebarHeight,
                     verticalGridLines: this.state.verticalGridLines
                   })}
+                <div style={{position: 'absolute', right: getMenuButtonWidth() / 2 + 1, top: this.state.topOffset + 1}}>
+                  {this.renderMenuButton()}
+                </div>
               </div>
-              <div style={{position: 'absolute', right: 0, top: 1}}>{this.renderMenuButton()}</div>
             </div>
           );
         }}
