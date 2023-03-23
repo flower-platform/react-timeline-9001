@@ -125,6 +125,13 @@ export class BackgroundLayer extends React.Component {
     topOffset: PropTypes.number,
 
     /**
+     * Internal (passed by parent). Height of the time bar.
+     *
+     * @type { number }
+     */
+    timebarHeight: PropTypes.number,
+
+    /**
      * Internal (passed by parent). Total width of the timeline.
      *
      * @type { number }
@@ -161,6 +168,7 @@ export class BackgroundLayer extends React.Component {
     highlightedIntervals: [],
     height: undefined,
     topOffset: undefined,
+    timebarHeight: undefined,
     width: undefined,
     leftOffset: undefined,
     startDateTimeline: undefined,
@@ -313,7 +321,7 @@ export class BackgroundLayer extends React.Component {
   }
 
   renderNowMarker() {
-    const {nowMarker, height, topOffset, nowMarkerClassName} = this.props;
+    const {nowMarker, height, topOffset, timebarHeight, nowMarkerClassName} = this.props;
     const currentDate = moment();
     const overlappsDisplayedInterval =
       this.props.startDateTimeline.isSameOrBefore(currentDate) && this.props.endDateTimeline.isSameOrAfter(currentDate);
@@ -322,8 +330,8 @@ export class BackgroundLayer extends React.Component {
         {nowMarker && overlappsDisplayedInterval && (
           <Marker
             date={currentDate}
-            top={0}
-            height={height + topOffset}
+            top={topOffset - timebarHeight}
+            height={height + timebarHeight}
             shouldUpdate={this.state.shouldUpdate}
             calculateHorizontalPosition={this.calculateHorizontalPosition}
             className={`rct9k-background-layer-now-marker ${nowMarkerClassName}`}
