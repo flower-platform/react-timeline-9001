@@ -426,7 +426,8 @@ export default class Timeline extends React.Component {
       groups: this.props.groups,
       verticalGridLines: [],
       width: 0,
-      height: 0
+      height: 0,
+      topOffset: 0
     };
 
     // These functions need to be bound because they are passed as parameters.
@@ -1496,7 +1497,11 @@ export default class Timeline extends React.Component {
       <Measure
         bounds
         onResize={contentRect => {
-          this.setState({width: contentRect.bounds?.width || 0, height: contentRect.bounds?.height || 0});
+          this.setState({
+            width: contentRect.bounds?.width || 0,
+            height: contentRect.bounds?.height || 0,
+            topOffset: contentRect.bounds?.top || 0
+          });
           this.refreshGrid();
         }}>
         {({measureRef}) => {
@@ -1524,7 +1529,7 @@ export default class Timeline extends React.Component {
                   <Marker
                     key={m.key}
                     height={this.state.height}
-                    top={0}
+                    top={this.state.topOffset}
                     date={0}
                     shouldUpdate={true}
                     calculateHorizontalPosition={() => {
@@ -1552,7 +1557,8 @@ export default class Timeline extends React.Component {
                     width: this.state.width,
                     leftOffset: leftOffset,
                     height: bodyHeight,
-                    topOffset: timebarHeisght,
+                    topOffset: this.state.topOffset + timebarHeight,
+                    timebarHeight,
                     verticalGridLines: this.state.verticalGridLines
                   })}
               </div>
