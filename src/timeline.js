@@ -1704,86 +1704,92 @@ export default class Timeline extends React.Component {
       });
     }
     return (
-      // Instead of <Measure .../>, in the past <AutoSizer ... /> was used. However it would round with/height, which generated and endless
-      // scrollbar appear/disappear, depending on the parent, depending on the resolution.
-      <Measure
-        bounds
-        onResize={contentRect => {
-          const config = {
-            width: contentRect.bounds?.width || 0,
-            height: contentRect.bounds?.height || 0,
-            topOffset: contentRect.bounds?.top || 0
-          };
-          this.setState(config);
-          this.refreshGrid(config);
-        }}>
-        {({measureRef}) => {
-          const leftOffset = this.calculateLeftOffset();
-          const bodyHeight = calculateHeight(this.state.height);
-          const timebarHeight = getTimebarHeight();
-          return (
-            <div ref={measureRef} className={divCssClass}>
-              <div className="parent-div" onMouseMove={this.mouseMoveFunc}>
-                <SelectBox
-                  ref={this.select_ref_callback}
-                  className={this.state.dragToCreateMode ? 'rct9k-selector-outer-add' : ''}
-                />
-                <Timebar
-                  cursorTime={this.getCursor()}
-                  start={this.getStartDate()}
-                  end={this.getEndDate()}
-                  width={this.state.width}
-                  leftOffset={leftOffset}
-                  selectedRanges={this.state.selection}
-                  groupTitleRenderer={groupTitleRenderer}
-                  tableColumns={tableColumns}
-                  groupOffset={groupOffset}
-                  setVerticalGridLines={this.setVerticalGridLines}
-                  {...varTimebarProps}
-                />
-                {markers.map(m => (
-                  <Marker
-                    key={m.key}
-                    height={this.state.height}
-                    top={this.state.topOffset}
-                    date={0}
-                    shouldUpdate={true}
-                    calculateHorizontalPosition={() => {
-                      return {left: m.left};
-                    }}
-                    className="rct9k-marker-overlay"
+      <>
+        <TestsAreDemoCheat objectToPublish={this} />
+        {
+          // Instead of <Measure .../>, in the past <AutoSizer ... /> was used. However it would round with/height, which generated and endless
+          // scrollbar appear/disappear, depending on the parent, depending on the resolution.
+        }
+        <Measure
+          bounds
+          onResize={contentRect => {
+            const config = {
+              width: contentRect.bounds?.width || 0,
+              height: contentRect.bounds?.height || 0,
+              topOffset: contentRect.bounds?.top || 0
+            };
+            this.setState(config);
+            this.refreshGrid(config);
+          }}>
+          {({measureRef}) => {
+            const leftOffset = this.calculateLeftOffset();
+            const bodyHeight = calculateHeight(this.state.height);
+            const timebarHeight = getTimebarHeight();
+            return (
+              <div ref={measureRef} className={divCssClass}>
+                <div className="parent-div" onMouseMove={this.mouseMoveFunc}>
+                  <SelectBox
+                    ref={this.select_ref_callback}
+                    className={this.state.dragToCreateMode ? 'rct9k-selector-outer-add' : ''}
                   />
-                ))}
-                <TimelineBody
-                  width={this.state.width}
-                  columnWidth={columnWidth(this.state.width)}
-                  height={bodyHeight}
-                  rowHeight={this.rowHeight}
-                  rowCount={this.state.groups.length}
-                  columnCount={(tableColumns && tableColumns.length > 0 ? tableColumns.length : 1) + 1}
-                  cellRenderer={this.cellRenderer(this.getTimelineWidth(this.state.width))}
-                  grid_ref_callback={this.grid_ref_callback}
-                  shallowUpdateCheck={shallowUpdateCheck}
-                  forceRedrawFunc={forceRedrawFunc}
-                />
-                {backgroundLayer &&
-                  React.cloneElement(backgroundLayer, {
-                    startDateTimeline: this.getStartDate(),
-                    endDateTimeline: this.getEndDate(),
-                    width: this.state.width,
-                    leftOffset: leftOffset,
-                    height: bodyHeight,
-                    topOffset: this.state.topOffset + timebarHeight,
-                    verticalGridLines: this.state.verticalGridLines
-                  })}
-                <div style={{position: 'absolute', right: getMenuButtonWidth() / 2 + 1, top: this.state.topOffset + 1}}>
-                  {this.renderMenuButton()}
+                  <Timebar
+                    cursorTime={this.getCursor()}
+                    start={this.getStartDate()}
+                    end={this.getEndDate()}
+                    width={this.state.width}
+                    leftOffset={leftOffset}
+                    selectedRanges={this.state.selection}
+                    groupTitleRenderer={groupTitleRenderer}
+                    tableColumns={tableColumns}
+                    groupOffset={groupOffset}
+                    setVerticalGridLines={this.setVerticalGridLines}
+                    {...varTimebarProps}
+                  />
+                  {markers.map(m => (
+                    <Marker
+                      key={m.key}
+                      height={this.state.height}
+                      top={this.state.topOffset}
+                      date={0}
+                      shouldUpdate={true}
+                      calculateHorizontalPosition={() => {
+                        return {left: m.left};
+                      }}
+                      className="rct9k-marker-overlay"
+                    />
+                  ))}
+                  <TimelineBody
+                    width={this.state.width}
+                    columnWidth={columnWidth(this.state.width)}
+                    height={bodyHeight}
+                    rowHeight={this.rowHeight}
+                    rowCount={this.state.groups.length}
+                    columnCount={(tableColumns && tableColumns.length > 0 ? tableColumns.length : 1) + 1}
+                    cellRenderer={this.cellRenderer(this.getTimelineWidth(this.state.width))}
+                    grid_ref_callback={this.grid_ref_callback}
+                    shallowUpdateCheck={shallowUpdateCheck}
+                    forceRedrawFunc={forceRedrawFunc}
+                  />
+                  {backgroundLayer &&
+                    React.cloneElement(backgroundLayer, {
+                      startDateTimeline: this.getStartDate(),
+                      endDateTimeline: this.getEndDate(),
+                      width: this.state.width,
+                      leftOffset: leftOffset,
+                      height: bodyHeight,
+                      topOffset: this.state.topOffset + timebarHeight,
+                      verticalGridLines: this.state.verticalGridLines
+                    })}
+                  <div
+                    style={{position: 'absolute', right: getMenuButtonWidth() / 2 + 1, top: this.state.topOffset + 1}}>
+                    {this.renderMenuButton()}
+                  </div>
                 </div>
               </div>
-            </div>
-          );
-        }}
-      </Measure>
+            );
+          }}
+        </Measure>
+      </>
     );
   }
 
