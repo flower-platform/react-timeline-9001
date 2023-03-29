@@ -6,6 +6,7 @@ import { dragToCreateScenarios } from './DragToCreateScenarios';
 
 export default {
     title: 'Features/Drag to create',
+    excludeStories: ["DragToCreateDemo"],
     component: Timeline
 };
 
@@ -20,11 +21,11 @@ Main.parameters = {
 
 export class DragToCreateDemo extends React.Component {
     someTasks = [...someTasks];
+    groups = [...someHumanResources, { id: 4, title: 'Andy' }];
     render() {
-        return <Timeline startDate={d('2018-09-20')} endDate={d('2018-09-21')} groups={someHumanResources} items={this.someTasks} onDragToCreateEnded={(groupIndex: number, itemIndex: number | string, itemStart: number | object, itemEnd: number | object) => {
-            console.log(someHumanResources[groupIndex])
-            if (someHumanResources[groupIndex]) {
-                this.someTasks.push({ key: itemIndex, row: groupIndex, title: 'Task ' + someHumanResources[groupIndex].title + itemIndex, start: itemStart, end: itemEnd });
+        return <Timeline startDate={d('2018-09-20')} endDate={d('2018-09-21')} groups={this.groups} items={this.someTasks} onDragToCreateEnded={(groupIndex: number, itemIndex: number | string, itemStart: number | object, itemEnd: number | object) => {
+            if (this.groups[groupIndex]) {
+                this.someTasks.push({ key: itemIndex, row: groupIndex, title: 'Task ' + this.groups[groupIndex].title + itemIndex, start: itemStart, end: itemEnd });
                 this.forceUpdate();
             }
         }

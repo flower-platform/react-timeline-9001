@@ -38,14 +38,18 @@ import ItemRenderer from './components/ItemRenderer';
 import {GroupRenderer} from './components/GroupRenderer';
 import TimelineBody from './components/body';
 import {Marker} from './components/Marker';
-import {createTestids, TestsAreDemoCheat} from '@famiprog-foundation/tests-are-demo';
+import {createTestids, tad, TestsAreDemoCheat} from '@famiprog-foundation/tests-are-demo';
 
 const testids = createTestids('Timeline', {
   menu: '',
   menuButton: '',
   dragToCreateButton: '',
   dragToCreatePopup: '',
-  dragToCreateCancelButton: ''
+  dragToCreateCancelButton: '',
+  row: ``,
+  group: ``,
+  item: '',
+  selector: ''
 });
 export const timelineTestids = testids;
 
@@ -828,6 +832,134 @@ export default class Timeline extends React.Component {
   };
 
   /**
+   * @param {number} clientX
+   * @param {number} clientY
+   */
+  #onDragStartSelect(clientX, clientY) {
+    const nearestRowObject = getNearestRowObject(clientX, clientY);
+
+    // this._selectBox.start(e.clientX, e.clientY);
+    // this._selectBox.start(e.clientX, topRowObj.style.top);
+    const startY = adjustRowTopPositionToViewport(nearestRowObject, nearestRowObject.getBoundingClientRect().y);
+    this._selectBox.start(clientX, startY);
+    // const bottomRow = Number(getNearestRowNumber(left + width, top + height));
+  }
+
+  /**
+   * @param {number} clientX
+   * @param {number} clientY
+   * @param {number} startXElement
+   */
+  #onDragMoveSelect(clientX, clientY, startXElement) {
+    if (this.state.dragCancel) {
+      // do nothing if drag is canceled
+      return;
+    }
+    const magicalConstant = 2;
+    // @bendog: I added this magical constant to solve the issue of selection bleed,
+    // I don't understand why it works, but if frequentist statisticians can use imaginary numbers, so can i.
+    const {startX, startY} = this._selectBox;
+    const startRowObject = getNearestRowObject(startX, startY);
+    const startXRowObject = startRowObject.getBoundingClientRect().x + 1;
+    // select only row without group
+    if (startXElement < startXRowObject) {
+      clientX = startXRowObject;
+    }
+    const currentRowObject = getNearestRowObject(clientX, clientY);
+    if (currentRowObject !== undefined && startRowObject !== undefined) {
+      // only run if you can detect the top row
+      const startRowNumber = getRowObjectRowNumber(startRowObject);
+      const currentRowNumber = getRowObjectRowNumber(currentRowObject);
+      // const numRows = 1 + Math.abs(startRowNumber - currentRowNumber);
+      const rowMarginBorder = getVerticalMarginBorder(currentRowObject);
+      if (startRowNumber <= currentRowNumber) {
+        // select box for selection going down
+        // get the first selected rows top
+        let startTop = Math.ceil(startRowObject.getBoundingClientRect().top + rowMarginBorder);
+        startTop = adjustRowTopPositionToViewport(startRowObject, startTop);
+        // get the currently selected rows bottom
+        // if drag to create mode set bottom from the first selected row
+        const currentBottom = Math.floor(
+          (this.state.dragToCreateMode ? getTrueBottom(startRowObject) : getTrueBottom(currentRowObject)) -
+            magicalConstant -
+            rowMarginBorder
+        );
+        this._selectBox.start(startX, startTop);
+        this._selectBox.move(clientX, currentBottom);
+      } else {
+        // select box for selection going up
+        // get the currently selected rows top
+        // if drag to create mode keep set top from the first selected row
+        const currentTop = Math.ceil(
+          (this.state.dragToCreateMode
+            ? startRowObject.getBoundingClientRect().top
+            : currentRowObject.getBoundingClientRect().top) + rowMarginBorder
+        );
+        // get the first selected rows bottom
+        const startBottom = Math.floor(getTrueBottom(startRowObject) - magicalConstant - rowMarginBorder * 2);
+        // the bottom will bleed south unless you counter the margins and boreders from the above rows
+        this._selectBox.start(startX, startBottom);
+        this._selectBox.move(clientX, currentTop);
+      }
+    }
+  }
+
+  #onDragEndSelect() {
+    if (this.state.dragCancel) {
+      // only reset dragCancel on dragend if drag is canceled
+      this.setState({dragCancel: false});
+      return;
+    }
+
+    let {top, left, width, height} = this._selectBox.end();
+    //Get the start and end row of the selection rectangle
+    const topRowObject = getNearestRowObject(left, top);
+    if (topRowObject !== undefined) {
+      // only confirm the end of a drag if the selection box is valid
+      const topRowNumber = Number(getNearestRowNumber(left, top));
+      const topRowLoc = topRowObject.getBoundingClientRect();
+      const rowMarginBorder = getVerticalMarginBorder(topRowObject);
+      const y = Math.floor(topRowLoc.top - rowMarginBorder) + Math.floor(height - rowMarginBorder);
+      const bottomRow = Number(getNearestRowNumber(left + width, adjustRowTopPositionToViewport(topRowObject, y)));
+      //Get the start and end time of the selection rectangle
+      left = left - topRowLoc.left;
+      let startOffset = width > 0 ? left : left + width;
+      let endOffset = width > 0 ? left + width : left;
+      const startTime = getTimeAtPixel(
+        startOffset,
+        this.getStartDate(),
+        this.getEndDate(),
+        this.getTimelineWidth(),
+        this.getTimelineSnap()
+      );
+      const endTime = getTimeAtPixel(
+        endOffset,
+        this.getStartDate(),
+        this.getEndDate(),
+        this.getTimelineWidth(),
+        this.getTimelineSnap()
+      );
+      //Get items in these ranges
+      let selectedItems = [];
+      for (let r = Math.min(topRowNumber, bottomRow); r <= Math.max(topRowNumber, bottomRow); r++) {
+        selectedItems.push(
+          ..._.filter(this.rowItemMap[r], i => {
+            return this.getStartFromItem(i).isBefore(endTime) && this.getEndFromItem(i).isAfter(startTime);
+          })
+        );
+      }
+      !this.state.dragToCreateMode &&
+        this.props.onInteraction &&
+        this.props.onInteraction(Timeline.changeTypes.itemsSelected, selectedItems);
+      if (this.state.dragToCreateMode && this.props.onDragToCreateEnded) {
+        // get avaible itemIndex and call the onDragToCreateEnded
+        const itemIndex = Math.max(...Object.keys(this.itemRowMap)) + 1;
+        this.props.onDragToCreateEnded && this.props.onDragToCreateEnded(topRowNumber, itemIndex, startTime, endTime);
+      }
+    }
+  }
+
+  /**
    * @param { boolean } canSelect
    * @param { boolean } canDrag
    * @param { boolean } canResize
@@ -1121,124 +1253,13 @@ export default class Timeline extends React.Component {
         })
         .styleCursor(false)
         .on('dragstart', e => {
-          const nearestRowObject = getNearestRowObject(e.clientX, e.clientY);
-
-          // this._selectBox.start(e.clientX, e.clientY);
-          // this._selectBox.start(e.clientX, topRowObj.style.top);
-          const startY = adjustRowTopPositionToViewport(nearestRowObject, nearestRowObject.getBoundingClientRect().y);
-          this._selectBox.start(e.clientX, startY);
-          // const bottomRow = Number(getNearestRowNumber(left + width, top + height));
+          this.#onDragStartSelect(e.clientX, e.clientY);
         })
         .on('dragmove', e => {
-          if (this.state.dragCancel) {
-            // do nothing if drag is canceled
-            return;
-          }
-          const magicalConstant = 2;
-          // @bendog: I added this magical constant to solve the issue of selection bleed,
-          // I don't understand why it works, but if frequentist statisticians can use imaginary numbers, so can i.
-          const {startX, startY} = this._selectBox;
-          const startRowObject = getNearestRowObject(startX, startY);
-          let {clientX, clientY} = e;
-          const startXRowObject = startRowObject.getBoundingClientRect().x + 1;
-          // select only row without group
-          if (e.page.x < startXRowObject) {
-            clientX = startXRowObject;
-          }
-          const currentRowObject = getNearestRowObject(clientX, clientY);
-          if (currentRowObject !== undefined && startRowObject !== undefined) {
-            // only run if you can detect the top row
-            const startRowNumber = getRowObjectRowNumber(startRowObject);
-            const currentRowNumber = getRowObjectRowNumber(currentRowObject);
-            // const numRows = 1 + Math.abs(startRowNumber - currentRowNumber);
-            const rowMarginBorder = getVerticalMarginBorder(currentRowObject);
-            if (startRowNumber <= currentRowNumber) {
-              // select box for selection going down
-              // get the first selected rows top
-              let startTop = Math.ceil(startRowObject.getBoundingClientRect().top + rowMarginBorder);
-              startTop = adjustRowTopPositionToViewport(startRowObject, startTop);
-              // get the currently selected rows bottom
-              // if drag to create mode set bottom from the first selected row
-              const currentBottom = Math.floor(
-                (this.state.dragToCreateMode ? getTrueBottom(startRowObject) : getTrueBottom(currentRowObject)) -
-                  magicalConstant -
-                  rowMarginBorder
-              );
-              this._selectBox.start(startX, startTop);
-              this._selectBox.move(clientX, currentBottom);
-            } else {
-              // select box for selection going up
-              // get the currently selected rows top
-              // if drag to create mode keep set top from the first selected row
-              const currentTop = Math.ceil(
-                (this.state.dragToCreateMode
-                  ? startRowObject.getBoundingClientRect().top
-                  : currentRowObject.getBoundingClientRect().top) + rowMarginBorder
-              );
-              // get the first selected rows bottom
-              const startBottom = Math.floor(getTrueBottom(startRowObject) - magicalConstant - rowMarginBorder * 2);
-              // the bottom will bleed south unless you counter the margins and boreders from the above rows
-              this._selectBox.start(startX, startBottom);
-              this._selectBox.move(clientX, currentTop);
-            }
-          }
+          this.#onDragMoveSelect(e.clientX, e.clientY, e.page.x);
         })
         .on('dragend', e => {
-          if (this.state.dragCancel) {
-            // only reset dragCancel on dragend if drag is canceled
-            this.setState({dragCancel: false});
-            return;
-          }
-
-          let {top, left, width, height} = this._selectBox.end();
-          //Get the start and end row of the selection rectangle
-          const topRowObject = getNearestRowObject(left, top);
-          if (topRowObject !== undefined) {
-            // only confirm the end of a drag if the selection box is valid
-            const topRowNumber = Number(getNearestRowNumber(left, top));
-            const topRowLoc = topRowObject.getBoundingClientRect();
-            const rowMarginBorder = getVerticalMarginBorder(topRowObject);
-            const y = Math.floor(topRowLoc.top - rowMarginBorder) + Math.floor(height - rowMarginBorder);
-            const bottomRow = Number(
-              getNearestRowNumber(left + width, adjustRowTopPositionToViewport(topRowObject, y))
-            );
-            //Get the start and end time of the selection rectangle
-            left = left - topRowLoc.left;
-            let startOffset = width > 0 ? left : left + width;
-            let endOffset = width > 0 ? left + width : left;
-            const startTime = getTimeAtPixel(
-              startOffset,
-              this.getStartDate(),
-              this.getEndDate(),
-              this.getTimelineWidth(),
-              this.getTimelineSnap()
-            );
-            const endTime = getTimeAtPixel(
-              endOffset,
-              this.getStartDate(),
-              this.getEndDate(),
-              this.getTimelineWidth(),
-              this.getTimelineSnap()
-            );
-            //Get items in these ranges
-            let selectedItems = [];
-            for (let r = Math.min(topRowNumber, bottomRow); r <= Math.max(topRowNumber, bottomRow); r++) {
-              selectedItems.push(
-                ..._.filter(this.rowItemMap[r], i => {
-                  return this.getStartFromItem(i).isBefore(endTime) && this.getEndFromItem(i).isAfter(startTime);
-                })
-              );
-            }
-            !this.state.dragToCreateMode &&
-              this.props.onInteraction &&
-              this.props.onInteraction(Timeline.changeTypes.itemsSelected, selectedItems);
-            if (this.state.dragToCreateMode && this.props.onDragToCreateEnded) {
-              // get avaible itemIndex and call the onDragToCreateEnded
-              const itemIndex = Math.max(...Object.keys(this.itemRowMap)) + 1;
-              this.props.onDragToCreateEnded &&
-                this.props.onDragToCreateEnded(topRowNumber, itemIndex, startTime, endTime);
-            }
-          }
+          this.#onDragEndSelect();
         });
     }
   }
@@ -1292,6 +1313,7 @@ export default class Timeline extends React.Component {
         }
         return (
           <div
+            data-testid={testids.row + '_' + rowIndex}
             key={key}
             style={style}
             data-row-index={rowIndex}
@@ -1354,7 +1376,12 @@ export default class Timeline extends React.Component {
         }
         let group = _.find(this.state.groups, g => g.id == rowIndex);
         return (
-          <div data-row-index={rowIndex} key={key} style={style} className="rct9k-group">
+          <div
+            data-testid={testids.group + '_' + rowIndex}
+            data-row-index={rowIndex}
+            key={key}
+            style={style}
+            className="rct9k-group">
             {React.isValidElement(ColumnRenderer) && ColumnRenderer}
             {!React.isValidElement(ColumnRenderer) && (
               <ColumnRenderer group={group} labelProperty={labelProperty} rowIndex={rowIndex} />
@@ -1653,7 +1680,7 @@ export default class Timeline extends React.Component {
             const bodyHeight = calculateHeight(height);
             const timebarHeight = getTimebarHeight();
             return (
-              <div className="parent-div" onMouseMove={this.mouseMoveFunc}>
+              <div data-testid="pa" className="parent-div" onMouseMove={this.mouseMoveFunc}>
                 <SelectBox
                   ref={this.select_ref_callback}
                   className={this.state.dragToCreateMode ? 'rct9k-selector-outer-add' : ''}
@@ -1714,5 +1741,52 @@ export default class Timeline extends React.Component {
         <TestsAreDemoCheat objectToPublish={this} />
       </div>
     );
+  }
+
+  ////////////////////////////////////////////////////////////////////////////////////////
+  ////// Test functions
+  ////////////////////////////////////////////////////////////////////////////////////////
+
+  tadSetCursorTime(x) {
+    const {componentId} = this.props;
+    const leftOffset = document.querySelector(`.rct9k-id-${componentId} .parent-div`).getBoundingClientRect().left;
+    const cursorTime = getTimeAtPixel(
+      x - this.calculateLeftOffset() - leftOffset,
+      this.getStartDate(),
+      this.getEndDate(),
+      this.getTimelineWidth(),
+      this.getTimelineSnap()
+    );
+    this.mouse_snapped_time = cursorTime;
+    this.setState({cursorTime});
+  }
+
+  tadDragStart(element, offsetX) {
+    const {x, y} = element.getBoundingClientRect();
+    this.#onDragStartSelect(offsetX + x, y);
+    this.tadSetCursorTime(offsetX + x);
+  }
+
+  async tadDragMove(x, y, delta = 10) {
+    let deltaX,
+      i = 0;
+    for (; i < x; i += delta) {
+      deltaX = Math.min(i + delta, x);
+      await new Promise(resolve => setTimeout(resolve, delta));
+      this.#onDragMoveSelect(this._selectBox.startX + deltaX, this._selectBox.startY + y);
+      this.tadSetCursorTime(this._selectBox.startX + deltaX);
+    }
+  }
+
+  tadDragEnd() {
+    this.#onDragEndSelect();
+  }
+
+  tadRightClick() {
+    if (this._selectBox.isStart()) {
+      this.setState({dragCancel: true});
+      this._selectBox.end();
+      this.tadDragEnd();
+    }
   }
 }

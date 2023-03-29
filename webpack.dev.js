@@ -1,3 +1,4 @@
+const webpack = require('webpack');
 const {merge} = require('webpack-merge');
 const common = require('./webpack.common.js');
 
@@ -6,7 +7,7 @@ const HtmlWebpackPlugin = require('html-webpack-plugin');
 module.exports = merge(common, {
   entry: './src/demo_index.js',
   mode: 'development',
-  devtool: 'inline-source-map',
+  devtool: 'source-map',
   plugins: [
     new HtmlWebpackPlugin({
       title: 'React Timeline 9000',
@@ -17,7 +18,12 @@ module.exports = merge(common, {
         removeComments: false,
         collapseWhitespace: false
       }
-    })
+    }),
+    new webpack.DefinePlugin({
+      "process.env": {
+        NODE_ENV: JSON.stringify("development")
+      }
+    }),
   ],
   devServer: {
     static: './dist',
