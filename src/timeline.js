@@ -3,14 +3,16 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import ReactDOM from 'react-dom';
-import {Grid, AutoSizer, defaultCellRangeRenderer} from 'react-virtualized';
+import Measure from 'react-measure';
 
 import moment from 'moment';
 import interact from 'interactjs';
 import _ from 'lodash';
+import {Column, Group, InteractOption, Item, RowLayer} from './index';
 
-import {pixToInt, intToPix, sumStyle} from './utils/commonUtils';
+import {pixToInt, intToPix} from './utils/commonUtils';
 import {
+  adjustRowTopPositionToViewport,
   rowItemsRenderer,
   rowLayerRenderer,
   getNearestRowNumber,
@@ -31,19 +33,21 @@ import {
 } from './utils/timeUtils';
 import Timebar from './components/timebar';
 import SelectBox from './components/selector';
-import {DefaultGroupRenderer, DefaultItemRenderer} from './components/renderers';
+import ItemRenderer from './components/ItemRenderer';
+import {GroupRenderer} from './components/GroupRenderer';
 import TimelineBody from './components/body';
-import Marker from './components/marker';
+import {Marker} from './components/Marker';
 
 // startsWith polyfill for IE11 support
 import 'core-js/fn/string/starts-with';
 
 const SINGLE_COLUMN_LABEL_PROPERTY = 'title';
+const EMPTY_GROUP_KEY = 'empty-group';
 
 /**
  * Timeline class
- * @reactProps {!number} items - this is prop1
- * @reactProps {string} prop2 - this is prop2
+ * @extends React.Component<Timeline.propTypes>
+ * @extends React.Component<Timeline.propTypes>
  */
 export default class Timeline extends React.Component {
   /**
@@ -56,34 +60,84 @@ export default class Timeline extends React.Component {
   });
 
   static propTypes = {
-    items: PropTypes.arrayOf(
+    /**
+     * The rows (aka groups) of the Timeline.
+     *
+     * `id` is mandatory, it should: be numeric, start with 0 and have consecutive values.
+     *
+     * `title` is used displayed by the default renderer. This is optional, i.e. you may use this and/or other fields, provided
+     * you have a custom renderer.
+     * @type { Array.<Group> }
+     */
+    groups: PropTypes.arrayOf(
       PropTypes.shape({
-        key: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
-        // start and end are not required because getStartFromItem() and getEndFromItem() functions
-        // are being used and they can be overriden to use other fields
-        start: PropTypes.oneOfType([PropTypes.object, PropTypes.number]),
-        end: PropTypes.oneOfType([PropTypes.object, PropTypes.number])
+        id: PropTypes.number.isRequired,
+        title: PropTypes.string
       })
     ).isRequired,
-    groups: PropTypes.arrayOf(PropTypes.object).isRequired,
-    // Single column mode: the width of the column.
-    // Multiple columns mode: the default width of the columns, which may be overridden on a per column basis.
-    groupOffset: PropTypes.number.isRequired,
-    tableColumns: PropTypes.arrayOf(
+
+    /**
+     * The segments (aka items). An item is associated with a row. Hence `row` is mandatory, pointing to an `id` of a row (group).
+     *
+     * `key` is also needed and has the React standard meaning.
+     *
+     * `start` and `stop` are dates (numeric/millis or moment objects, cf. `useMoment`).
+     *
+     * All the props of an item are copied to the props of the item renderer. E.g. `<ItemRenderer {...props.itemRendererDefaultProps } {...item}` ... />. See its
+     * doc, to see what props are known/rendered by `ItemRenderer` (such as `title`, `color`, etc.). The item renderer can be
+     * customized using the `itemRenderer` prop.
+     * @type { Array.<Item> }
+     */
+    items: PropTypes.arrayOf(
       PropTypes.shape({
-        // The default renderer for a cell is props.groupRenderer that renders labelProperty from group.
-        // The renderer for a column can be overriden using cellRenderer. cellRenderer can be a React element
-        // or a function or a class component that generates a React element.
-        labelProperty: PropTypes.string,
-        cellRenderer: PropTypes.oneOfType([PropTypes.func, PropTypes.element]),
-        // The default renderer for a header is props.groupTitleRenderer that renders headerLabel.
-        // The renderer for a header column can be overriden using headerRenderer. headerRenderer can be a React element
-        // or a function or a class component that generates a React element.
-        headerLabel: PropTypes.string,
-        headerRenderer: PropTypes.oneOfType([PropTypes.func, PropTypes.element]),
-        width: PropTypes.number // width of the column in px
+        key: PropTypes.oneOfType([PropTypes.number, PropTypes.string]).isRequired,
+        row: PropTypes.number.isRequired,
+        // start and end are not required because getStartFromItem() and getEndFromItem() functions
+        // are being used and they can be overriden to use other fields
+        start: PropTypes.oneOfType([PropTypes.number, PropTypes.object]),
+        end: PropTypes.oneOfType([PropTypes.number, PropTypes.object])
       })
-    ),
+    ).isRequired,
+
+    /**
+     * @type { Array.<number> }
+     */
+    selectedItems: PropTypes.arrayOf(PropTypes.number),
+
+    /**
+     * The component that is the item (segment) renderer. You can change the default component (i.e. `ItemRenderer`). We
+     * recommend to create a subclass of it, rather than creating one from scratch.
+     * @type { Function }
+     */
+    itemRenderer: PropTypes.oneOfType([PropTypes.object, PropTypes.func]),
+
+    /**
+     * This is used more or less like this:
+     *
+     * ```jsx
+     * <ItemRenderer {...props.itemRendererDefaultProps } {...item} ... />
+     * ```
+     *
+     * This is the way to go if you want to set a property for all segments (items). E.g. `color`. Take a look at the props
+     * of `ItemRenderer` to see what are the possible options. If you override the item renderer, and it will accept additional
+     * props, you can of course specify them here.
+     * @type { object }
+     */
+    itemRendererDefaultProps: PropTypes.object,
+
+    /**
+     * The height of the items (segments) in pixels, it is used to calculate the height of the row.
+     *
+     * Items (segments) that are overlapping are displayed one below the other. In this case, the height of the row will
+     * be the maximum number of overlapping items (segments) multiplied by `itemHeight`.
+     * @type { number }
+     */
+    itemHeight: PropTypes.number,
+
+    /**
+     * List of layers that will be rendered for a row.
+     * @type { Array.<RowLayer> }
+     */
     rowLayers: PropTypes.arrayOf(
       PropTypes.shape({
         // start and end are not required because getStartFromItem() and getEndFromItem() functions
@@ -94,46 +148,216 @@ export default class Timeline extends React.Component {
         style: PropTypes.object.isRequired
       })
     ),
-    selectedItems: PropTypes.arrayOf(PropTypes.number),
-    startDate: PropTypes.oneOfType([PropTypes.object, PropTypes.number]).isRequired,
-    endDate: PropTypes.oneOfType([PropTypes.object, PropTypes.number]).isRequired,
-    snap: PropTypes.number, //like snapMinutes, but for seconds; couldn't get it any lower because the pixels are not calculated correctly
-    snapMinutes: PropTypes.number,
-    showCursorTime: PropTypes.bool,
-    cursorTimeFormat: PropTypes.string,
-    componentId: PropTypes.string, // A unique key to identify the component. Only needed when 2 grids are mounted
-    itemHeight: PropTypes.number,
-    timelineMode: PropTypes.number,
-    timebarFormat: PropTypes.object,
-    onItemClick: PropTypes.func,
-    onItemDoubleClick: PropTypes.func,
-    onItemContext: PropTypes.func,
-    onInteraction: PropTypes.func,
-    onRowClick: PropTypes.func,
-    onRowContext: PropTypes.func,
-    onRowDoubleClick: PropTypes.func,
-    onGroupRowClick: PropTypes.func,
-    onGroupRowDoubleClick: PropTypes.func,
-    onItemHover: PropTypes.func,
-    onItemLeave: PropTypes.func,
-    itemRenderer: PropTypes.func,
-    // Single column mode: the renderer of a cell.
-    // Multiple columns mode: the default renderer of a cell, which may be overridden on a per column basis.
+
+    /**
+     * Start of the displayed interval, as date (numeric/millis or moment object, cf. `useMoment`).
+     * @type {number | object}
+     */
+    startDate: PropTypes.oneOfType([PropTypes.number, PropTypes.object]).isRequired,
+
+    /**
+     * End of the displayed interval, as date (numeric/millis or moment object, cf. `useMoment`).
+     * @type { number | object }
+     */
+    endDate: PropTypes.oneOfType([PropTypes.number, PropTypes.object]).isRequired,
+
+    /** If `false`, then when you "talk" dates/times to the Timeline, then you use
+     * plain timestamps (i.e. number of millis, e.g. `new Date().valueOf()`). And this everywhere where
+     * a date/time is needed (e.g. for an item, for global start/end, etc.). This is the **recommended** (and the default) way to go, especially if you use Redux.
+     *
+     * NOTE 1: the Timeline still uses "moment" internally. And this because it was quicker to refactor this way.
+     * This may change in the future, if we find reasons and time to refactor more.
+     *
+     * NOTE 2: The upstream repo, had this `true` by default, in order to maintain backward compatibility. But we discovered that w/ `false`, the component
+     * actually works both w/ timestamps AND moment objects. And this is because we convert using `moment(date)`, which works in the 2 cases. Obviously it's
+     * not a good idea to mix the date types, one of the reasons being that maybe in the future moment won't be used internally any more.
+     *
+     * @type { boolean }
+     */
+    useMoment: PropTypes.bool,
+
+    /**
+     * Single column mode: the width of the column.
+     * Multiple columns mode: the default width of the columns (if column.width is not configured), which may be overridden on a per column basis.
+     * @type { number }
+     */
+    groupOffset: PropTypes.number.isRequired,
+
+    /**
+     * The columns that will be rendered using data from groups.
+     * @type { Array.<Column> }
+     */
+    tableColumns: PropTypes.arrayOf(
+      PropTypes.shape({
+        /**
+         * The default renderer for a cell is props.groupRenderer that renders labelProperty from group.
+         * The renderer for a column can be overriden using cellRenderer. cellRenderer can be a React element
+         * or a function or a class component that generates a React element.
+         */
+        labelProperty: PropTypes.string,
+        cellRenderer: PropTypes.oneOfType([PropTypes.func, PropTypes.element]),
+        // The default renderer for a header is props.groupTitleRenderer that renders headerLabel.
+        // The renderer for a header column can be overriden using headerRenderer. headerRenderer can be a React element
+        // or a function or a class component that generates a React element.
+        headerLabel: PropTypes.string,
+        headerRenderer: PropTypes.oneOfType([PropTypes.func, PropTypes.element]),
+
+        /**
+         * Width of the column in px.
+         */
+        width: PropTypes.number
+      })
+    ),
+
+    /**
+     * Single column mode: the renderer of a cell.
+     * Multiple columns mode: the default renderer of a cell, which may be overridden on a per column basis.
+     * @type { Function }
+     */
     groupRenderer: PropTypes.func,
-    // Single column mode: the renderer of the header cell.
-    // Multiple columns mode: the default renderer of a header cell, which may be overridden on a per column basis.
+
+    /**
+     * Single column mode: the renderer of the header cell.
+     * Multiple columns mode: the default renderer of a header cell, which may be overridden on a per column basis.
+     * @type { Function }
+     */
     groupTitleRenderer: PropTypes.func,
-    shallowUpdateCheck: PropTypes.bool,
-    forceRedrawFunc: PropTypes.func,
+
+    /**
+     * @type { number }
+     */
+    snap: PropTypes.number, //like snapMinutes, but for seconds; couldn't get it any lower because the pixels are not calculated correctly
+
+    /**
+     * @type { number }
+     */
+    snapMinutes: PropTypes.number,
+
+    /**
+     * Shows the cursor time in the timebar and a red marker in the grid indicating the cursor time.
+     * @type { boolean }
+     */
+    showCursorTime: PropTypes.bool,
+
+    /**
+     * The format of the cursor time displayed in the timebar.
+     * @type { string }
+     */
+    cursorTimeFormat: PropTypes.string,
+
+    /**
+     * A unique key to identify the component. Only needed when 2 grids are mounted.
+     * @type { string }
+     */
+    componentId: PropTypes.string,
+
+    /**
+     * @type { number }
+     */
+    timelineMode: PropTypes.number,
+
+    /**
+     * @type { object }
+     */
+    timebarFormat: PropTypes.object,
+
+    /**
+     * @type { string }
+     */
     bottomResolution: PropTypes.string,
+
+    /**
+     * @type { string }
+     */
     topResolution: PropTypes.string,
+
+    /**
+     * If true timeline will try to minimize re-renders . Set to false if items don't show up/update on prop change.
+     * @type { boolean }
+     */
+    shallowUpdateCheck: PropTypes.bool,
+
+    /**
+     * Function called when shallowUpdateCheck==true. If returns true the timeline will be redrawn.
+     * If false the library will decide if redrawing is required.
+     * @type { Function }
+     */
+    forceRedrawFunc: PropTypes.func,
+
+    /**
+     * @type { InteractOption }
+     */
     interactOptions: PropTypes.shape({
       draggable: PropTypes.object,
       pointerEvents: PropTypes.object,
       // TODO: this doesn't seem used; originally it was w/ "required"; I removed this to avoid warnings in console
       resizable: PropTypes.object
     }),
-    useMoment: PropTypes.bool // Whether the timeline should receive dates as moment object or in milliseconds.
+
+    /**
+     * @type { Function }
+     */
+    onItemClick: PropTypes.func,
+
+    /**
+     * @type { Function }
+     */
+    onItemDoubleClick: PropTypes.func,
+
+    /**
+     * @type { Function }
+     */
+    onItemContext: PropTypes.func,
+
+    /**
+     * @type { Function }
+     */
+    onInteraction: PropTypes.func,
+
+    /**
+     * @type { Function }
+     */
+    onRowClick: PropTypes.func,
+
+    /**
+     * @type { Function }
+     */
+    onRowContext: PropTypes.func,
+
+    /**
+     * @type { Function }
+     */
+    onRowDoubleClick: PropTypes.func,
+
+    /**
+     * @type { Function }
+     */
+    onGroupRowClick: PropTypes.func,
+
+    /**
+     * @type { Function }
+     */
+    onGroupRowDoubleClick: PropTypes.func,
+
+    /**
+     * @type { Function }
+     */
+    onItemHover: PropTypes.func,
+
+    /**
+     * @type { Function }
+     */
+    onItemLeave: PropTypes.func,
+
+    /**
+     * This property should be used like this:
+     *
+     * ```jsx
+     * <Timeline backgroundLayer={<BackgroundLayer ... /> ... />
+     * ```
+     * @type { JSX.Element }
+     */
+    backgroundLayer: PropTypes.object
   };
 
   static defaultProps = {
@@ -144,16 +368,36 @@ export default class Timeline extends React.Component {
     cursorTimeFormat: 'D MMM YYYY HH:mm',
     componentId: 'r9k1',
     showCursorTime: true,
-    groupRenderer: DefaultGroupRenderer,
-    itemRenderer: DefaultItemRenderer,
+    groupRenderer: GroupRenderer,
+    itemRenderer: ItemRenderer,
     timelineMode: Timeline.TIMELINE_MODES.SELECT | Timeline.TIMELINE_MODES.DRAG | Timeline.TIMELINE_MODES.RESIZE,
-    shallowUpdateCheck: false,
+    // in rtl9k
+    // shallowUpdateCheck: false,
+    shallowUpdateCheck: true,
     forceRedrawFunc: null,
     onItemHover() {},
     onItemLeave() {},
     interactOptions: {},
-    useMoment: true,
-    tableColumns: []
+    itemStyle: {},
+    // in rtl9k:
+    // useMoment: true,
+    useMoment: false,
+    tableColumns: [],
+    selectedItems: [],
+    snap: undefined,
+    groupTitleRenderer: undefined,
+    timebarFormat: undefined,
+    bottomResolution: undefined,
+    topResolution: undefined,
+    onItemClick() {},
+    onItemDoubleClick() {},
+    onItemContext() {},
+    onRowClick() {},
+    onRowContext() {},
+    onRowDoubleClick() {},
+    onInteraction() {},
+    itemRendererDefaultProps: {},
+    backgroundLayer: null
   };
 
   /**
@@ -186,7 +430,14 @@ export default class Timeline extends React.Component {
   constructor(props) {
     super(props);
     this.selecting = false;
-    this.state = {selection: [], cursorTime: null};
+    this.state = {
+      selection: [],
+      cursorTime: null,
+      groups: this.props.groups,
+      verticalGridLines: [],
+      width: 0,
+      height: 0
+    };
 
     // These functions need to be bound because they are passed as parameters.
     // getStartFromItem and getEndFromItem are used in rowItemsRenderer function
@@ -215,6 +466,7 @@ export default class Timeline extends React.Component {
     this.throttledMouseMoveFunc = _.throttle(this.throttledMouseMoveFunc.bind(this), 20);
     this.mouseMoveFunc = this.mouseMoveFunc.bind(this);
     this.getCursor = this.getCursor.bind(this);
+    this.setVerticalGridLines = this.setVerticalGridLines.bind(this);
 
     const canSelect = Timeline.isBitSet(Timeline.TIMELINE_MODES.SELECT, this.props.timelineMode);
     const canDrag = Timeline.isBitSet(Timeline.TIMELINE_MODES.DRAG, this.props.timelineMode);
@@ -233,6 +485,7 @@ export default class Timeline extends React.Component {
       convertDateToMoment(nextProps.endDate, nextProps.useMoment),
       nextProps.useMoment
     );
+    this.fillInTimelineWithEmptyRows(nextProps.groups);
     // @TODO
     // investigate if we need this, only added to refresh the grid
     // when double click -> add an item
@@ -260,76 +513,86 @@ export default class Timeline extends React.Component {
   }
 
   /**
-   * It returns the start date of the timeline as moment.
-   * @returns startDate as moment
+   * Start of the displayed interval (as moment object).
+   *
+   * @return {moment}
    */
   getStartDate() {
     return convertDateToMoment(this.props.startDate, this.props.useMoment);
   }
 
   /**
-   * It returns the end date of the timeline as moment.
-   * @returns endDate as moment
+   * End of the displayed interval (as moment object).
+   *
+   * @return {moment}
    */
   getEndDate() {
     return convertDateToMoment(this.props.endDate, this.props.useMoment);
   }
 
   /**
-   * It returns the start of the item as moment.
-   * @param {object} item Item that is displayed in the grid.
-   * @param {useMoment} useMoment This parameter is necessary because this method is also called when
-   * the component receives new props. Default value: this.props.useMoment.
-   * @returns start of the item as moment
+   * Start of the segment (item).
+   *
+   * @param {Item} item The segment (item).
+   * @param {boolean} useMoment This parameter is necessary because this method is also called when
+   * the component receives new props. Default value: `this.props.useMoment`.
+   * @return {moment}
    */
   getStartFromItem(item, useMoment = this.props.useMoment) {
     return convertDateToMoment(item.start, useMoment);
   }
 
   /**
-   * It assigns newDateAsMoment to the start of the item, but first it converts newDateAsMoment
-   * to moment or milliseconds according to useMoment.
-   * @param {object} item Item that is displayed in the grid.
+   * It assigns `newDateAsMoment` to the start of the segment (item), but first it converts it
+   * to moment or number/milliseconds according to `useMoment`.
+   *
+   * @param {Item} item The segment (item).
    * @param {moment} newDateAsMoment
+   * @return {void}
    */
   setStartToItem(item, newDateAsMoment) {
     item.start = convertMomentToDateType(newDateAsMoment, this.props.useMoment);
   }
 
   /**
-   * It returns the end of the item as moment.
-   * @param {object} item Item that is displayed in the grid.
-   * @param {useMoment} useMoment This parameter is necessary because this method is also called when
-   * the component receives new props. Default value: this.props.useMoment.
-   * @returns end of the item as moment.
+   * End of the segment (item).
+   *
+   * @param {Item} item The segment (item).
+   * @param {boolean} useMoment This parameter is necessary because this method is also called when
+   * the component receives new props. Default value: `this.props.useMoment`.
+   * @return {moment}
    */
   getEndFromItem(item, useMoment = this.props.useMoment) {
     return convertDateToMoment(item.end, useMoment);
   }
 
   /**
-   * It assigns newDateAsMoment to the end of the item, but first it converts newDateAsMoment
-   * to moment or milliseconds according to useMoment.
-   * @param {object} item Item that is displayed in the grid.
+   * It assigns `newDateAsMoment` to the end of the segment (item), but first it converts it
+   * to moment or number/milliseconds according to `useMoment`.
+   *
+   * @param {Item} item The segment (item).
    * @param {moment} newDateAsMoment
+   * @return {void}
    */
   setEndToItem(item, newDateAsMoment) {
     item.end = convertMomentToDateType(newDateAsMoment, this.props.useMoment);
   }
 
   /**
-   * It returns the start of the layer as moment.
-   * @param {object} layer
-   * @returns the start of the rowLayer as moment.
+   * Start of the layer as a moment object.
+   *
+   * @param {RowLayer} layer
+   * @return {moment}
    */
   getStartFromRowLayer(layer) {
     return convertDateToMoment(layer.start, this.props.useMoment);
   }
 
   /**
-   * It assigns newDateAsMoment to the start of the layer, but first it converts newDateAsMoment
-   * to moment or milliseconds according to useMoment.
-   * @param {object} layer Item that is displayed in the grid.
+   * It assigns `newDateAsMoment` to the start of the segment (item), but first it converts it
+   * to moment or number/milliseconds according to `useMoment`.
+   *
+   * @param {RowLayer} layer
    * @param {moment} newDateAsMoment
    */
   setStartToRowLayer(layer, newDateAsMoment) {
@@ -337,18 +600,20 @@ export default class Timeline extends React.Component {
   }
 
   /**
-   * It returns the end of the layer as moment.
-   * @param {object} layer
-   * @returns the end of the layer as moment.
+   * End of the layer as a moment object.
+   *
+   * @param {RowLayer} layer
+   * @return {moment}
    */
   getEndFromRowLayer(layer) {
     return convertDateToMoment(layer.end, this.props.useMoment);
   }
 
   /**
-   * It assigns newDateAsMoment to the end of the layer, but first it converts newDateAsMoment
-   * to moment or milliseconds according to useMoment.
-   * @param {object} layer Item that is displayed in the grid.
+   * It assigns `newDateAsMoment` to the end of the segment (item), but first it converts it
+   * to moment or number/milliseconds according to `useMoment`.
+   *
+   * @param {RowLayer} layer
    * @param {moment} newDateAsMoment
    */
   setEndToRowLayer(layer, newDateAsMoment) {
@@ -368,7 +633,7 @@ export default class Timeline extends React.Component {
 
   /**
    * Sets the internal maps used by the component for looking up item & row data
-   * @param {Object[]} items The items to be displayed in the grid
+   * @param {Item[]} items The items to be displayed in the grid
    * @param {moment} startDate The visible start date of the timeline
    * @param {moment} endDate The visible end date of the timeline
    * @param {boolean} useMoment This parameter is necessary because this method is also called when
@@ -403,13 +668,57 @@ export default class Timeline extends React.Component {
   }
 
   /**
+   * Compute the number of rows that fit inside the timeline. If there can fit
+   * more rows than the model, fill in with empty groups.
+   * @param {Group[]} groups
+   */
+  fillInTimelineWithEmptyRows(groups) {
+    // remove empty groups
+    groups = groups.filter(group => !group.key || !group.key.startsWith(EMPTY_GROUP_KEY));
+
+    // get height of the grid (without timebar);
+    // used to compute the number of rows we need to fill in
+    if (!this._grid || this._grid.props.height <= 0) {
+      this.setState({groups: groups});
+      return;
+    }
+
+    // compute the total height of the actual rows;
+    // if there are items that are overlapping, then the total height of a row is the maximum number
+    // of items that are overlapping on that row, multiplied by props.itemHeight
+    let totalItemsHeight = 0;
+    let that = this;
+    _.forEach(groups, group => {
+      totalItemsHeight += (that.rowHeightCache[group.id] || 1) * that.props.itemHeight;
+    });
+    let heightToFillIn = this._grid.props.height - totalItemsHeight;
+    let fillInGroups = [];
+
+    let groupId = groups.length;
+    while (heightToFillIn > 0) {
+      // create new empty group;
+      // if the last row would be only partially visible, then we set the height of the row as the remaining
+      // height (add `rowHeight` in group, which will be used in rowHeight() function)
+      let emptyGroup = {id: groupId, key: EMPTY_GROUP_KEY + groupId};
+      if (heightToFillIn < this.props.itemHeight) {
+        emptyGroup.rowHeight = heightToFillIn;
+      }
+
+      fillInGroups.push(emptyGroup);
+      heightToFillIn -= this.props.itemHeight;
+      groupId++;
+    }
+    this.setState({groups: [...groups, ...fillInGroups]});
+  }
+
+  /**
    * Returns an item given its DOM element
    * @param {Object} e the DOM element of the item
    * @return {Object} Item details
    * @prop {number|string} index The item's index
    * @prop {number} rowNo The row number the item is in
    * @prop {number} itemIndex Not really used - gets the index of the item in the row map
-   * @prop {Object} item The provided item object
+   * @prop {Item} item The provided item object
    */
   itemFromElement(e) {
     const index = e.getAttribute('data-item-index');
@@ -423,7 +732,7 @@ export default class Timeline extends React.Component {
   /**
    * Gets an item given its ID
    * @param {number} id item id
-   * @return {Object} Item object
+   * @return {Item} Item object
    */
   getItem(id) {
     // This is quite stupid and shouldn't really be needed
@@ -434,7 +743,7 @@ export default class Timeline extends React.Component {
 
   /**
    * Move an item from one row to another
-   * @param {object} item The item object whose groups is to be changed
+   * @param {Item} item The item object whose groups is to be changed
    * @param {number} curRow The item's current row index
    * @param {number} newRow The item's new row index
    */
@@ -475,6 +784,7 @@ export default class Timeline extends React.Component {
 
   /**
    * Get the snap in milliseconds from snapMinutes or snap
+   * @returns { number }
    */
   getTimelineSnap() {
     if (this.props.snap) {
@@ -491,8 +801,17 @@ export default class Timeline extends React.Component {
    */
   refreshGrid = (config = {}) => {
     this._grid.recomputeGridSize(config);
+    // fill in timeline with empty rows only on resize
+    if (!_.isEmpty(config)) {
+      this.fillInTimelineWithEmptyRows(this.state.groups);
+    }
   };
 
+  /**
+   * @param { boolean } canSelect
+   * @param { boolean } canDrag
+   * @param { boolean } canResize
+   */
   setUpDragging(canSelect, canDrag, canResize) {
     // No need to setUpDragging during SSR
     if (typeof window === 'undefined') {
@@ -778,7 +1097,8 @@ export default class Timeline extends React.Component {
 
           // this._selectBox.start(e.clientX, e.clientY);
           // this._selectBox.start(e.clientX, topRowObj.style.top);
-          this._selectBox.start(e.clientX, nearestRowObject.getBoundingClientRect().y);
+          const startY = adjustRowTopPositionToViewport(nearestRowObject, nearestRowObject.getBoundingClientRect().y);
+          this._selectBox.start(e.clientX, startY);
           // const bottomRow = Number(getNearestRowNumber(left + width, top + height));
         })
         .on('dragmove', e => {
@@ -798,7 +1118,8 @@ export default class Timeline extends React.Component {
             if (startRowNumber <= currentRowNumber) {
               // select box for selection going down
               // get the first selected rows top
-              const startTop = Math.ceil(startRowObject.getBoundingClientRect().top + rowMarginBorder);
+              let startTop = Math.ceil(startRowObject.getBoundingClientRect().top + rowMarginBorder);
+              startTop = adjustRowTopPositionToViewport(startRowObject, startTop);
               // get the currently selected rows bottom
               const currentBottom = Math.floor(getTrueBottom(currentRowObject) - magicalConstant - rowMarginBorder);
               this._selectBox.start(startX, startTop);
@@ -824,11 +1145,9 @@ export default class Timeline extends React.Component {
             const topRowNumber = Number(getNearestRowNumber(left, top));
             const topRowLoc = topRowObject.getBoundingClientRect();
             const rowMarginBorder = getVerticalMarginBorder(topRowObject);
+            const y = Math.floor(topRowLoc.top - rowMarginBorder) + Math.floor(height - rowMarginBorder);
             const bottomRow = Number(
-              getNearestRowNumber(
-                left + width,
-                Math.floor(topRowLoc.top - rowMarginBorder) + Math.floor(height - rowMarginBorder)
-              )
+              getNearestRowNumber(left + width, adjustRowTopPositionToViewport(topRowObject, y))
             );
             //Get the start and end time of the selection rectangle
             left = left - topRowLoc.left;
@@ -939,6 +1258,7 @@ export default class Timeline extends React.Component {
               this.props.itemHeight,
               this.props.itemRenderer,
               canSelect ? this.props.selectedItems : [],
+              this.props.itemRendererDefaultProps,
               this.getStartFromItem,
               this.getEndFromItem
             )}
@@ -971,7 +1291,7 @@ export default class Timeline extends React.Component {
         } else {
           labelProperty = SINGLE_COLUMN_LABEL_PROPERTY;
         }
-        let group = _.find(this.props.groups, g => g.id == rowIndex);
+        let group = _.find(this.state.groups, g => g.id == rowIndex);
         return (
           <div
             data-row-index={rowIndex}
@@ -997,9 +1317,15 @@ export default class Timeline extends React.Component {
   }
 
   /**
-   * Helper for react virtuaized to get the row height given a row index
+   * Helper for react virtualized to get the row height given a row index.
    */
   rowHeight({index}) {
+    let group = _.find(this.state.groups, g => g.id == index);
+    // only for empty rows (EMPTY_GROUP_KEY), if the group has a custom row height,
+    // we will return that height
+    if (group.rowHeight && group.key.startsWith(EMPTY_GROUP_KEY)) {
+      return group.rowHeight;
+    }
     let rh = this.rowHeightCache[index] ? this.rowHeightCache[index] : 1;
     return rh * this.props.itemHeight;
   }
@@ -1057,7 +1383,7 @@ export default class Timeline extends React.Component {
   /**
    * Calculates left offset of the timeline (group lists). If props.tableColumns is defined,
    * the left offset is the sum of the widths of all tableColumns; otherwise returns groupOffset.
-   * @returns left offset
+   * @returns {number} left offset
    */
   calculateLeftOffset() {
     const {tableColumns, groupOffset} = this.props;
@@ -1072,6 +1398,14 @@ export default class Timeline extends React.Component {
     return totalOffset;
   }
 
+  /**
+   * Setter for verticalGridLines (that will be passed to `BackgroundLayer`).
+   * @param { object } verticalGridLines
+   */
+  setVerticalGridLines(verticalGridLines) {
+    this.setState({verticalGridLines});
+  }
+
   render() {
     const {
       onInteraction,
@@ -1084,7 +1418,8 @@ export default class Timeline extends React.Component {
       forceRedrawFunc,
       bottomResolution,
       topResolution,
-      tableColumns
+      tableColumns,
+      backgroundLayer
     } = this.props;
     let that = this;
 
@@ -1094,10 +1429,18 @@ export default class Timeline extends React.Component {
     if (bottomResolution) varTimebarProps['bottom_resolution'] = bottomResolution;
     if (topResolution) varTimebarProps['top_resolution'] = topResolution;
 
+    /**
+     * @param { Column } column
+     * @returns { number } width of a column
+     */
     function getColumnWidth(column) {
       return column.width ? column.width : groupOffset;
     }
 
+    /**
+     * @param { number } width
+     * @returns { Function }
+     */
     function columnWidth(width) {
       return ({index}) => {
         // The width of the first column when tableColumns is not defined is groupOffset.
@@ -1121,7 +1464,10 @@ export default class Timeline extends React.Component {
       };
     }
 
-    function calculateHeight(height) {
+    /**
+     * @returns { number } height of the timebar
+     */
+    function getTimebarHeight() {
       if (typeof window === 'undefined') {
         return 0;
       }
@@ -1131,8 +1477,19 @@ export default class Timeline extends React.Component {
         return 0;
       }
       // substract timebar height from total height
-      const timebarHeight = timebar.getBoundingClientRect().height;
-      return Math.max(height - timebarHeight, 0);
+      return timebar.getBoundingClientRect().height;
+    }
+
+    /**
+     * @param { number } height (total height of the timeline)
+     * @returns { number } height of the timeline w/o timebar
+     */
+    function calculateHeight(height) {
+      if (typeof window === 'undefined' || height === undefined) {
+        return 0;
+      }
+
+      return Math.max(height - getTimebarHeight(), 0);
     }
 
     // Markers (only current time marker atm)
@@ -1150,42 +1507,75 @@ export default class Timeline extends React.Component {
       });
     }
     return (
-      <div className={divCssClass}>
-        <AutoSizer className="rct9k-autosizer" onResize={this.refreshGrid}>
-          {({height, width}) => (
-            <div className="parent-div" onMouseMove={this.mouseMoveFunc}>
-              <SelectBox ref={this.select_ref_callback} />
-              <Timebar
-                cursorTime={this.getCursor()}
-                start={this.getStartDate()}
-                end={this.getEndDate()}
-                width={width}
-                leftOffset={this.calculateLeftOffset()}
-                selectedRanges={this.state.selection}
-                groupTitleRenderer={groupTitleRenderer}
-                tableColumns={tableColumns}
-                groupOffset={groupOffset}
-                {...varTimebarProps}
-              />
-              {markers.map(m => (
-                <Marker key={m.key} height={height} top={0} left={m.left} />
-              ))}
-              <TimelineBody
-                width={width}
-                columnWidth={columnWidth(width)}
-                height={calculateHeight(height)}
-                rowHeight={this.rowHeight}
-                rowCount={this.props.groups.length}
-                columnCount={(tableColumns && tableColumns.length > 0 ? tableColumns.length : 1) + 1}
-                cellRenderer={this.cellRenderer(this.getTimelineWidth(width))}
-                grid_ref_callback={this.grid_ref_callback}
-                shallowUpdateCheck={shallowUpdateCheck}
-                forceRedrawFunc={forceRedrawFunc}
-              />
+      // Instead of <Measure .../>, in the past <AutoSizer ... /> was used. However it would round with/height, which generated and endless
+      // scrollbar appear/disappear, depending on the parent, depending on the resolution.
+      <Measure
+        bounds
+        onResize={contentRect => {
+          this.setState({width: contentRect.bounds?.width || 0, height: contentRect.bounds?.height || 0});
+          this.refreshGrid();
+        }}>
+        {({measureRef}) => {
+          const leftOffset = this.calculateLeftOffset();
+          const bodyHeight = calculateHeight(this.state.height);
+          const timebarHeight = getTimebarHeight();
+          return (
+            <div ref={measureRef} className={divCssClass}>
+              <div className="parent-div" onMouseMove={this.mouseMoveFunc}>
+                <SelectBox ref={this.select_ref_callback} />
+                <Timebar
+                  cursorTime={this.getCursor()}
+                  start={this.getStartDate()}
+                  end={this.getEndDate()}
+                  width={this.state.width}
+                  leftOffset={leftOffset}
+                  selectedRanges={this.state.selection}
+                  groupTitleRenderer={groupTitleRenderer}
+                  tableColumns={tableColumns}
+                  groupOffset={groupOffset}
+                  setVerticalGridLines={this.setVerticalGridLines}
+                  {...varTimebarProps}
+                />
+                {markers.map(m => (
+                  <Marker
+                    key={m.key}
+                    height={this.state.height}
+                    top={0}
+                    date={0}
+                    shouldUpdate={true}
+                    calculateHorizontalPosition={() => {
+                      return {left: m.left};
+                    }}
+                    className="rct9k-marker-overlay"
+                  />
+                ))}
+                <TimelineBody
+                  width={this.state.width}
+                  columnWidth={columnWidth(this.state.width)}
+                  height={bodyHeight}
+                  rowHeight={this.rowHeight}
+                  rowCount={this.state.groups.length}
+                  columnCount={(tableColumns && tableColumns.length > 0 ? tableColumns.length : 1) + 1}
+                  cellRenderer={this.cellRenderer(this.getTimelineWidth(this.state.width))}
+                  grid_ref_callback={this.grid_ref_callback}
+                  shallowUpdateCheck={shallowUpdateCheck}
+                  forceRedrawFunc={forceRedrawFunc}
+                />
+                {backgroundLayer &&
+                  React.cloneElement(backgroundLayer, {
+                    startDateTimeline: this.getStartDate(),
+                    endDateTimeline: this.getEndDate(),
+                    width: this.state.width,
+                    leftOffset: leftOffset,
+                    height: bodyHeight,
+                    topOffset: timebarHeisght,
+                    verticalGridLines: this.state.verticalGridLines
+                  })}
+              </div>
             </div>
-          )}
-        </AutoSizer>
-      </div>
+          );
+        }}
+      </Measure>
     );
   }
 }

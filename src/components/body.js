@@ -7,6 +7,9 @@ import PropTypes from 'prop-types';
 
 import {Grid} from 'react-virtualized';
 
+/**
+ * @extends Component<TimelineBody.propTypes>
+ */
 class TimelineBody extends Component {
   componentDidMount() {
     this.forceUpdate();
@@ -47,21 +50,70 @@ class TimelineBody extends Component {
         rowCount={rowCount}
         rowHeight={rowHeight}
         width={width}
+        className="rct9k-grid"
       />
     );
   }
 }
 
 TimelineBody.propTypes = {
+  /**
+   * The total width of the body; mandatory field.
+   * @type { number }
+   */
   width: PropTypes.number.isRequired,
+
+  /**
+   * Function that returns the width of each column, mandatory field.
+   * @type { Function }
+   */
   columnWidth: PropTypes.func.isRequired,
+
+  /**
+   * The total number of columns, including the timeline (gantt).
+   * @type { number }
+   */
   columnCount: PropTypes.number,
+
+  /**
+   * The total height of the body (without timebar), mandatory field.
+   * @type { number }
+   */
   height: PropTypes.number.isRequired,
+
+  /**
+   * Function that returns the height for each row, mandatory field.
+   * @type { Function }
+   */
   rowHeight: PropTypes.func.isRequired,
+
+  /**
+   * Number of rows in timeline, mandatory field.
+   * @type { number }
+   */
   rowCount: PropTypes.number.isRequired,
+
+  /**
+   * @type { Function }
+   */
   grid_ref_callback: PropTypes.func.isRequired,
+
+  /**
+   * Renderer for each cell of the grid.
+   * @type { Function }
+   */
   cellRenderer: PropTypes.func.isRequired,
+
+  /**
+   * As e.g. @see Timeline.props.shallowUpdateCheck
+   * @type { boolean }
+   */
   shallowUpdateCheck: PropTypes.bool,
+
+  /**
+   * As e.g. @see Timeline.props.forceRedrawFunc
+   * @type { Function }
+   */
   forceRedrawFunc: PropTypes.func
 };
 

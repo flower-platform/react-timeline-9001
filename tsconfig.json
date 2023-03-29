@@ -1,0 +1,12 @@
+{
+    "include": [
+        "src"
+    ],
+    "compilerOptions": {
+        "outDir": "dist-ts",
+        "allowJs": true,
+        "esModuleInterop": true,
+        "jsx": "react-jsx",
+        "experimentalDecorators": true
+    }
+}

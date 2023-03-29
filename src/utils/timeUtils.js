@@ -58,6 +58,7 @@ export function getTimeAtPixel(pixel_location, vis_start, vis_end, total_width, 
   if (snapMilliseconds !== 0) timeAtPix = timeSnap(timeAtPix, snapMilliseconds);
   return timeAtPix;
 }
+
 /**
  * Get the pixel location at a specific time
  * @param  {objects} time The time (moment) object
@@ -70,6 +71,7 @@ export function getPixelAtTime(time, vis_start, vis_end, total_width) {
   const min_from_start = time.diff(vis_start, 'milliseconds');
   return min_from_start * pixelsPerMillisecond(vis_start, vis_end, total_width);
 }
+
 /**
  * Returns the duration from the {@link vis_start}
  * @param  {number} pixels
@@ -87,7 +89,9 @@ export function getDurationFromPixels(pixels, vis_start, vis_end, total_width) {
 }
 
 /**
- * If useMoment is true returns the date, otherwise converts date to moment.
+ * If `useMoment` is `true` then returns `date` as is. Otherwise converts `date` to
+ * a moment object.
+ *
  * @param {moment|number} date
  * @param {boolean} useMoment
  * @returns moment
@@ -100,10 +104,12 @@ export function convertDateToMoment(date, useMoment) {
 }
 
 /**
- * If useMoment is true returns dateAsMoment, otherwise it converts dateAsMoment to milliseconds.
- * @param {moment} dateAsMoment moment to be converted
- * @param {boolean} useMoment if true return dateAsMoment, otherwise return millis
- * @returns a moment object or date in milliseconds
+ * If `useMoment` is `true` returns `dateAsMoment` as is. Otherwise it converts `dateAsMoment` to
+ * number/milliseconds.
+ *
+ * @param {moment} dateAsMoment
+ * @param {boolean} useMoment
+ * @returns a moment object or a number/milliseconds
  */
 export function convertMomentToDateType(dateAsMoment, useMoment) {
   if (useMoment) {

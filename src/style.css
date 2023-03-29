@@ -1,3 +1,33 @@
+.rct9k-background-layer-vertical-grid {
+  position: absolute;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.rct9k-background-layer-vertical-line:first-child {
+  border: 0 !important;
+}
+
+.rct9k-background-layer-vertical-line {
+  height: 100%;
+  display: inline-block;
+  border-left: 1px solid;
+}
+
+.rct9k-timebar-item:first-child {
+  border: 0 !important;
+}
+
+.rct9k-highlighted-interval {
+  position: absolute;
+  background: #eeeeff;
+}
+
+.rct9k-background-layer-highlight-weekends {
+  background: #fff7ee;
+  opacity: 1;
+}
+
 .rct9k-timeline-div {
   width: 100%;
   /* if the timeline is in a flex layout, we want it to adapt to the parent */
@@ -17,16 +47,27 @@
 .rct9k-items-outer {
   white-space: nowrap;
   position: absolute;
-  display: inline-block;
-  overflow: hidden;
+  display: flex;
+  overflow: visible;
   z-index: 3;
 }
 .rct9k-items-inner {
-  display: inline-block;
-  margin: 3px;
+  display: flex;
   padding: 3px;
+  margin: 5px 0;
   width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
 }
+
+.rct9k-marker {
+  position: absolute;
+  margin: 0;
+  background: #a9a9e6;
+  width: 2px;
+  border: 0;
+}
+
 .rct9k-marker-overlay {
   z-index: 2;
   height: 475px;
@@ -35,23 +76,58 @@
   background: red;
   pointer-events: none;
 }
+
+.rct9k-background-layer-now-marker {
+  background: red;
+  width: 2px;
+}
+
+.rct9k-item-renderer {
+  opacity: 0.8;
+  border: darkgrey solid 1px;
+  border-radius: 3px;
+}
 .rct9k-item-renderer-inner {
   pointer-events: none;
+  align-self: center;
+}
+
+.rct9k-item-glow {
+  box-shadow: 0;
+  transition: opacity 0.5s ease-in-out, box-shadow 0.5s ease-in-out;
+}
+.rct9k-item-glow:hover {
+  box-shadow: 0 0 12px #2d618c;
+  opacity: 1 !important;
 }
 .rct9k-row {
   /* white-space: nowrap; */
   box-sizing: border-box;
   border: 1px solid black;
   border-top: 0;
-  border-left: 2px solid black;
+  border-left: 0;
 }
 
 .rct9k-items-selected {
-  background-color: magenta;
+  background: magenta !important;
+  opacity: 1 !important;
+}
+
+.rct9k-grid {
+  border-bottom: 1px solid black;
+}
+
+/**
+ * EM: RM27551 - in Firefox (on some computers), when we click on the body of the timeline, a blue outline is shown around the body.
+ * After some investigation, it seems that an outline is applied by the browser on `:focus-visible`.
+ */
+.rct9k-grid:focus-visible {
+  outline: none !important;
 }
 
 .ReactVirtualized__Grid {
   overflow-x: hidden;
+  z-index: 1;
 }
 
 .ReactVirtualized__Grid__innerScrollContainer:first-child {
@@ -69,20 +145,29 @@
   z-index: 6;
 }
 
+.rct9k-group {
+  border-right: 2px solid black;
+}
+
 .rct9k-timebar {
   display: flex;
 }
 
 /* Timeline top timebar */
+.rct9k-timebar {
+  display: flex;
+}
 .rct9k-timebar-outer,
 .rct9k-timebar-group-title {
   height: 60px;
   background-color: white;
   border: 1px solid black;
   box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
 }
 .rct9k-timebar-outer {
-  border-left: none;
+  border-left: 0;
 }
 .rct9k-timebar-inner {
   height: 30px;
@@ -95,13 +180,24 @@
   border-left: 1px solid;
   white-space: nowrap;
   box-sizing: border-box;
+  height: 100%;
+  padding: 5px;
+}
+.rct9k-timebar-inner.rct9k-timebar-inner-bottom {
+  border-top: 1px solid black;
 }
 .rct9k-timebar-item-selected {
   background-color: lightblue;
 }
 
 .rct9k-timebar-group-title {
-  border-right: none;
+  border-right: 2px solid black;
+}
+
+.rct9k-timeline-div {
+  background-color: #fff;
+  font-size: 12px;
+  height: 100%;
 }
 
 /* Multi-select box */
@@ -124,11 +220,6 @@
 #root {
   width: 100%;
   height: 100%;
-}
-
-.demo {
-  height: 100%;
   display: flex;
-  gap: 5px;
   flex-direction: column;
 }

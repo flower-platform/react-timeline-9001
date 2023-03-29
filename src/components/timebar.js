@@ -5,26 +5,30 @@ import PropTypes from 'prop-types';
 import _ from 'lodash';
 import moment from 'moment';
 import {intToPix} from '../utils/commonUtils';
-import {DefaultColumnHeaderRenderer} from './renderers';
+import {ColumnHeaderRenderer} from './ColumnRenderer';
 import {timebarFormat as defaultTimebarFormat} from '../consts/timebarConsts';
+import {Column} from '../index';
 
 /**
- * Timebar component - displays the current time on top of the timeline
+ * Timebar component - displays the current time on top of the timeline.
+ * @extends React.Component<Timebar.propTypes>
  */
 export default class Timebar extends React.Component {
   constructor(props) {
     super(props);
-    this.state = {};
+    this.state = {topBarComponent: [], bottomBarComponent: [], resolution: {}};
 
     this.guessResolution = this.guessResolution.bind(this);
     this.renderBar = this.renderBar.bind(this);
-    this.renderTopBar = this.renderTopBar.bind(this);
-    this.renderBottomBar = this.renderBottomBar.bind(this);
   }
 
   componentWillMount() {
     this.guessResolution();
+    const bottomBarComponent = this.getBottomBar();
+    const topBarComponent = this.getTopBar();
+    this.setState({topBarComponent, bottomBarComponent});
   }
+
   /**
    * On new props we check if a resolution is given, and if not we guess one
    * @param {Object} nextProps Props coming in
@@ -34,6 +38,22 @@ export default class Timebar extends React.Component {
       this.setState({resolution: {top: nextProps.top_resolution, bottom: nextProps.bottom_resolution}});
     } else {
       this.guessResolution(nextProps.start, nextProps.end);
+    }
+  }
+
+  componentDidUpdate(prevProps) {
+    if (
+      !this.props.start.isSame(prevProps.start) ||
+      !this.props.end.isSame(prevProps.end) ||
+      this.props.timeFormats !== prevProps.timeFormats ||
+      this.props.top_resolution !== prevProps.top_resolution ||
+      this.props.bottom_resolution !== prevProps.bottom_resolution ||
+      this.props.width !== prevProps.width ||
+      this.props.leftOffset !== prevProps.leftOffset
+    ) {
+      const bottomBarComponent = this.getBottomBar();
+      const topBarComponent = this.getTopBar();
+      this.setState({topBarComponent, bottomBarComponent});
     }
   }
 
@@ -67,21 +87,25 @@ export default class Timebar extends React.Component {
   }
 
   /**
-   * Renderer for top bar.
+   * Calculates the top bar.
    * @returns {Object} JSX for top menu bar - based of time format & resolution
    */
-  renderTopBar() {
+  getTopBar() {
     let res = this.state.resolution.top;
     return this.renderBar({format: this.props.timeFormats.majorLabels[res], type: res});
   }
+
   /**
-   * Renderer for bottom bar.
+   * Calculates the bottom bar.
    * @returns {Object} JSX for bottom menu bar - based of time format & resolution
    */
-  renderBottomBar() {
+  getBottomBar() {
     let res = this.state.resolution.bottom;
-    return this.renderBar({format: this.props.timeFormats.minorLabels[res], type: res});
+    const bottomBar = this.renderBar({format: this.props.timeFormats.minorLabels[res], type: res});
+    this.props.setVerticalGridLines(bottomBar);
+    return bottomBar;
   }
+
   /**
    * Gets the number of pixels per segment of the timebar section (using the resolution)
    * @param {moment} date The date being rendered. This is used to figure out how many days are in the month
@@ -126,6 +150,7 @@ export default class Timebar extends React.Component {
     }
     return Math.min(inc, width);
   }
+
   /**
    * Renders an entire segment of the timebar (top or bottom)
    * @param {string} resolution The resolution to render at [Year; Month...]
@@ -225,8 +250,7 @@ export default class Timebar extends React.Component {
    */
   render() {
     const {cursorTime, tableColumns} = this.props;
-    const topBarComponent = this.renderTopBar();
-    const bottomBarComponent = this.renderBottomBar();
+    const {topBarComponent, bottomBarComponent} = this.state;
     const GroupTitleRenderer = this.props.groupTitleRenderer;
 
     // Only show the cursor on 1 of the top bar segments
@@ -284,22 +308,86 @@ export default class Timebar extends React.Component {
 }
 
 Timebar.propTypes = {
+  /**
+   * @type { any }
+   */
   cursorTime: PropTypes.any,
+
+  /**
+   * As e.g. @see Timeline.props.groupTitleRenderer
+   * @type { Function }
+   */
   groupTitleRenderer: PropTypes.func,
-  start: PropTypes.object.isRequired, //moment
-  end: PropTypes.object.isRequired, //moment
+
+  /**
+   * Start of the displayed interval, as moment object.
+   * @type { object }
+   */
+  start: PropTypes.object.isRequired,
+
+  /**
+   * End of the displayed interval, as moment object.
+   * @type { object }
+   */
+  end: PropTypes.object.isRequired,
+
+  /**
+   * Total width of the timeline (gantt), mandatory field.
+   * @type { number }
+   */
   width: PropTypes.number.isRequired,
+
+  /**
+   * The left side offset, this offset is subtracted from the total width of the timeline
+   * to obtain the width of the timebar.
+   * @type { number }
+   */
   leftOffset: PropTypes.number,
+
+  /**
+   * The time unit for the top timebar.
+   * @type { string }
+   */
   top_resolution: PropTypes.string,
+
+  /**
+   * The time unit for the bottom timebar.
+   * @type { string }
+   */
   bottom_resolution: PropTypes.string,
+
+  /**
+   * @type { Array.<object> }
+   */
   selectedRanges: PropTypes.arrayOf(PropTypes.object), // [start: moment ,end: moment (end)]
+
+  /**
+   * Formats for each time unit (@see defaultTimebarFormat)
+   * @type { object }
+   */
   timeFormats: PropTypes.object,
-  tableColumns: PropTypes.arrayOf(PropTypes.object)
+
+  /**
+   * @type { Array.<Column> }
+   */
+  tableColumns: PropTypes.arrayOf(PropTypes.object),
+
+  /**
+   * It's passed by parent. The `vertical grid` uses the same intervals as the bottom timebar, it is redundant to calculated them again.
+   * This callback passes these intervals to parent.
+   * @type { Function }
+   */
+  setVerticalGridLines: PropTypes.func
 };
+
 Timebar.defaultProps = {
   selectedRanges: [],
-  groupTitleRenderer: DefaultColumnHeaderRenderer,
+  groupTitleRenderer: ColumnHeaderRenderer,
   leftOffset: 0,
   timeFormats: defaultTimebarFormat,
-  tableColumns: []
+  tableColumns: [],
+  top_resolution: undefined,
+  bottom_resolution: undefined,
+  leftOffset: undefined,
+  cursorTime: undefined
 };

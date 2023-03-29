@@ -37,6 +37,20 @@ New work is always done on new branches. E.g. `my-new-branch`. At the end of the
 * we make a PR and/or merge it into `master-flower-platform`;
 * then, we increment *fp-ver-N* to *fp-ver-N+1* cf. above.
 
+## Tracking of the pull requests submitted to the upstream repo
+
+We prefix our issues in the upstream repo w/ `[rt10000]`.
+
+| Issue (mouse hover for title) | Pull request | Merged |
+| - | - | - |
+| React9k/react-timeline-9000#190 | React9k/react-timeline-9000#243 | yes |
+| React9k/react-timeline-9000#196 | React9k/react-timeline-9000#239 | yes |
+| React9k/react-timeline-9000#221 | React9k/react-timeline-9000#241 | yes |
+| React9k/react-timeline-9000#234 | React9k/react-timeline-9000#237 | yes |
+| minor | React9k/react-timeline-9000#257 | yes |
+| minor | React9k/react-timeline-9000#260 | yes |
+| React9k/react-timeline-9000#271 | React9k/react-timeline-9000#272 |  |
+
 ## Original `README.md` of the upstream repo is below
 
 ---
@@ -102,6 +116,8 @@ See http://react-timeline-9000.s3-website-ap-southeast-2.amazonaws.com/docs/ for
 | timelineMode       |             |                                                                                                                                                          |
 | timebarFormat      |             |                                                                                                                                                          |
 | itemRenderer       |             |                                                                                                                                                          |
+| itemStyle          | | Style applied to all items      |
+| itemClassName      | | Class name applied to all items |
 | groupRenderer      |             |                                                                                                                                                          |
 | shallowUpdateCheck | False       | If true timeline will try to minimize re-renders . Set to false if items don't show up/update on prop change                                             |
 | forceRedrawFunc  | () => False | Function called when `shallowUpdateCheck`==true. If returns true the timeline will be redrawn. If false the library will decide if redrawing is required |
@@ -113,6 +129,16 @@ See http://react-timeline-9000.s3-website-ap-southeast-2.amazonaws.com/docs/ for
 | items            |
 | groups           |
 | selectedItems    |
+
+### Items
+
+Required props:
+* key - number
+
+### Groups
+
+Required props:
+* id - number - needs to be consecutive
 
 ## Callbacks
 | Name                  |

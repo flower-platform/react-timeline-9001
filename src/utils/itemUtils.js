@@ -3,17 +3,19 @@
 import React from 'react';
 import _ from 'lodash';
 import moment from 'moment';
+import {Item, RowLayer} from '../index';
 
 /**
  * Render all items in a row
  * @external {moment} http://momentjs.com/
- * @param  {Object[]} items List of items to render for this row
+ * @param  {Item[]} items List of items to render for this row
  * @param  {moment} vis_start The visible start of the timeline
  * @param  {moment} vis_end The visible end of the timeline
  * @param  {number} total_width pixel width of the timeline
  * @param  {number} itemHeight The height of the item in px
  * @param  {function} itemRenderer The renderer of the item
  * @param  {Object[]} selectedItems
+ * @param  {Object} itemRendererDefaultProps
  * @param  {function} getStartFromItem Function that returns the start of an item
  * @param  {function} getEndFromItem Function that returns the end of an item
  */
@@ -25,6 +27,7 @@ export function rowItemsRenderer(
   itemHeight,
   itemRenderer,
   selectedItems = [],
+  itemRendererDefaultProps,
   getStartFromItem,
   getEndFromItem
 ) {
@@ -53,16 +56,20 @@ export function rowItemsRenderer(
     rowOffset++;
   }
   return _.map(displayItems, i => {
-    const {color} = i;
     const Comp = itemRenderer;
     let top = itemHeight * i['rowOffset'];
+    // itemHeight is also used to calculate the row height; the row height is the maximum number of overlapping items
+    // in a row multiplied with itemHeight.
+    // If the max overlapping items is 1, then itemHeight = row height,
+    // but we need to subtract 10 because of the margin (see rct9k-items-inner class in style.css)
+    const adjustedItemHeight = itemHeight - 10;
     let item_offset_mins = getStartFromItem(i).diff(vis_start, 'milliseconds');
     let item_duration_mins = getEndFromItem(i).diff(getStartFromItem(i), 'milliseconds');
     let left = Math.round(item_offset_mins * pixels_per_ms);
     let width = Math.round(item_duration_mins * pixels_per_ms);
-    let compClassnames = 'rct9k-items-inner';
+    let compClassnames = (i.className || itemRendererDefaultProps.className) + ' rct9k-items-inner';
     let outerClassnames = 'rct9k-items-outer item_draggable';
-    let style = {backgroundColor: color};
+    let style = {};
     let isSelected = selectedItems.indexOf(Number(i.key)) > -1;
 
     if (isSelected) {
@@ -77,7 +84,7 @@ export function rowItemsRenderer(
         data-item-index={i.key}
         className={outerClassnames}
         style={{left, width, top, backgroundColor: 'transparent'}}>
-        <Comp key={i.key} item={i} className={compClassnames} style={style} />
+        <Comp {...itemRendererDefaultProps} {...i} item={i} className={compClassnames} height={adjustedItemHeight} />
       </span>
     );
   });
@@ -85,7 +92,7 @@ export function rowItemsRenderer(
 
 /**
  * Render row layers
- * @param  {Object[]} layers List of layers to render for this row
+ * @param  {RowLayer[]} layers List of layers to render for this row
  * @param  {moment} vis_start The visible start of the timeline
  * @param  {moment} vis_end The visible end of the timeline
  * @param  {number} total_width pixel width of the timeline
@@ -223,7 +230,7 @@ export function getNearestRowNumber(x, y, topDiv = document) {
 
 /**
  * Use to find the height of a row, given a set of items
- * @param  {Object[]} items List of items
+ * @param  {Item[]} items List of items
  * @param  {function} getStartFromItem Function that returns the start of an item.
  * @param  {function} getEndFromItem Function that returns the end of an item.
  * @param  {boolean} useMoment This parameter is necessary because this method is also called when
@@ -244,4 +251,31 @@ export function getMaxOverlappingItems(items, getStartFromItem, getEndFromItem, 
     max++;
   }
   return Math.max(max, 1);
+}
+
+/**
+ * It finds the ancestor with the provided className of the element.
+ * @param {Object} the DOM element
+ * @param {string} className
+ * @returns {Object} ancestor with className
+ */
+export function findAncestorWithClassName(element, className) {
+  while ((element = element.parentNode) && !element.classList.contains(className));
+  return element;
+}
+
+/**
+ * A special case is when we try to select items from a row that is scrolled (not fully visible).
+ * The `top` position of that row is not visible, so when we move the mouse and try to find the nearest row object
+ * using the `top` position, it will not find the actual row because at that position the row is not visible.
+ * In this case we will use the `top` position of the viewport (the container of the rows).
+ * @param {Object} row the DOM element of the row object
+ * @param {number} top
+ */
+export function adjustRowTopPositionToViewport(row, top) {
+  let viewport = findAncestorWithClassName(row, 'ReactVirtualized__Grid').getBoundingClientRect();
+  if (viewport.top > top) {
+    return viewport.top;
+  }
+  return top;
 }
