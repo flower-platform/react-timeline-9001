@@ -3,7 +3,7 @@
 import React, {Fragment} from 'react';
 import PropTypes from 'prop-types';
 import ReactDOM from 'react-dom';
-import {Grid, AutoSizer} from 'react-virtualized';
+import Measure from 'react-measure';
 
 import moment from 'moment';
 import interact from 'interactjs';
@@ -457,6 +457,9 @@ export default class Timeline extends React.Component {
       cursorTime: null,
       groups: this.props.groups,
       verticalGridLines: [],
+      width: 0,
+      height: 0,
+      topOffset: 0,
       dragToCreateMode: false,
       openMenu: false,
       dragCancel: false
@@ -495,7 +498,6 @@ export default class Timeline extends React.Component {
     const canDrag = Timeline.isBitSet(Timeline.TIMELINE_MODES.DRAG, this.props.timelineMode);
     const canResize = Timeline.isBitSet(Timeline.TIMELINE_MODES.RESIZE, this.props.timelineMode);
     this.setUpDragging(canSelect, canDrag, canResize);
-    this.refDiv = React.createRef();
   }
 
   componentDidMount() {
@@ -1647,6 +1649,18 @@ export default class Timeline extends React.Component {
     }
 
     /**
+     * @returns { number } width of the menu button
+     */
+    function getMenuButtonWidth() {
+      let menuButton = document.querySelector(`.button.ui.mini.circular.icon.primary.button`);
+      if (!menuButton) {
+        return 0;
+      }
+      // substract menu button width from total width
+      return menuButton.getBoundingClientRect().width;
+    }
+
+    /**
      * @param { number } height (total height of the timeline)
      * @returns { number } height of the timeline w/o timebar
      */
@@ -1673,14 +1687,25 @@ export default class Timeline extends React.Component {
       });
     }
     return (
-      <div className={divCssClass} ref={this.refDiv}>
-        <AutoSizer className="rct9k-autosizer" onResize={this.refreshGrid}>
-          {({height, width}) => {
-            const leftOffset = this.calculateLeftOffset();
-            const bodyHeight = calculateHeight(height);
-            const timebarHeight = getTimebarHeight();
-            return (
-              <div data-testid="pa" className="parent-div" onMouseMove={this.mouseMoveFunc}>
+      // Instead of <Measure .../>, in the past <AutoSizer ... /> was used. However it would round with/height, which generated and endless
+      // scrollbar appear/disappear, depending on the parent, depending on the resolution.
+      <Measure
+        bounds
+        onResize={contentRect => {
+          this.setState({
+            width: contentRect.bounds?.width || 0,
+            height: contentRect.bounds?.height || 0,
+            topOffset: contentRect.bounds?.top || 0
+          });
+          this.refreshGrid();
+        }}>
+        {({measureRef}) => {
+          const leftOffset = this.calculateLeftOffset();
+          const bodyHeight = calculateHeight(this.state.height);
+          const timebarHeight = getTimebarHeight();
+          return (
+            <div ref={measureRef} className={divCssClass}>
+              <div className="parent-div" onMouseMove={this.mouseMoveFunc}>
                 <SelectBox
                   ref={this.select_ref_callback}
                   className={this.state.dragToCreateMode ? 'rct9k-selector-outer-add' : ''}
@@ -1689,7 +1714,7 @@ export default class Timeline extends React.Component {
                   cursorTime={this.getCursor()}
                   start={this.getStartDate()}
                   end={this.getEndDate()}
-                  width={width}
+                  width={this.state.width}
                   leftOffset={leftOffset}
                   selectedRanges={this.state.selection}
                   groupTitleRenderer={groupTitleRenderer}
@@ -1701,8 +1726,8 @@ export default class Timeline extends React.Component {
                 {markers.map(m => (
                   <Marker
                     key={m.key}
-                    height={height}
-                    top={0}
+                    height={this.state.height}
+                    top={this.state.topOffset}
                     date={0}
                     shouldUpdate={true}
                     calculateHorizontalPosition={() => {
@@ -1712,13 +1737,13 @@ export default class Timeline extends React.Component {
                   />
                 ))}
                 <TimelineBody
-                  width={width}
-                  columnWidth={columnWidth(width)}
+                  width={this.state.width}
+                  columnWidth={columnWidth(this.state.width)}
                   height={bodyHeight}
                   rowHeight={this.rowHeight}
                   rowCount={this.state.groups.length}
                   columnCount={(tableColumns && tableColumns.length > 0 ? tableColumns.length : 1) + 1}
-                  cellRenderer={this.cellRenderer(this.getTimelineWidth(width))}
+                  cellRenderer={this.cellRenderer(this.getTimelineWidth(this.state.width))}
                   grid_ref_callback={this.grid_ref_callback}
                   shallowUpdateCheck={shallowUpdateCheck}
                   forceRedrawFunc={forceRedrawFunc}
@@ -1727,19 +1752,21 @@ export default class Timeline extends React.Component {
                   React.cloneElement(backgroundLayer, {
                     startDateTimeline: this.getStartDate(),
                     endDateTimeline: this.getEndDate(),
-                    width: width,
+                    width: this.state.width,
                     leftOffset: leftOffset,
                     height: bodyHeight,
-                    topOffset: timebarHeight,
+                    topOffset: this.state.topOffset + timebarHeight,
+                    timebarHeight,
                     verticalGridLines: this.state.verticalGridLines
                   })}
+                <div style={{position: 'absolute', right: getMenuButtonWidth() / 2 + 1, top: this.state.topOffset + 1}}>
+                  {this.renderMenuButton()}
+                </div>
               </div>
-            );
-          }}
-        </AutoSizer>
-        <div style={{position: 'absolute', right: 0, top: 1}}>{this.renderMenuButton()}</div>
-        <TestsAreDemoCheat objectToPublish={this} />
-      </div>
+            </div>
+          );
+        }}
+      </Measure>
     );
   }
 

@@ -11,7 +11,7 @@ export class DragToCreateTestsAreDemo {
     @Scenario("WHEN click on the menu button, THEN the menu opens")
     async whenClickMenuButton() {
         tad.cc("Click on the menu button");
-        await tad.userEventWaitable.click(tad.screenCapturing.getByTestId(timelineTestids.menuButton+" "));
+        await tad.userEventWaitable.click(tad.screenCapturing.getByTestId(timelineTestids.menuButton));
         tad.cc("Check if the menu is open");
         await tad.assertWaitable.exists(tad.screenCapturing.getByTestId(timelineTestids.menu));
         tad.cc("Check if exist the 'Add (drag to create)' button");

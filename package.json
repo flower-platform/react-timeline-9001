@@ -1,12 +1,12 @@
 {
-  "name": "crispico/react-timeline-10000",
-  "version": "2.0.2",
+  "name": "@crispico/react-timeline-10000",
+  "version": "2.1.1",
   "description": "Performance focused timeline for react",
   "private": false,
   "types": "./types/index.d.ts",
   "scripts": {
     "build": "yarn tsc && webpack --config webpack.prod.js",
-    "build_lib": "yarn tsc && babel src --out-dir lib -x '.js,.jsx,.mdx,.html,.tsx' --ignore **/demo.js,**/demo_index.js,**/demo.html,**/demo/,**/setupTests.js,**/*/*.test.js,**/stories/ --copy-files --source-maps inline --no-copy-ignored",
+    "build_lib": "yarn tsc && babel src --out-dir lib -x '.js,.jsx,.mdx,.html,.tsx' --ignore **/demo.js,**/demo_index.js,**/demo.html,**/demo/,**/setupTests.js,**/*/*.test.js,**/stories/,**/testsAreDemo --copy-files --source-maps inline --no-copy-ignored",
     "build_demo": "webpack --config webpack.demo.prod.js",
     "start": "webpack-dev-server --open --config webpack.dev.js",
     "docs": "esdoc && mv docs/index.html docs/index-docs.html",
@@ -41,7 +41,7 @@
   "homepage": "https://github.com/flower-platform/react-timeline-10000",
   "devDependencies": {
     "@babel/cli": "^7.0.0",
-    "@famiprog-foundation/tests-are-demo": "^0.7.0",
+    "@famiprog-foundation/tests-are-demo": "^0.8.0",
     "@storybook/addon-actions": "^6.3.11",
     "@storybook/addon-essentials": "^6.3.11",
     "@storybook/addon-links": "^6.3.11",
@@ -92,6 +92,7 @@
     "interactjs": "^1.6.2",
     "lodash": "^4.17.19",
     "moment": "^2.22.2",
+    "react-measure": "^2.5.2",
     "react-virtualized": "^9.19.1"
   },
   "peerDependencies": {
