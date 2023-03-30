@@ -375,19 +375,18 @@ export default class Timeline extends React.Component {
     backgroundLayer: PropTypes.object,
 
     /**
-     * Function called when dragToCreateMode == true on dragend
-     * @param {number} groupIndex Index of selected group
-     * @param {number | string} itemIndex Index for new item
-     * @param {number | object} itemStart Start for new item
-     * @param {number | object} itemEnd End for new item
+     * Function called when dragToCreateMode == true on dragstart
+     * @param { DragToCreateParam } param
      * @type { Function }
      */
-    onDragToCreateEnded: PropTypes.func,
+    onDragToCreateStarted: PropTypes.func,
 
     /**
-     * @type { boolean }
+     * Function called when dragToCreateMode == true on dragend
+     * @param { DragToCreateParam } param
+     * @type { Function }
      */
-    renderMenuButton: PropTypes.bool
+    onDragToCreateEnded: PropTypes.func
   };
 
   static defaultProps = {
@@ -430,8 +429,8 @@ export default class Timeline extends React.Component {
     onInteraction() {},
     itemRendererDefaultProps: {},
     backgroundLayer: null,
-    onDragToCreateEnded: undefined,
-    renderMenuButton: true
+    onDragToCreateStarted: undefined,
+    onDragToCreateEnded: undefined
   };
 
   /**
@@ -850,12 +849,22 @@ export default class Timeline extends React.Component {
    */
   #onDragStartSelect(clientX, clientY) {
     const nearestRowObject = getNearestRowObject(clientX, clientY);
-
-    // this._selectBox.start(e.clientX, e.clientY);
-    // this._selectBox.start(e.clientX, topRowObj.style.top);
     const startY = adjustRowTopPositionToViewport(nearestRowObject, nearestRowObject.getBoundingClientRect().y);
     this._selectBox.start(clientX, startY);
-    // const bottomRow = Number(getNearestRowNumber(left + width, top + height));
+
+    if (this.state.dragToCreateMode && this.props.onDragToCreateStarted) {
+      const groupIndex = Number(getNearestRowNumber(clientX, clientY));
+      const itemIndex = Math.max(...Object.keys(this.itemRowMap)) + 1;
+      const startOffset = clientX - nearestRowObject.getBoundingClientRect().left;
+      const itemStart = getTimeAtPixel(
+        startOffset,
+        this.getStartDate(),
+        this.getEndDate(),
+        this.getTimelineWidth(),
+        this.getTimelineSnap()
+      );
+      this.props.onDragToCreateStarted && this.props.onDragToCreateStarted({groupIndex, itemIndex, itemStart});
+    }
   }
 
   /**
@@ -883,7 +892,6 @@ export default class Timeline extends React.Component {
       // only run if you can detect the top row
       const startRowNumber = getRowObjectRowNumber(startRowObject);
       const currentRowNumber = getRowObjectRowNumber(currentRowObject);
-      // const numRows = 1 + Math.abs(startRowNumber - currentRowNumber);
       const rowMarginBorder = getVerticalMarginBorder(currentRowObject);
       if (startRowNumber <= currentRowNumber) {
         // select box for selection going down
@@ -934,7 +942,7 @@ export default class Timeline extends React.Component {
       const rowMarginBorder = getVerticalMarginBorder(topRowObject);
       const y = Math.floor(topRowLoc.top - rowMarginBorder) + Math.floor(height - rowMarginBorder);
       const bottomRow = Number(getNearestRowNumber(left + width, adjustRowTopPositionToViewport(topRowObject, y)));
-      //Get the start and end time of the selection rectangle
+      // Get the start and end time of the selection rectangle
       left = left - topRowLoc.left;
       let startOffset = width > 0 ? left : left + width;
       let endOffset = width > 0 ? left + width : left;
@@ -952,7 +960,7 @@ export default class Timeline extends React.Component {
         this.getTimelineWidth(),
         this.getTimelineSnap()
       );
-      //Get items in these ranges
+      // Get items in these ranges
       let selectedItems = [];
       for (let r = Math.min(topRowNumber, bottomRow); r <= Math.max(topRowNumber, bottomRow); r++) {
         selectedItems.push(
@@ -967,7 +975,7 @@ export default class Timeline extends React.Component {
       if (this.state.dragToCreateMode && this.props.onDragToCreateEnded) {
         // get avaible itemIndex and call the onDragToCreateEnded
         const itemIndex = Math.max(...Object.keys(this.itemRowMap)) + 1;
-        this.props.onDragToCreateEnded && this.props.onDragToCreateEnded(topRowNumber, itemIndex, startTime, endTime);
+        this.props.onDragToCreateEnded({groupIndex: topRowNumber, itemIndex, itemStart: startTime, itemEnd: endTime});
       }
     }
   }
@@ -1249,7 +1257,6 @@ export default class Timeline extends React.Component {
           this._grid.recomputeGridSize({rowIndex: minRowNo});
         });
     }
-
     if (canSelect) {
       window.oncontextmenu = e => {
         // on right click if drag in progres cancel it
@@ -1547,46 +1554,44 @@ export default class Timeline extends React.Component {
    */
   renderMenuButton() {
     return (
-      this.props.renderMenuButton && (
-        <Popup
-          data-testid={testids.dragToCreatePopup}
-          trigger={
-            <Popup
-              className="rct9k-menu"
-              trigger={
-                <Button
-                  data-testid={testids.menuButton}
-                  size="mini"
-                  circular
-                  primary
-                  style={{fontSize: undefined}}
-                  icon="bars"
-                  onClick={() => this.setState({openMenu: true})}
-                />
-              }
-              on="click"
-              open={this.state.openMenu}
-              basic
-              position="bottom right"
-              onClose={() => this.setState({openMenu: false})}>
-              {this.renderMenuContent()}
-            </Popup>
-          }
-          open={this.state.dragToCreateMode && !this.state.openMenu}
-          position="top right">
-          <div>
-            <div>Drag to create mode</div>
-            <Button
-              data-testid={testids.dragToCreateCancelButton}
-              content="Cancel"
-              icon="cancel"
-              negative
-              size="mini"
-              onClick={() => this.setDragToCreateMode(false)}
-            />
-          </div>
-        </Popup>
-      )
+      <Popup
+        data-testid={testids.dragToCreatePopup}
+        trigger={
+          <Popup
+            className="rct9k-menu"
+            trigger={
+              <Button
+                data-testid={testids.menuButton}
+                size="mini"
+                circular
+                primary
+                style={{fontSize: undefined}}
+                icon="bars"
+                onClick={() => this.setState({openMenu: true})}
+              />
+            }
+            on="click"
+            open={this.state.openMenu}
+            basic
+            position="bottom right"
+            onClose={() => this.setState({openMenu: false})}>
+            {this.renderMenuContent()}
+          </Popup>
+        }
+        open={this.state.dragToCreateMode && !this.state.openMenu}
+        position="top right">
+        <div>
+          <div>Drag to create mode</div>
+          <Button
+            data-testid={testids.dragToCreateCancelButton}
+            content="Cancel"
+            icon="cancel"
+            negative
+            size="mini"
+            onClick={() => this.setDragToCreateMode(false)}
+          />
+        </div>
+      </Popup>
     );
   }
 

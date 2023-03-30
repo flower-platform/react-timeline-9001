@@ -7,6 +7,7 @@ const HtmlWebpackPlugin = require('html-webpack-plugin');
 module.exports = merge(common, {
   entry: './src/demo_index.js',
   mode: 'development',
+  // used 'source-map' for have the separate source maps
   devtool: 'source-map',
   plugins: [
     new HtmlWebpackPlugin({
@@ -19,6 +20,7 @@ module.exports = merge(common, {
         collapseWhitespace: false
       }
     }),
+    // Its's need for testing-library because on getting DEBUG_PRINT_LIMIT the env is undefined
     new webpack.DefinePlugin({
       "process.env": {
         NODE_ENV: JSON.stringify("development")
