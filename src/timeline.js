@@ -471,7 +471,6 @@ export default class Timeline extends React.Component {
       verticalGridLines: [],
       width: 0,
       height: 0,
-      topOffset: 0,
       dragToCreateMode: false,
       openMenu: false,
       dragCancel: false
@@ -1713,11 +1712,7 @@ export default class Timeline extends React.Component {
         <Measure
           bounds
           onResize={contentRect => {
-            const config = {
-              width: contentRect.bounds?.width || 0,
-              height: contentRect.bounds?.height || 0,
-              topOffset: contentRect.bounds?.top || 0
-            };
+            const config = {width: contentRect.bounds?.width || 0, height: contentRect.bounds?.height || 0};
             this.setState(config);
             this.refreshGrid(config);
           }}>
@@ -1749,7 +1744,7 @@ export default class Timeline extends React.Component {
                     <Marker
                       key={m.key}
                       height={this.state.height}
-                      top={this.state.topOffset}
+                      top={0}
                       date={0}
                       shouldUpdate={true}
                       calculateHorizontalPosition={() => {
@@ -1780,10 +1775,7 @@ export default class Timeline extends React.Component {
                       topOffset: this.state.topOffset + timebarHeight,
                       verticalGridLines: this.state.verticalGridLines
                     })}
-                  <div
-                    style={{position: 'absolute', right: getMenuButtonWidth() / 2 + 1, top: this.state.topOffset + 1}}>
-                    {this.renderMenuButton()}
-                  </div>
+                  <div style={{position: 'absolute', right: 1, top: 1}}>{this.renderMenuButton()}</div>
                 </div>
               </div>
             );
