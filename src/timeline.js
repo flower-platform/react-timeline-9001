@@ -865,7 +865,7 @@ export default class Timeline extends React.Component {
         this.getTimelineWidth(),
         this.getTimelineSnap()
       );
-      this.props.onDragToCreateStarted && this.props.onDragToCreateStarted({groupIndex, itemIndex, itemStart});
+      this.props.onDragToCreateStarted({groupIndex, itemIndex, itemStart});
     }
   }
 
