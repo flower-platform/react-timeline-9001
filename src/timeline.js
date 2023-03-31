@@ -38,7 +38,7 @@ import ItemRenderer from './components/ItemRenderer';
 import {GroupRenderer} from './components/GroupRenderer';
 import TimelineBody from './components/body';
 import {Marker} from './components/Marker';
-import {createTestids, tad, TestsAreDemoCheat} from '@famiprog-foundation/tests-are-demo';
+import {createTestids, TestsAreDemoCheat} from '@famiprog-foundation/tests-are-demo';
 
 const testids = createTestids('Timeline', {
   menu: '',
@@ -58,6 +58,8 @@ import 'core-js/fn/string/starts-with';
 
 const SINGLE_COLUMN_LABEL_PROPERTY = 'title';
 const EMPTY_GROUP_KEY = 'empty-group';
+
+export const PARENT_ELEMENT = componentId => document.querySelector(`.rct9k-id-${componentId} .parent-div`);
 
 /**
  * Timeline class
@@ -933,7 +935,7 @@ export default class Timeline extends React.Component {
     }
 
     let {top, left, width, height} = this._selectBox.end();
-    //Get the start and end row of the selection rectangle
+    // Get the start and end row of the selection rectangle
     const topRowObject = getNearestRowObject(left, top);
     if (topRowObject !== undefined) {
       // only confirm the end of a drag if the selection box is valid
@@ -1259,7 +1261,7 @@ export default class Timeline extends React.Component {
     }
     if (canSelect) {
       window.oncontextmenu = e => {
-        // on right click if drag in progres cancel it
+        // on right click if drag in progress cancel it
         e.preventDefault();
         if (this._selectBox.isStart()) {
           this.setState({dragCancel: true});
@@ -1460,7 +1462,7 @@ export default class Timeline extends React.Component {
    */
   throttledMouseMoveFunc(e) {
     const {componentId} = this.props;
-    const leftOffset = document.querySelector(`.rct9k-id-${componentId} .parent-div`).getBoundingClientRect().left;
+    const leftOffset = PARENT_ELEMENT(this.props.componentId).getBoundingClientRect().left;
     const cursorSnappedTime = getTimeAtPixel(
       e.clientX - this.calculateLeftOffset() - leftOffset,
       this.getStartDate(),
@@ -1533,11 +1535,11 @@ export default class Timeline extends React.Component {
             <Button
               data-testid={testids.dragToCreateButton}
               className="no-margin"
+              size="mini"
               content={this.state.dragToCreateMode ? 'Cancel: Add (drag to create)' : 'Add (drag to create)'}
               icon={this.state.dragToCreateMode ? 'cancel' : 'plus'}
               positive={!this.state.dragToCreateMode}
               negative={this.state.dragToCreateMode}
-              size="mini"
               onClick={() => {
                 this.setDragToCreateMode(!this.state.dragToCreateMode);
                 this.setState({openMenu: false});
@@ -1556,30 +1558,29 @@ export default class Timeline extends React.Component {
     return (
       <Popup
         data-testid={testids.dragToCreatePopup}
+        position="top right"
+        open={this.state.dragToCreateMode && !this.state.openMenu}
         trigger={
           <Popup
             className="rct9k-menu"
+            on="click"
+            basic
+            position="bottom right"
             trigger={
               <Button
                 data-testid={testids.menuButton}
                 size="mini"
                 circular
                 primary
-                style={{fontSize: undefined}}
                 icon="bars"
                 onClick={() => this.setState({openMenu: true})}
               />
             }
-            on="click"
             open={this.state.openMenu}
-            basic
-            position="bottom right"
             onClose={() => this.setState({openMenu: false})}>
             {this.renderMenuContent()}
           </Popup>
-        }
-        open={this.state.dragToCreateMode && !this.state.openMenu}
-        position="top right">
+        }>
         <div>
           <div>Drag to create mode</div>
           <Button
@@ -1667,18 +1668,6 @@ export default class Timeline extends React.Component {
       }
       // substract timebar height from total height
       return timebar.getBoundingClientRect().height;
-    }
-
-    /**
-     * @returns { number } width of the menu button
-     */
-    function getMenuButtonWidth() {
-      let menuButton = document.querySelector(`.button.ui.mini.circular.icon.primary.button`);
-      if (!menuButton) {
-        return 0;
-      }
-      // substract menu button width from total width
-      return menuButton.getBoundingClientRect().width;
     }
 
     /**
@@ -1780,7 +1769,7 @@ export default class Timeline extends React.Component {
                       topOffset: this.state.topOffset + timebarHeight,
                       verticalGridLines: this.state.verticalGridLines
                     })}
-                  <div style={{position: 'absolute', right: 1, top: 1}}>{this.renderMenuButton()}</div>
+                  <div className="rct9k-menu-div">{this.renderMenuButton()}</div>
                 </div>
               </div>
             );
@@ -1794,9 +1783,8 @@ export default class Timeline extends React.Component {
   ////// Test functions
   ////////////////////////////////////////////////////////////////////////////////////////
 
-  tadSetCursorTime(x) {
-    const {componentId} = this.props;
-    const leftOffset = document.querySelector(`.rct9k-id-${componentId} .parent-div`).getBoundingClientRect().left;
+  setCursorTime(x) {
+    const leftOffset = PARENT_ELEMENT(this.props.componentId).getBoundingClientRect().left;
     const cursorTime = getTimeAtPixel(
       x - this.calculateLeftOffset() - leftOffset,
       this.getStartDate(),
@@ -1808,32 +1796,31 @@ export default class Timeline extends React.Component {
     this.setState({cursorTime});
   }
 
-  tadDragStart(element, offsetX) {
+  dragStart(element, offsetX) {
     const {x, y} = element.getBoundingClientRect();
     this.#onDragStartSelect(offsetX + x, y);
-    this.tadSetCursorTime(offsetX + x);
+    this.setCursorTime(offsetX + x);
   }
 
-  async tadDragMove(x, y, delta = 10) {
-    let deltaX,
-      i = 0;
-    for (; i < x; i += delta) {
+  async dragMove(x, y, delta = 10) {
+    let deltaX;
+    for (let i = 0; i < x; i += delta) {
       deltaX = Math.min(i + delta, x);
       await new Promise(resolve => setTimeout(resolve, delta));
       this.#onDragMoveSelect(this._selectBox.startX + deltaX, this._selectBox.startY + y);
-      this.tadSetCursorTime(this._selectBox.startX + deltaX);
+      this.setCursorTime(this._selectBox.startX + deltaX);
     }
   }
 
-  tadDragEnd() {
+  dragEnd() {
     this.#onDragEndSelect();
   }
 
-  tadRightClick() {
+  rightClick() {
     if (this._selectBox.isStart()) {
       this.setState({dragCancel: true});
       this._selectBox.end();
-      this.tadDragEnd();
+      this.dragEnd();
     }
   }
 }

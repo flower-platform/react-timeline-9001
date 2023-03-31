@@ -1,17 +1,35 @@
 import { ComponentStory } from "@storybook/react";
-import React from "react";
 import { useEffect, useRef, useState } from "react";
 import { Segment } from "semantic-ui-react";
+import PropTypes from 'prop-types';
+import Timeline from "../../timeline";
 import { d, someHumanResources, someTasks } from "../sampleData";
-import { CustomTimeline } from "./CustomTimeline";
 import { customTimelineScenarios } from "./CustomTimelineScenarios";
+import ReactDOM from "react-dom";
 
 export default {
   title: 'Features/Custom',
-  component: CustomTimeline
+  component: Timeline
 };
 
-export const CustomMenuButtonRenderer: ComponentStory<typeof CustomTimeline> = () => {
+export const CustomMenuButtonRenderer: ComponentStory<typeof Timeline> = () => {
+
+  class CustomTimeline extends Timeline {
+    static propTypes = {
+      ...super.propTypes,
+      /**
+       * @type { JSX.Element }
+       */
+      toolbarDomElement: PropTypes.object.isRequired
+    };
+
+    renderMenuButton() {
+      return this.props.toolbarDomElement
+        ? ReactDOM.createPortal(super.renderMenuButton(), this.props.toolbarDomElement)
+        : super.renderMenuButton();
+    }
+  }
+
   const divRef = useRef<any>();
   const [value, setValue] = useState(0);
   // after first render when the div dom element is created for re-render 
@@ -27,5 +45,5 @@ export const CustomMenuButtonRenderer: ComponentStory<typeof CustomTimeline> = (
 };
 
 CustomMenuButtonRenderer.parameters = {
-  scenarios: [customTimelineScenarios.rendererMenuButton]
+  scenarios: Object.keys(customTimelineScenarios).map(key => customTimelineScenarios[key])
 };
