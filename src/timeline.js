@@ -1461,7 +1461,6 @@ export default class Timeline extends React.Component {
    * Only calls back if a new snap time is reached
    */
   throttledMouseMoveFunc(e) {
-    const {componentId} = this.props;
     const leftOffset = PARENT_ELEMENT(this.props.componentId).getBoundingClientRect().left;
     const cursorSnappedTime = getTimeAtPixel(
       e.clientX - this.calculateLeftOffset() - leftOffset,
@@ -1766,7 +1765,7 @@ export default class Timeline extends React.Component {
                       width: this.state.width,
                       leftOffset: leftOffset,
                       height: bodyHeight,
-                      topOffset: this.state.topOffset + timebarHeight,
+                      topOffset: timebarHeight,
                       verticalGridLines: this.state.verticalGridLines
                     })}
                   <div className="rct9k-menu-div">{this.renderMenuButton()}</div>
