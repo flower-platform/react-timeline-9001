@@ -1,6 +1,6 @@
 'use strict';
 
-import React from 'react';
+import React, {createRef} from 'react';
 import PropTypes from 'prop-types';
 import ReactDOM from 'react-dom';
 import Measure from 'react-measure';
@@ -40,9 +40,12 @@ import {Marker} from './components/Marker';
 
 // startsWith polyfill for IE11 support
 import 'core-js/fn/string/starts-with';
+import {TimelineTable} from './components/TimelineTable';
+import SplitPane from 'react-split-pane';
 
 const SINGLE_COLUMN_LABEL_PROPERTY = 'title';
 const EMPTY_GROUP_KEY = 'empty-group';
+const TABLE_OFFSET = 15;
 
 /**
  * Timeline class
@@ -425,8 +428,10 @@ export default class Timeline extends React.Component {
       cursorTime: null,
       groups: this.props.groups,
       verticalGridLines: [],
-      width: 0,
-      height: 0
+      screenHeight: 0,
+      gridWidth: 0,
+      tableColumns: this.props.tableColumns,
+      tableWidth: 0
     };
 
     // These functions need to be bound because they are passed as parameters.
@@ -452,11 +457,15 @@ export default class Timeline extends React.Component {
     this.itemFromElement = this.itemFromElement.bind(this);
     this.updateDimensions = this.updateDimensions.bind(this);
     this.grid_ref_callback = this.grid_ref_callback.bind(this);
+    this.table_ref_callback = this.table_ref_callback.bind(this);
     this.select_ref_callback = this.select_ref_callback.bind(this);
     this.throttledMouseMoveFunc = _.throttle(this.throttledMouseMoveFunc.bind(this), 20);
     this.mouseMoveFunc = this.mouseMoveFunc.bind(this);
     this.getCursor = this.getCursor.bind(this);
     this.setVerticalGridLines = this.setVerticalGridLines.bind(this);
+    this.handleScrollTable = this.handleScrollTable.bind(this);
+    this.handleScrollGantt = this.handleScrollGantt.bind(this);
+    this.handleDrag = this.handleDrag.bind(this);
 
     const canSelect = Timeline.isBitSet(Timeline.TIMELINE_MODES.SELECT, this.props.timelineMode);
     const canDrag = Timeline.isBitSet(Timeline.TIMELINE_MODES.DRAG, this.props.timelineMode);
@@ -490,15 +499,20 @@ export default class Timeline extends React.Component {
   }
 
   componentDidUpdate(prevProps, prevState) {
-    const {timelineMode, selectedItems} = this.props;
+    const {timelineMode, selectedItems, tableColumns} = this.props;
     const selectionChange = !_.isEqual(prevProps.selectedItems, selectedItems);
     const timelineModeChange = !_.isEqual(prevProps.timelineMode, timelineMode);
+    const colummsChanged = !_.isEqual(prevProps.tableColumns, tableColumns);
 
     if (timelineModeChange || selectionChange) {
       const canSelect = Timeline.isBitSet(Timeline.TIMELINE_MODES.SELECT, timelineMode);
       const canDrag = Timeline.isBitSet(Timeline.TIMELINE_MODES.DRAG, timelineMode);
       const canResize = Timeline.isBitSet(Timeline.TIMELINE_MODES.RESIZE, timelineMode);
       this.setUpDragging(canSelect, canDrag, canResize);
+    }
+
+    if (colummsChanged) {
+      this.setState({tableColumns});
     }
   }
 
@@ -768,8 +782,9 @@ export default class Timeline extends React.Component {
    * @returns {number} The width in pixels
    */
   getTimelineWidth(totalWidth) {
-    if (totalWidth !== undefined) return totalWidth - this.calculateLeftOffset();
-    return this._grid.props.width - this.calculateLeftOffset();
+    if (totalWidth !== undefined) return totalWidth;
+    //  - this.calculateLeftOffset();
+    return this._grid.props.width; //- this.calculateLeftOffset();
   }
 
   /**
@@ -790,7 +805,7 @@ export default class Timeline extends React.Component {
    * @param {Object?} config Config to pass wo react-virtualized's compute func
    */
   refreshGrid = (config = {}) => {
-    this._grid.recomputeGridSize(config);
+    this._grid?.recomputeGridSize(config);
     // fill in timeline with empty rows only on resize
     if (!_.isEmpty(config)) {
       this.fillInTimelineWithEmptyRows(this.state.groups);
@@ -1211,86 +1226,56 @@ export default class Timeline extends React.Component {
     const canSelect = Timeline.isBitSet(Timeline.TIMELINE_MODES.SELECT, timelineMode);
     return ({columnIndex, key, parent, rowIndex, style}) => {
       // the items column is the last column in the grid; itemCol is the index of this column
-      let itemCol = this.props.tableColumns && this.props.tableColumns.length > 0 ? this.props.tableColumns.length : 1;
-      if (itemCol == columnIndex) {
-        let itemsInRow = this.rowItemMap[rowIndex];
-        const layersInRow = rowLayers.filter(r => r.rowNumber === rowIndex);
-        let rowHeight = this.props.itemHeight;
-        if (this.rowHeightCache[rowIndex]) {
-          rowHeight = rowHeight * this.rowHeightCache[rowIndex];
-        }
-        return (
-          <div
-            key={key}
-            style={style}
-            data-row-index={rowIndex}
-            className="rct9k-row"
-            onClick={e => this._handleItemRowEvent(e, Timeline.no_op, this.props.onRowClick)}
-            onMouseDown={e => (this.selecting = false)}
-            onMouseMove={e => (this.selecting = true)}
-            onMouseOver={e => {
-              this.selecting = false;
-              return this._handleItemRowEvent(e, onItemHover, null);
-            }}
-            onMouseLeave={e => {
-              this.selecting = false;
-              return this._handleItemRowEvent(e, onItemLeave, null);
-            }}
-            onContextMenu={e =>
-              this._handleItemRowEvent(e, this.props.onItemContextClick, this.props.onRowContextClick)
-            }
-            onDoubleClick={e => this._handleItemRowEvent(e, this.props.onItemDoubleClick, this.props.onRowDoubleClick)}>
-            {rowItemsRenderer(
-              itemsInRow,
-              this.getStartDate(),
-              this.getEndDate(),
-              width,
-              this.props.itemHeight,
-              this.props.itemRenderer,
-              canSelect ? this.props.selectedItems : [],
-              this.props.itemRendererDefaultProps,
-              this.getStartFromItem,
-              this.getEndFromItem
-            )}
-            {rowLayerRenderer(
-              layersInRow,
-              this.getStartDate(),
-              this.getEndDate(),
-              width,
-              rowHeight,
-              this.getStartFromRowLayer,
-              this.getEndFromRowLayer
-            )}
-          </div>
-        );
-      } else {
-        // Single column mode: the renderer of the cell is props.groupRenderer
-        // with default labelProperty: SINGLE_COLUMN_LABEL_PROPERTY(title).
-        //
-        // Multiple columns mode: default renderer - props.groupRenderer with column.labelProperty;
-        // custom renderer: column.cellRenderer.
-        let labelProperty = '';
-        let ColumnRenderer = this.props.groupRenderer;
-        if (this.props.tableColumns && this.props.tableColumns.length > 0) {
-          const column = this.props.tableColumns[columnIndex];
-          if (column.cellRenderer) {
-            ColumnRenderer = column.cellRenderer;
-          } else {
-            labelProperty = column.labelProperty;
-          }
-        } else {
-          labelProperty = SINGLE_COLUMN_LABEL_PROPERTY;
-        }
-        let group = _.find(this.state.groups, g => g.id == rowIndex);
-        return (
-          <div data-row-index={rowIndex} key={key} style={style} className="rct9k-group">
-            {React.isValidElement(ColumnRenderer) && ColumnRenderer}
-            {!React.isValidElement(ColumnRenderer) && (
-              <ColumnRenderer group={group} labelProperty={labelProperty} rowIndex={rowIndex} />
-            )}
-          </div>
-        );
+      let itemCol = this.state.tableColumns && this.state.tableColumns.length > 0 ? this.state.tableColumns.length : 1;
+      //  if (itemCol == columnIndex) {
+      let itemsInRow = this.rowItemMap[rowIndex];
+      const layersInRow = rowLayers.filter(r => r.rowNumber === rowIndex);
+      let rowHeight = this.props.itemHeight;
+      if (this.rowHeightCache[rowIndex]) {
+        rowHeight = rowHeight * this.rowHeightCache[rowIndex];
       }
+      return (
+        <div
+          key={key}
+          style={style}
+          data-row-index={rowIndex}
+          className="rct9k-row"
+          onClick={e => this._handleItemRowEvent(e, Timeline.no_op, this.props.onRowClick)}
+          onMouseDown={e => (this.selecting = false)}
+          onMouseMove={e => (this.selecting = true)}
+          onMouseOver={e => {
+            this.selecting = false;
+            return this._handleItemRowEvent(e, onItemHover, null);
+          }}
+          onMouseLeave={e => {
+            this.selecting = false;
+            return this._handleItemRowEvent(e, onItemLeave, null);
+          }}
+          onContextMenu={e => this._handleItemRowEvent(e, this.props.onItemContextClick, this.props.onRowContextClick)}
+          onDoubleClick={e => this._handleItemRowEvent(e, this.props.onItemDoubleClick, this.props.onRowDoubleClick)}>
+          {rowItemsRenderer(
+            itemsInRow,
+            this.getStartDate(),
+            this.getEndDate(),
+            width,
+            this.props.itemHeight,
+            this.props.itemRenderer,
+            canSelect ? this.props.selectedItems : [],
+            this.props.itemRendererDefaultProps,
+            this.getStartFromItem,
+            this.getEndFromItem
+          )}
+          {rowLayerRenderer(
+            layersInRow,
+            this.getStartDate(),
+            this.getEndDate(),
+            width,
+            rowHeight,
+            this.getStartFromRowLayer,
+            this.getEndFromRowLayer
+          )}
+        </div>
+      );
     };
   }
 
@@ -1323,8 +1308,12 @@ export default class Timeline extends React.Component {
     this._gridDomNode = ReactDOM.findDOMNode(this._grid);
   }
 
+  table_ref_callback(reactComponent) {
+    this._table = reactComponent;
+    this._tableDomNode = ReactDOM.findDOMNode(this._table);
+  }
+
   /**
-   * Set the select box ref.
    * @param {Object} reactComponent Selectbox react element
    */
   select_ref_callback(reactComponent) {
@@ -1339,7 +1328,7 @@ export default class Timeline extends React.Component {
     const {componentId} = this.props;
     const leftOffset = document.querySelector(`.rct9k-id-${componentId} .parent-div`).getBoundingClientRect().left;
     const cursorSnappedTime = getTimeAtPixel(
-      e.clientX - this.calculateLeftOffset() - leftOffset,
+      e.clientX - leftOffset + 2,
       this.getStartDate(),
       this.getEndDate(),
       this.getTimelineWidth(),
@@ -1370,7 +1359,8 @@ export default class Timeline extends React.Component {
    * @returns {number} left offset
    */
   calculateLeftOffset() {
-    const {tableColumns, groupOffset} = this.props;
+    const {groupOffset} = this.props;
+    const {tableColumns} = this.state;
     if (!tableColumns || tableColumns.length == 0) {
       return groupOffset;
     }
@@ -1390,6 +1380,34 @@ export default class Timeline extends React.Component {
     this.setState({verticalGridLines});
   }
 
+  handleScrollTable = scrollPos => {
+    this._gridDomNode.scrollTop = scrollPos;
+    return true;
+  };
+
+  handleScrollGantt = ({scrollTop}) => {
+    // console.log(document.getElementsByClassName("fixedDataTableRowLayout_main"));
+    // if (document.getElementsByClassName("fixedDataTableRowLayout_main")) {
+    // document.getElementsByClassName("fixedDataTableRowLayout_main").scrollTop = scrollTop; }
+    // this._tableDomNode.scrollTop = scrollTop;
+    if (this._table.props.headerHeight !== 0) {
+      this._table?.scrollActions.scrollToY(scrollTop);
+    }
+    return true;
+  };
+
+  handleDrag(width) {
+    const {tableColumns} = this.state;
+    const tableColumnsTotalWidth = tableColumns.reduce((acc, tableColumn) => acc + tableColumn.width, 0);
+    const tableColumnsPercentages = tableColumns.map(tableColumn => tableColumn.width / tableColumnsTotalWidth);
+    this.setState({
+      tableColumns: tableColumns.map((tableColumn, index) => {
+        return {...tableColumn, width: width * tableColumnsPercentages[index]};
+      })
+    });
+    return true;
+  }
+
   render() {
     const {
       onInteraction,
@@ -1402,9 +1420,9 @@ export default class Timeline extends React.Component {
       forceRedrawFunc,
       bottomResolution,
       topResolution,
-      tableColumns,
       backgroundLayer
     } = this.props;
+    const {tableColumns} = this.state;
     let that = this;
 
     const divCssClass = `rct9k-timeline-div rct9k-id-${componentId}`;
@@ -1428,23 +1446,7 @@ export default class Timeline extends React.Component {
     function columnWidth(width) {
       return ({index}) => {
         // The width of the first column when tableColumns is not defined is groupOffset.
-        if (index == 0 && (!that.props.tableColumns || that.props.tableColumns.length == 0)) return groupOffset;
-
-        // The width of the last column is width minus the left offset.
-        // The left offset is groupOffset when tableColumns is not defined or
-        // the sum of the widths of all tableColumns.
-        let leftOffset = groupOffset;
-        if (that.props.tableColumns && that.props.tableColumns.length > 0) {
-          if (index < that.props.tableColumns.length) {
-            return getColumnWidth(that.props.tableColumns[index]);
-          } else {
-            leftOffset = 0;
-            that.props.tableColumns.forEach(column => {
-              leftOffset += getColumnWidth(column);
-            });
-          }
-        }
-        return width - leftOffset;
+        return width;
       };
     }
 
@@ -1486,76 +1488,117 @@ export default class Timeline extends React.Component {
         this.getTimelineWidth()
       );
       markers.push({
-        left: cursorPix + this.calculateLeftOffset(),
+        left: cursorPix,
         key: 1
       });
     }
+
+    function getTableWidth() {
+      return tableColumns.reduce((acc, column) => acc + column.width) + TABLE_OFFSET;
+    }
+
+    const rowsHeights = this.state.groups.map((_, index) => this.rowHeight({index}));
+
+    {
+      /* Instead of <Measure .../>, in the past <AutoSizer ... /> was used. However it would round with/height, which generated and endless
+    scrollbar appear/disappear, depending on the parent, depending on the resolution. */
+    }
     return (
-      // Instead of <Measure .../>, in the past <AutoSizer ... /> was used. However it would round with/height, which generated and endless
-      // scrollbar appear/disappear, depending on the parent, depending on the resolution.
       <Measure
         bounds
         onResize={contentRect => {
-          this.setState({width: contentRect.bounds?.width || 0, height: contentRect.bounds?.height || 0});
+          this.setState({screenHeight: contentRect.bounds?.height || 0});
           this.refreshGrid();
         }}>
         {({measureRef}) => {
           const leftOffset = this.calculateLeftOffset();
-          const bodyHeight = calculateHeight(this.state.height);
+          const bodyHeight = calculateHeight(this.state.screenHeight);
           const timebarHeight = getTimebarHeight();
           return (
-            <div ref={measureRef} className={divCssClass}>
-              <div className="parent-div" onMouseMove={this.mouseMoveFunc}>
-                <SelectBox ref={this.select_ref_callback} />
-                <Timebar
-                  cursorTime={this.getCursor()}
-                  start={this.getStartDate()}
-                  end={this.getEndDate()}
-                  width={this.state.width}
-                  leftOffset={leftOffset}
-                  selectedRanges={this.state.selection}
-                  groupTitleRenderer={groupTitleRenderer}
-                  tableColumns={tableColumns}
-                  groupOffset={groupOffset}
-                  setVerticalGridLines={this.setVerticalGridLines}
-                  {...varTimebarProps}
+            <div ref={measureRef} style={{display: 'flex', flexDirection: 'row', flex: 1, height: '100%'}}>
+              <SplitPane
+                split="vertical"
+                style={{height: this.state.screenHeight}}
+                defaultSize={getTableWidth()}
+                size={getTableWidth()}
+                onChange={this.handleDrag}>
+                <TimelineTable
+                  rowsHeights={rowsHeights}
+                  tableColumns={this.state.tableColumns}
+                  groups={this.state.groups}
+                  table_ref_callback={this.table_ref_callback}
+                  onVerticalScroll={this.handleScrollTable}
+                  headerHeight={timebarHeight}
+                  tableHeight={this.state.screenHeight}
                 />
-                {markers.map(m => (
-                  <Marker
-                    key={m.key}
-                    height={this.state.height}
-                    top={0}
-                    date={0}
-                    shouldUpdate={true}
-                    calculateHorizontalPosition={() => {
-                      return {left: m.left};
+                <div style={{flex: 1, overflow: 'hidden'}}>
+                  <Measure
+                    bounds
+                    onResize={contentRect => {
+                      this.setState({gridWidth: contentRect.bounds?.width || 0});
+                      this.refreshGrid();
+                    }}>
+                    {({measureRef, contentRect}) => {
+                      return (
+                        <div ref={measureRef} className={divCssClass}>
+                          <div className="parent-div" onMouseMove={this.mouseMoveFunc}>
+                            <SelectBox ref={this.select_ref_callback} />
+                            <Timebar
+                              cursorTime={this.getCursor()}
+                              start={this.getStartDate()}
+                              end={this.getEndDate()}
+                              width={this.state.gridWidth}
+                              leftOffset={0}
+                              selectedRanges={this.state.selection}
+                              groupTitleRenderer={groupTitleRenderer}
+                              tableColumns={[]}
+                              groupOffset={0}
+                              setVerticalGridLines={this.setVerticalGridLines}
+                              {...varTimebarProps}
+                            />
+                            {markers.map(m => (
+                              <Marker
+                                key={m.key}
+                                height={this.state.screenHeight}
+                                top={0}
+                                date={0}
+                                shouldUpdate={true}
+                                calculateHorizontalPosition={() => {
+                                  return {left: m.left};
+                                }}
+                                className="rct9k-marker-overlay"
+                              />
+                            ))}
+                            <TimelineBody
+                              width={this.state.gridWidth}
+                              columnWidth={columnWidth(this.state.gridWidth)}
+                              height={bodyHeight}
+                              rowHeight={this.rowHeight}
+                              rowCount={this.state.groups.length}
+                              columnCount={1}
+                              cellRenderer={this.cellRenderer(this.getTimelineWidth(this.state.gridWidth))}
+                              grid_ref_callback={this.grid_ref_callback}
+                              shallowUpdateCheck={shallowUpdateCheck}
+                              forceRedrawFunc={forceRedrawFunc}
+                              onScroll={this.handleScrollGantt}
+                            />
+                            {backgroundLayer &&
+                              React.cloneElement(backgroundLayer, {
+                                startDateTimeline: this.getStartDate(),
+                                endDateTimeline: this.getEndDate(),
+                                width: this.state.gridWidth,
+                                leftOffset: 0,
+                                height: bodyHeight,
+                                topOffset: timebarHeight,
+                                verticalGridLines: this.state.verticalGridLines
+                              })}
+                          </div>
+                        </div>
+                      );
                     }}
-                    className="rct9k-marker-overlay"
-                  />
-                ))}
-                <TimelineBody
-                  width={this.state.width}
-                  columnWidth={columnWidth(this.state.width)}
-                  height={bodyHeight}
-                  rowHeight={this.rowHeight}
-                  rowCount={this.state.groups.length}
-                  columnCount={(tableColumns && tableColumns.length > 0 ? tableColumns.length : 1) + 1}
-                  cellRenderer={this.cellRenderer(this.getTimelineWidth(this.state.width))}
-                  grid_ref_callback={this.grid_ref_callback}
-                  shallowUpdateCheck={shallowUpdateCheck}
-                  forceRedrawFunc={forceRedrawFunc}
-                />
-                {backgroundLayer &&
-                  React.cloneElement(backgroundLayer, {
-                    startDateTimeline: this.getStartDate(),
-                    endDateTimeline: this.getEndDate(),
-                    width: this.state.width,
-                    leftOffset: leftOffset,
-                    height: bodyHeight,
-                    topOffset: timebarHeisght,
-                    verticalGridLines: this.state.verticalGridLines
-                  })}
-              </div>
+                  </Measure>
+                </div>
+              </SplitPane>
             </div>
           );
         }}

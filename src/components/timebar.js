@@ -262,18 +262,6 @@ export default class Timebar extends React.Component {
 
     return (
       <div className="rct9k-timebar" style={{width: this.props.width}}>
-        {/* Single column mode */}
-        {(!tableColumns || tableColumns.length == 0) && (
-          <div className="rct9k-timebar-group-title" style={{width: this.props.leftOffset}}>
-            <GroupTitleRenderer />
-          </div>
-        )}
-        {/* Multiple columns mode */}
-        {tableColumns &&
-          tableColumns.length > 0 &&
-          tableColumns.map((column, index) => {
-            return this.renderColumnHeader(column, index);
-          })}
         <div className="rct9k-timebar-outer" style={{width: this.props.width - this.props.leftOffset}}>
           <div className="rct9k-timebar-inner rct9k-timebar-inner-top">
             {_.map(topBarComponent, i => {

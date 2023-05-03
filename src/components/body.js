@@ -26,8 +26,8 @@ class TimelineBody extends Component {
 
     // prettier-ignore
     const shallowChange = props.height !== nextProps.height
-      || props.width !== nextProps.width
-      || props.rowCount !== nextProps.rowCount;
+     || props.width !== nextProps.width
+     || props.rowCount !== nextProps.rowCount;
 
     if (props.forceRedrawFunc) {
       return shallowChange || props.forceRedrawFunc(props, nextProps);
@@ -36,7 +36,7 @@ class TimelineBody extends Component {
     return shallowChange;
   }
   render() {
-    const {width, columnWidth, height, rowHeight, rowCount, columnCount} = this.props;
+    const {width, columnWidth, height, rowHeight, rowCount, columnCount, onScroll} = this.props;
     const {grid_ref_callback, cellRenderer} = this.props;
 
     return (
@@ -51,6 +51,7 @@ class TimelineBody extends Component {
         rowHeight={rowHeight}
         width={width}
         className="rct9k-grid"
+        onScroll={onScroll}
       />
     );
   }

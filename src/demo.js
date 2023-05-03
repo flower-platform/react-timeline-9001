@@ -1,6 +1,7 @@
 'use strict';
 
 import React, {Component} from 'react';
+import PropTypes from 'prop-types';
 import moment from 'moment';
 import _ from 'lodash';
 
@@ -16,6 +17,7 @@ import {Layout, Form, InputNumber, Button, DatePicker, Checkbox, Switch, Icon} f
 import 'antd/dist/antd.css';
 import './style.css';
 import './stories/storybook.css';
+import {TimelineTable} from './components/TimelineTable';
 
 const {TIMELINE_MODES} = Timeline;
 
@@ -120,7 +122,7 @@ export default class DemoTimeline extends Component {
       },
       // custom renderers: react elements
       {
-        width: 250,
+        width: 150,
         cellRenderer: <Checkbox>Checkbox</Checkbox>,
         headerRenderer: (
           <span>
@@ -345,7 +347,6 @@ export default class DemoTimeline extends Component {
         curDate.add(bandDuration, 'days');
       }
     }
-
     return (
       <div className="demo">
         <div style={{margin: 24}}>
@@ -421,7 +422,7 @@ export default class DemoTimeline extends Component {
           useMoment={useMoment}
           startDate={useMoment ? startDate : startDate.valueOf()}
           endDate={useMoment ? endDate : endDate.valueOf()}
-          tableColumns={multipleColumnsMode ? tableColumns : []}
+          tableColumns={multipleColumnsMode ? tableColumns : [tableColumns[0]]}
           rowLayers={rowLayers}
           selectedItems={selectedItems}
           timelineMode={timelineMode}
@@ -436,6 +437,7 @@ export default class DemoTimeline extends Component {
           itemRenderer={useCustomRenderers ? CustomItemRenderer : undefined}
           groupRenderer={useCustomRenderers ? CustomGroupRenderer : undefined}
           groupTitleRenderer={useCustomRenderers ? () => <div>Group title</div> : undefined}
+          // table={<TimelineTable tableColumns={tableColumns} groups={groups} />}
         />
       </div>
     );
