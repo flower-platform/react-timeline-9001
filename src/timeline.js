@@ -1,6 +1,6 @@
 'use strict';
 
-import React, {createRef} from 'react';
+import React, {Fragment} from 'react';
 import PropTypes from 'prop-types';
 import ReactDOM from 'react-dom';
 import Measure from 'react-measure';
@@ -9,6 +9,7 @@ import moment from 'moment';
 import interact from 'interactjs';
 import _ from 'lodash';
 import {Column, Group, InteractOption, Item, RowLayer} from './index';
+import {Button, Popup} from 'semantic-ui-react';
 
 import {pixToInt, intToPix} from './utils/commonUtils';
 import {
@@ -37,6 +38,20 @@ import ItemRenderer from './components/ItemRenderer';
 import {GroupRenderer} from './components/GroupRenderer';
 import TimelineBody from './components/body';
 import {Marker} from './components/Marker';
+import {createTestids, TestsAreDemoCheat} from '@famiprog-foundation/tests-are-demo';
+
+const testids = createTestids('Timeline', {
+  menu: '',
+  menuButton: '',
+  dragToCreateButton: '',
+  dragToCreatePopup: '',
+  dragToCreateCancelButton: '',
+  row: ``,
+  group: ``,
+  item: '',
+  selector: ''
+});
+export const timelineTestids = testids;
 
 // startsWith polyfill for IE11 support
 import 'core-js/fn/string/starts-with';
@@ -46,6 +61,8 @@ import SplitPane from 'react-split-pane';
 const SINGLE_COLUMN_LABEL_PROPERTY = 'title';
 const EMPTY_GROUP_KEY = 'empty-group';
 const TABLE_OFFSET = 15;
+
+export const PARENT_ELEMENT = componentId => document.querySelector(`.rct9k-id-${componentId} .parent-div`);
 
 /**
  * Timeline class
@@ -335,6 +352,16 @@ export default class Timeline extends React.Component {
     /**
      * @type { Function }
      */
+    onGroupRowClick: PropTypes.func,
+
+    /**
+     * @type { Function }
+     */
+    onGroupRowDoubleClick: PropTypes.func,
+
+    /**
+     * @type { Function }
+     */
     onItemHover: PropTypes.func,
 
     /**
@@ -350,7 +377,21 @@ export default class Timeline extends React.Component {
      * ```
      * @type { JSX.Element }
      */
-    backgroundLayer: PropTypes.object
+    backgroundLayer: PropTypes.object,
+
+    /**
+     * Function called when dragToCreateMode == true on dragstart
+     * @param { DragToCreateParam } param
+     * @type { Function }
+     */
+    onDragToCreateStarted: PropTypes.func,
+
+    /**
+     * Function called when dragToCreateMode == true on dragend
+     * @param { DragToCreateParam } param
+     * @type { Function }
+     */
+    onDragToCreateEnded: PropTypes.func
   };
 
   static defaultProps = {
@@ -388,9 +429,13 @@ export default class Timeline extends React.Component {
     onRowClick() {},
     onRowContext() {},
     onRowDoubleClick() {},
+    onGroupRowClick() {},
+    onGroupRowDoubleClick() {},
     onInteraction() {},
     itemRendererDefaultProps: {},
-    backgroundLayer: null
+    backgroundLayer: null,
+    onDragToCreateStarted: undefined,
+    onDragToCreateEnded: undefined
   };
 
   /**
@@ -431,7 +476,10 @@ export default class Timeline extends React.Component {
       screenHeight: 0,
       gridWidth: 0,
       tableColumns: this.props.tableColumns,
-      tableWidth: 0
+      tableWidth: 0,
+      dragToCreateMode: false,
+      openMenu: false,
+      dragCancel: false
     };
 
     // These functions need to be bound because they are passed as parameters.
@@ -783,8 +831,7 @@ export default class Timeline extends React.Component {
    */
   getTimelineWidth(totalWidth) {
     if (totalWidth !== undefined) return totalWidth;
-    //  - this.calculateLeftOffset();
-    return this._grid.props.width; //- this.calculateLeftOffset();
+    return this._grid.props.width;
   }
 
   /**
@@ -811,6 +858,138 @@ export default class Timeline extends React.Component {
       this.fillInTimelineWithEmptyRows(this.state.groups);
     }
   };
+
+  /**
+   * @param {number} clientX
+   * @param {number} clientY
+   */
+  #onDragStartSelect(clientX, clientY) {
+    const nearestRowObject = getNearestRowObject(clientX, clientY);
+    const startY = adjustRowTopPositionToViewport(nearestRowObject, nearestRowObject.getBoundingClientRect().y);
+    this._selectBox.start(clientX, startY);
+
+    if (this.state.dragToCreateMode && this.props.onDragToCreateStarted) {
+      const groupIndex = Number(getNearestRowNumber(clientX, clientY));
+      const itemIndex = Math.max(...Object.keys(this.itemRowMap)) + 1;
+      const startOffset = clientX - nearestRowObject.getBoundingClientRect().left;
+      const itemStart = getTimeAtPixel(
+        startOffset,
+        this.getStartDate(),
+        this.getEndDate(),
+        this.getTimelineWidth(),
+        this.getTimelineSnap()
+      );
+      this.props.onDragToCreateStarted({groupIndex, itemIndex, itemStart});
+    }
+  }
+
+  /**
+   * @param {number} clientX
+   * @param {number} clientY
+   * @param {number} startXElement
+   */
+  #onDragMoveSelect(clientX, clientY, startXElement) {
+    if (this.state.dragCancel) {
+      // do nothing if drag is canceled
+      return;
+    }
+    // when selection going up, the bottom start row === top next row of start and getNearestRowObject
+    // returns both row and we cannot determine which row is needed and we substract this constant from bottom select box
+    const magicalConstant = 1;
+    const {startX, startY} = this._selectBox;
+    const startRowObject = getNearestRowObject(startX, startY);
+    const startXRowObject = startRowObject.getBoundingClientRect().x + 1;
+    // select only row without group
+    if (startXElement < startXRowObject) {
+      clientX = startXRowObject;
+    }
+    const currentRowObject = getNearestRowObject(clientX, clientY);
+    if (currentRowObject !== undefined && startRowObject !== undefined) {
+      // only run if you can detect the top row
+      const startRowNumber = getRowObjectRowNumber(startRowObject);
+      const currentRowNumber = getRowObjectRowNumber(currentRowObject);
+      if (startRowNumber <= currentRowNumber) {
+        // select box for selection going down
+        // get the first selected rows top
+        let startTop = startRowObject.getBoundingClientRect().top;
+        startTop = adjustRowTopPositionToViewport(startRowObject, startTop);
+        // get the currently selected rows bottom
+        // if drag to create mode set bottom from the first selected row
+        const currentBottom = this.state.dragToCreateMode
+          ? getTrueBottom(startRowObject)
+          : getTrueBottom(currentRowObject);
+        this._selectBox.start(startX, startTop);
+        this._selectBox.move(clientX, currentBottom - magicalConstant);
+      } else {
+        // select box for selection going up
+        // get the currently selected rows top
+        // if drag to create mode keep set top from the first selected row
+        const currentTop = this.state.dragToCreateMode
+          ? startRowObject.getBoundingClientRect().top
+          : currentRowObject.getBoundingClientRect().top;
+        // get the first selected rows bottom
+        const startBottom = getTrueBottom(startRowObject);
+        // the bottom will bleed south unless you counter the margins and boreders from the above rows
+        this._selectBox.start(startX, startBottom - magicalConstant);
+        this._selectBox.move(clientX, currentTop);
+      }
+    }
+  }
+
+  #onDragEndSelect() {
+    if (this.state.dragCancel) {
+      // only reset dragCancel on dragend if drag is canceled
+      this.setState({dragCancel: false});
+      return;
+    }
+
+    let {top, left, width, height} = this._selectBox.end();
+    // Get the start and end row of the selection rectangle
+    const topRowObject = getNearestRowObject(left, top);
+    if (topRowObject !== undefined) {
+      // only confirm the end of a drag if the selection box is valid
+      const topRowNumber = Number(getNearestRowNumber(left, top));
+      const topRowLoc = topRowObject.getBoundingClientRect();
+      const rowMarginBorder = getVerticalMarginBorder(topRowObject);
+      const y = Math.floor(topRowLoc.top - rowMarginBorder) + Math.floor(height - rowMarginBorder);
+      const bottomRow = Number(getNearestRowNumber(left + width, adjustRowTopPositionToViewport(topRowObject, y)));
+      // Get the start and end time of the selection rectangle
+      left = left - topRowLoc.left;
+      let startOffset = width > 0 ? left : left + width;
+      let endOffset = width > 0 ? left + width : left;
+      const startTime = getTimeAtPixel(
+        startOffset,
+        this.getStartDate(),
+        this.getEndDate(),
+        this.getTimelineWidth(),
+        this.getTimelineSnap()
+      );
+      const endTime = getTimeAtPixel(
+        endOffset,
+        this.getStartDate(),
+        this.getEndDate(),
+        this.getTimelineWidth(),
+        this.getTimelineSnap()
+      );
+      // Get items in these ranges
+      let selectedItems = [];
+      for (let r = Math.min(topRowNumber, bottomRow); r <= Math.max(topRowNumber, bottomRow); r++) {
+        selectedItems.push(
+          ..._.filter(this.rowItemMap[r], i => {
+            return this.getStartFromItem(i).isBefore(endTime) && this.getEndFromItem(i).isAfter(startTime);
+          })
+        );
+      }
+      !this.state.dragToCreateMode &&
+        this.props.onInteraction &&
+        this.props.onInteraction(Timeline.changeTypes.itemsSelected, selectedItems);
+      if (this.state.dragToCreateMode && this.props.onDragToCreateEnded) {
+        // get avaible itemIndex and call the onDragToCreateEnded
+        const itemIndex = Math.max(...Object.keys(this.itemRowMap)) + 1;
+        this.props.onDragToCreateEnded({groupIndex: topRowNumber, itemIndex, itemStart: startTime, itemEnd: endTime});
+      }
+    }
+  }
 
   /**
    * @param { boolean } canSelect
@@ -1089,8 +1268,15 @@ export default class Timeline extends React.Component {
           this._grid.recomputeGridSize({rowIndex: minRowNo});
         });
     }
-
     if (canSelect) {
+      window.oncontextmenu = e => {
+        // on right click if drag in progress cancel it
+        e.preventDefault();
+        if (this._selectBox.isStart()) {
+          this.setState({dragCancel: true});
+          this._selectBox.end();
+        }
+      };
       this._selectRectangleInteractable
         .draggable({
           enabled: true,
@@ -1098,91 +1284,13 @@ export default class Timeline extends React.Component {
         })
         .styleCursor(false)
         .on('dragstart', e => {
-          const nearestRowObject = getNearestRowObject(e.clientX, e.clientY);
-
-          // this._selectBox.start(e.clientX, e.clientY);
-          // this._selectBox.start(e.clientX, topRowObj.style.top);
-          const startY = adjustRowTopPositionToViewport(nearestRowObject, nearestRowObject.getBoundingClientRect().y);
-          this._selectBox.start(e.clientX, startY);
-          // const bottomRow = Number(getNearestRowNumber(left + width, top + height));
+          this.#onDragStartSelect(e.clientX, e.clientY);
         })
         .on('dragmove', e => {
-          const magicalConstant = 2;
-          // @bendog: I added this magical constant to solve the issue of selection bleed,
-          // I don't understand why it works, but if frequentist statisticians can use imaginary numbers, so can i.
-          const {startX, startY} = this._selectBox;
-          const startRowObject = getNearestRowObject(startX, startY);
-          const {clientX, clientY} = e;
-          const currentRowObject = getNearestRowObject(clientX, clientY);
-          if (currentRowObject !== undefined && startRowObject !== undefined) {
-            // only run if you can detect the top row
-            const startRowNumber = getRowObjectRowNumber(startRowObject);
-            const currentRowNumber = getRowObjectRowNumber(currentRowObject);
-            // const numRows = 1 + Math.abs(startRowNumber - currentRowNumber);
-            const rowMarginBorder = getVerticalMarginBorder(currentRowObject);
-            if (startRowNumber <= currentRowNumber) {
-              // select box for selection going down
-              // get the first selected rows top
-              let startTop = Math.ceil(startRowObject.getBoundingClientRect().top + rowMarginBorder);
-              startTop = adjustRowTopPositionToViewport(startRowObject, startTop);
-              // get the currently selected rows bottom
-              const currentBottom = Math.floor(getTrueBottom(currentRowObject) - magicalConstant - rowMarginBorder);
-              this._selectBox.start(startX, startTop);
-              this._selectBox.move(clientX, currentBottom);
-            } else {
-              // select box for selection going up
-              // get the currently selected rows top
-              const currentTop = Math.ceil(currentRowObject.getBoundingClientRect().top + rowMarginBorder);
-              // get the first selected rows bottom
-              const startBottom = Math.floor(getTrueBottom(startRowObject) - magicalConstant - rowMarginBorder * 2);
-              // the bottom will bleed south unless you counter the margins and boreders from the above rows
-              this._selectBox.start(startX, startBottom);
-              this._selectBox.move(clientX, currentTop);
-            }
-          }
+          this.#onDragMoveSelect(e.clientX, e.clientY, e.page.x);
         })
         .on('dragend', e => {
-          let {top, left, width, height} = this._selectBox.end();
-          //Get the start and end row of the selection rectangle
-          const topRowObject = getNearestRowObject(left, top);
-          if (topRowObject !== undefined) {
-            // only confirm the end of a drag if the selection box is valid
-            const topRowNumber = Number(getNearestRowNumber(left, top));
-            const topRowLoc = topRowObject.getBoundingClientRect();
-            const rowMarginBorder = getVerticalMarginBorder(topRowObject);
-            const y = Math.floor(topRowLoc.top - rowMarginBorder) + Math.floor(height - rowMarginBorder);
-            const bottomRow = Number(
-              getNearestRowNumber(left + width, adjustRowTopPositionToViewport(topRowObject, y))
-            );
-            //Get the start and end time of the selection rectangle
-            left = left - topRowLoc.left;
-            let startOffset = width > 0 ? left : left + width;
-            let endOffset = width > 0 ? left + width : left;
-            const startTime = getTimeAtPixel(
-              startOffset,
-              this.getStartDate(),
-              this.getEndDate(),
-              this.getTimelineWidth(),
-              this.getTimelineSnap()
-            );
-            const endTime = getTimeAtPixel(
-              endOffset,
-              this.getStartDate(),
-              this.getEndDate(),
-              this.getTimelineWidth(),
-              this.getTimelineSnap()
-            );
-            //Get items in these ranges
-            let selectedItems = [];
-            for (let r = Math.min(topRowNumber, bottomRow); r <= Math.max(topRowNumber, bottomRow); r++) {
-              selectedItems.push(
-                ..._.filter(this.rowItemMap[r], i => {
-                  return this.getStartFromItem(i).isBefore(endTime) && this.getEndFromItem(i).isAfter(startTime);
-                })
-              );
-            }
-            this.props.onInteraction && this.props.onInteraction(Timeline.changeTypes.itemsSelected, selectedItems);
-          }
+          this.#onDragEndSelect();
         });
     }
   }
@@ -1222,14 +1330,17 @@ export default class Timeline extends React.Component {
      * @param  {} rowIndex Vertical (row) index of cell
      * @param  {} style Style object to be applied to cell (to position it);
      */
-    const {timelineMode, onItemHover, onItemLeave, rowLayers} = this.props;
+    const {timelineMode, onItemHover, onItemLeave} = this.props;
     const canSelect = Timeline.isBitSet(Timeline.TIMELINE_MODES.SELECT, timelineMode);
     return ({columnIndex, key, parent, rowIndex, style}) => {
       // the items column is the last column in the grid; itemCol is the index of this column
       let itemCol = this.state.tableColumns && this.state.tableColumns.length > 0 ? this.state.tableColumns.length : 1;
       //  if (itemCol == columnIndex) {
       let itemsInRow = this.rowItemMap[rowIndex];
-      const layersInRow = rowLayers.filter(r => r.rowNumber === rowIndex);
+      // Previously, `rowLayers` constant was instatiated outside the arrow function. However, I have discovered that when
+      // the rowLayers were updated, the `rowLayers` constant had the previous value,
+      // but this.props.rowLayers has the new value.
+      const layersInRow = this.props.rowLayers.filter(r => r.rowNumber === rowIndex);
       let rowHeight = this.props.itemHeight;
       if (this.rowHeightCache[rowIndex]) {
         rowHeight = rowHeight * this.rowHeightCache[rowIndex];
@@ -1325,8 +1436,7 @@ export default class Timeline extends React.Component {
    * Only calls back if a new snap time is reached
    */
   throttledMouseMoveFunc(e) {
-    const {componentId} = this.props;
-    const leftOffset = document.querySelector(`.rct9k-id-${componentId} .parent-div`).getBoundingClientRect().left;
+    const leftOffset = PARENT_ELEMENT(this.props.componentId).getBoundingClientRect().left;
     const cursorSnappedTime = getTimeAtPixel(
       e.clientX - leftOffset + 2,
       this.getStartDate(),
@@ -1406,6 +1516,87 @@ export default class Timeline extends React.Component {
       })
     });
     return true;
+  }
+
+  /**
+   * Switches the Gantt in the mode: drag to create. Useful when you have an external mechanism that triggers this creation
+   * mode (e.g. "tool" like button/buttons).
+   * @param { boolean } dragToCreateMode
+   */
+  setDragToCreateMode(dragToCreateMode) {
+    this.setState({dragToCreateMode});
+  }
+
+  /**
+   * @returns { JSX.Element }
+   */
+  renderMenuContent() {
+    return (
+      <Fragment>
+        <div data-testid={testids.menu}>
+          {this.props.onDragToCreateEnded && (
+            <Button
+              data-testid={testids.dragToCreateButton}
+              className="no-margin"
+              size="mini"
+              content={this.state.dragToCreateMode ? 'Cancel: Add (drag to create)' : 'Add (drag to create)'}
+              icon={this.state.dragToCreateMode ? 'cancel' : 'plus'}
+              positive={!this.state.dragToCreateMode}
+              negative={this.state.dragToCreateMode}
+              onClick={() => {
+                this.setDragToCreateMode(!this.state.dragToCreateMode);
+                this.setState({openMenu: false});
+              }}
+            />
+          )}
+        </div>
+      </Fragment>
+    );
+  }
+
+  /**
+   * @returns { JSX.Element }
+   */
+  renderMenuButton() {
+    return (
+      <Popup
+        data-testid={testids.dragToCreatePopup}
+        position="top right"
+        open={this.state.dragToCreateMode && !this.state.openMenu}
+        trigger={
+          <Popup
+            className="rct9k-menu"
+            on="click"
+            basic
+            position="bottom right"
+            trigger={
+              <Button
+                data-testid={testids.menuButton}
+                size="mini"
+                circular
+                primary
+                icon="bars"
+                onClick={() => this.setState({openMenu: true})}
+              />
+            }
+            open={this.state.openMenu}
+            onClose={() => this.setState({openMenu: false})}>
+            {this.renderMenuContent()}
+          </Popup>
+        }>
+        <div>
+          <div>Drag to create mode</div>
+          <Button
+            data-testid={testids.dragToCreateCancelButton}
+            content="Cancel"
+            icon="cancel"
+            negative
+            size="mini"
+            onClick={() => this.setDragToCreateMode(false)}
+          />
+        </div>
+      </Popup>
+    );
   }
 
   render() {
@@ -1493,9 +1684,12 @@ export default class Timeline extends React.Component {
       });
     }
 
-    function getTableWidth() {
+    const getTableWidth = tableColumns => {
+      if (tableColumns.length == 0) {
+        return 0;
+      }
       return tableColumns.reduce((acc, column) => acc + column.width) + TABLE_OFFSET;
-    }
+    };
 
     const rowsHeights = this.state.groups.map((_, index) => this.rowHeight({index}));
 
@@ -1504,105 +1698,161 @@ export default class Timeline extends React.Component {
     scrollbar appear/disappear, depending on the parent, depending on the resolution. */
     }
     return (
-      <Measure
-        bounds
-        onResize={contentRect => {
-          this.setState({screenHeight: contentRect.bounds?.height || 0});
-          this.refreshGrid();
-        }}>
-        {({measureRef}) => {
-          const leftOffset = this.calculateLeftOffset();
-          const bodyHeight = calculateHeight(this.state.screenHeight);
-          const timebarHeight = getTimebarHeight();
-          return (
-            <div ref={measureRef} style={{display: 'flex', flexDirection: 'row', flex: 1, height: '100%'}}>
-              <SplitPane
-                split="vertical"
-                style={{height: this.state.screenHeight}}
-                defaultSize={getTableWidth()}
-                size={getTableWidth()}
-                onChange={this.handleDrag}>
-                <TimelineTable
-                  rowsHeights={rowsHeights}
-                  tableColumns={this.state.tableColumns}
-                  groups={this.state.groups}
-                  table_ref_callback={this.table_ref_callback}
-                  onVerticalScroll={this.handleScrollTable}
-                  headerHeight={timebarHeight}
-                  tableHeight={this.state.screenHeight}
-                />
-                <div style={{flex: 1, overflow: 'hidden'}}>
-                  <Measure
-                    bounds
-                    onResize={contentRect => {
-                      this.setState({gridWidth: contentRect.bounds?.width || 0});
-                      this.refreshGrid();
-                    }}>
-                    {({measureRef, contentRect}) => {
-                      return (
-                        <div ref={measureRef} className={divCssClass}>
-                          <div className="parent-div" onMouseMove={this.mouseMoveFunc}>
-                            <SelectBox ref={this.select_ref_callback} />
-                            <Timebar
-                              cursorTime={this.getCursor()}
-                              start={this.getStartDate()}
-                              end={this.getEndDate()}
-                              width={this.state.gridWidth}
-                              leftOffset={0}
-                              selectedRanges={this.state.selection}
-                              groupTitleRenderer={groupTitleRenderer}
-                              tableColumns={[]}
-                              groupOffset={0}
-                              setVerticalGridLines={this.setVerticalGridLines}
-                              {...varTimebarProps}
-                            />
-                            {markers.map(m => (
-                              <Marker
-                                key={m.key}
-                                height={this.state.screenHeight}
-                                top={0}
-                                date={0}
-                                shouldUpdate={true}
-                                calculateHorizontalPosition={() => {
-                                  return {left: m.left};
-                                }}
-                                className="rct9k-marker-overlay"
+      <>
+        <TestsAreDemoCheat objectToPublish={this} />
+        {
+          // Instead of <Measure .../>, in the past <AutoSizer ... /> was used. However it would round with/height, which generated and endless
+          // scrollbar appear/disappear, depending on the parent, depending on the resolution.
+        }
+        <Measure
+          bounds
+          onResize={contentRect => {
+            this.setState({screenHeight: contentRect.bounds?.height || 0});
+            this.refreshGrid();
+          }}>
+          {({measureRef}) => {
+            const leftOffset = this.calculateLeftOffset();
+            const bodyHeight = calculateHeight(this.state.screenHeight);
+            const timebarHeight = getTimebarHeight();
+            return (
+              <div ref={measureRef} style={{display: 'flex', flexDirection: 'row', flex: 1, height: '100%'}}>
+                <SplitPane
+                  split="vertical"
+                  style={{height: this.state.screenHeight}}
+                  defaultSize={getTableWidth(this.state.tableColumns)}
+                  size={getTableWidth(this.state.tableColumns)}
+                  onChange={this.handleDrag}>
+                  <TimelineTable
+                    rowsHeights={rowsHeights}
+                    tableColumns={this.state.tableColumns}
+                    groups={this.state.groups}
+                    table_ref_callback={this.table_ref_callback}
+                    onVerticalScroll={this.handleScrollTable}
+                    headerHeight={timebarHeight}
+                    tableHeight={this.state.screenHeight}
+                  />
+                  <div style={{flex: 1, overflow: 'hidden'}}>
+                    <Measure
+                      bounds
+                      onResize={contentRect => {
+                        this.setState({gridWidth: contentRect.bounds?.width || 0});
+                        this.refreshGrid();
+                      }}>
+                      {({measureRef, contentRect}) => {
+                        return (
+                          <div ref={measureRef} className={divCssClass}>
+                            <div className="parent-div" onMouseMove={this.mouseMoveFunc}>
+                              <SelectBox
+                                ref={this.select_ref_callback}
+                                className={this.state.dragToCreateMode ? 'rct9k-selector-outer-add' : ''}
                               />
-                            ))}
-                            <TimelineBody
-                              width={this.state.gridWidth}
-                              columnWidth={columnWidth(this.state.gridWidth)}
-                              height={bodyHeight}
-                              rowHeight={this.rowHeight}
-                              rowCount={this.state.groups.length}
-                              columnCount={1}
-                              cellRenderer={this.cellRenderer(this.getTimelineWidth(this.state.gridWidth))}
-                              grid_ref_callback={this.grid_ref_callback}
-                              shallowUpdateCheck={shallowUpdateCheck}
-                              forceRedrawFunc={forceRedrawFunc}
-                              onScroll={this.handleScrollGantt}
-                            />
-                            {backgroundLayer &&
-                              React.cloneElement(backgroundLayer, {
-                                startDateTimeline: this.getStartDate(),
-                                endDateTimeline: this.getEndDate(),
-                                width: this.state.gridWidth,
-                                leftOffset: 0,
-                                height: bodyHeight,
-                                topOffset: timebarHeight,
-                                verticalGridLines: this.state.verticalGridLines
-                              })}
+                              <Timebar
+                                cursorTime={this.getCursor()}
+                                start={this.getStartDate()}
+                                end={this.getEndDate()}
+                                width={this.state.gridWidth}
+                                leftOffset={0}
+                                selectedRanges={this.state.selection}
+                                groupTitleRenderer={groupTitleRenderer}
+                                tableColumns={[]}
+                                groupOffset={0}
+                                setVerticalGridLines={this.setVerticalGridLines}
+                                {...varTimebarProps}
+                              />
+                              {markers.map(m => (
+                                <Marker
+                                  key={m.key}
+                                  height={this.state.screenHeight}
+                                  top={0}
+                                  date={0}
+                                  shouldUpdate={true}
+                                  calculateHorizontalPosition={() => {
+                                    return {left: m.left};
+                                  }}
+                                  className="rct9k-marker-overlay"
+                                />
+                              ))}
+                              <TimelineBody
+                                width={this.state.gridWidth}
+                                columnWidth={columnWidth(this.state.gridWidth)}
+                                height={bodyHeight}
+                                rowHeight={this.rowHeight}
+                                rowCount={this.state.groups.length}
+                                columnCount={1}
+                                cellRenderer={this.cellRenderer(this.getTimelineWidth(this.state.gridWidth))}
+                                grid_ref_callback={this.grid_ref_callback}
+                                shallowUpdateCheck={shallowUpdateCheck}
+                                forceRedrawFunc={forceRedrawFunc}
+                                onScroll={this.handleScrollGantt}
+                              />
+                              {backgroundLayer &&
+                                React.cloneElement(backgroundLayer, {
+                                  startDateTimeline: this.getStartDate(),
+                                  endDateTimeline: this.getEndDate(),
+                                  width: this.state.gridWidth,
+                                  leftOffset: 0,
+                                  height: bodyHeight,
+                                  topOffset: timebarHeight,
+                                  verticalGridLines: this.state.verticalGridLines
+                                })}
+                              <div className="rct9k-menu-div">{this.renderMenuButton()}</div>
+                            </div>
                           </div>
-                        </div>
-                      );
-                    }}
-                  </Measure>
-                </div>
-              </SplitPane>
-            </div>
-          );
-        }}
-      </Measure>
+                        );
+                      }}
+                    </Measure>
+                  </div>
+                </SplitPane>
+              </div>
+            );
+          }}
+        </Measure>
+      </>
     );
+  }
+
+  ////////////////////////////////////////////////////////////////////////////////////////
+  ////// Test functions
+  ////////////////////////////////////////////////////////////////////////////////////////
+
+  setCursorTime(x) {
+    const leftOffset = PARENT_ELEMENT(this.props.componentId).getBoundingClientRect().left;
+    const cursorTime = getTimeAtPixel(
+      x - this.calculateLeftOffset() - leftOffset,
+      this.getStartDate(),
+      this.getEndDate(),
+      this.getTimelineWidth(),
+      this.getTimelineSnap()
+    );
+    this.mouse_snapped_time = cursorTime;
+    this.setState({cursorTime});
+  }
+
+  dragStart(element, offsetX) {
+    const {x, y} = element.getBoundingClientRect();
+    this.#onDragStartSelect(offsetX + x, y);
+    this.setCursorTime(offsetX + x);
+  }
+
+  async dragMove(x, y, delta = 10) {
+    let deltaX;
+    for (let i = 0; i < x; i += delta) {
+      deltaX = Math.min(i + delta, x);
+      await new Promise(resolve => setTimeout(resolve, delta));
+      this.#onDragMoveSelect(this._selectBox.startX + deltaX, this._selectBox.startY + y);
+      this.setCursorTime(this._selectBox.startX + deltaX);
+    }
+  }
+
+  dragEnd() {
+    this.#onDragEndSelect();
+  }
+
+  rightClick() {
+    if (this._selectBox.isStart()) {
+      this.setState({dragCancel: true});
+      this._selectBox.end();
+      this.dragEnd();
+    }
   }
 }
