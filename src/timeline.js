@@ -71,6 +71,29 @@ export const DEFAULT_ITEM_HEIGHT = 40;
 
 export const PARENT_ELEMENT = componentId => document.querySelector(`.rct9k-id-${componentId} .parent-div`);
 
+const TableWithStyle = ({oddColor, evenColor, table}) => {
+  const tableStyle = `
+    .fixedDataTableRowLayout_rowWrapper:nth-child(odd) {
+      background-color: ${oddColor} !important;
+    }
+
+    .fixedDataTableRowLayout_rowWrapper:nth-child(even) {
+      background-color: ${evenColor} !important;
+    }
+
+    .fixedDataTableRowLayout_main, .fixedDataTableRowLayout_body, .fixedDataTableCellGroupLayout_cellGroupWrapper, .fixedDataTableCellLayout_main   {
+      background-color: inherit!important;
+    }
+  `;
+
+  return (
+    <div>
+      <style>{tableStyle}</style>
+      {React.cloneElement(table)}
+    </div>
+  );
+};
+
 /**
  * Timeline class
  * @extends React.Component<Timeline.propTypes>
@@ -433,7 +456,6 @@ export default class Timeline extends React.Component {
     componentId: 'r9k1',
     showCursorTime: true,
     groupRenderer: GroupRenderer,
-    groupTitleRenderer: GroupHeaderRenderer,
     itemRenderer: ItemRenderer,
     timelineMode: Timeline.TIMELINE_MODES.SELECT | Timeline.TIMELINE_MODES.DRAG | Timeline.TIMELINE_MODES.RESIZE,
     // in rtl9k
@@ -1769,23 +1791,26 @@ export default class Timeline extends React.Component {
                   onChange={this.handleDrag}
                   ref={this.splitPane_ref_callback}>
                   {this.props.table ? (
-                    React.cloneElement(this.props.table, {
-                      rowsCount: this.state.groups.length,
-                      // Table can contain "buffered rows" that fill the empty space left, if any
-                      rowHeightGetter: rowIndex =>
-                        rowIndex < rowsHeights.length ? rowsHeights[rowIndex] : DEFAULT_ITEM_HEIGHT,
-                      rowHeight: this.props.itemHeight,
-                      ref: this.table_ref_callback,
-                      touchScrollEnabled: true,
-                      onVerticalScroll: this.handleScrollTable,
-                      scrollTop: this.state.scrollTop,
-                      headerHeight: timebarHeight,
-                      // TODO DB: A vertical scroll appears (only for scrolling 3 px overflow)
-                      // hint: if we add here 3 that scollbar disappear
-                      // Maybe it is due to the fact that we set 3 things: rowHeightGetter, height, and also rowCount
-                      height: this.state.screenHeight,
-                      width: this.state.tableWidth
-                    })
+                    <TableWithStyle
+                      oddColor={'#ff0000'}
+                      evenColor={'#00ff00'}
+                      table={React.cloneElement(this.props.table, {
+                        rowsCount: this.state.groups.length,
+                        // Table can contain "buffered rows" that fill the empty space left, if any
+                        rowHeightGetter: rowIndex =>
+                          rowIndex < rowsHeights.length ? rowsHeights[rowIndex] : DEFAULT_ITEM_HEIGHT,
+                        rowHeight: this.props.itemHeight,
+                        ref: this.table_ref_callback,
+                        touchScrollEnabled: true,
+                        onVerticalScroll: this.handleScrollTable,
+                        scrollTop: this.state.scrollTop,
+                        headerHeight: timebarHeight,
+                        // TODO DB: A vertical scroll appears (only for scrolling 3 px overflow)
+                        // hint: if we add here 3 that scollbar disappear
+                        // Maybe it is due to the fact that we set 3 things: rowHeightGetter, height, and also rowCount
+                        height: this.state.screenHeight,
+                        width: this.state.tableWidth
+                      })}></TableWithStyle>
                   ) : this.props.tableColumns ? (
                     <TimelineTable
                       rowsCount={this.state.groups.length}
