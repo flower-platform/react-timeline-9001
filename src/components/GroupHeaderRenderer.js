@@ -7,13 +7,13 @@ import {Column} from '../index';
  * @param { Column } props.column - The properties of the column
  * @param { string } props.column.headerLabel - The header's label
  */
-export class ColumnHeaderRenderer extends React.Component {
+export class GroupHeaderRenderer extends React.Component {
   /**
    * Returns the label of the header.
    * @returns { string }
    */
   getLabel() {
-    return this.props.column ? this.props.column.headerLabel : '';
+    return this.props.column && this.props.column.headerLabel ? this.props.column.headerLabel : '';
   }
 
   render() {

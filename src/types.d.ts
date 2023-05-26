@@ -1,15 +1,14 @@
+type ColumnBase = {
+    headerLabel?: string,
+    headerRenderer?: Function | JSX.Element,
+    width: number
+}
 /**
  * Most of the JS classes/functions have type information as JSDoc (included in the corresponding comments).
  * For some types this was not possible (e.g. because we didn't have actual classes), hence we define them here.
  * They are "included" by the class Timeline.
  */
-export type Column = {
-    labelProperty: string,
-    cellRenderer: Function | JSX.Element,
-    headerLabel: string,
-    headerRenderer: Function | JSX.Element,
-    width: number
-}
+export type Column = ColumnBase & ({labelProperty: string } | {cellRenderer: Function | JSX.Element});
 
 export type Group = {
     id: number,

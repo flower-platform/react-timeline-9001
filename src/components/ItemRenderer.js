@@ -61,7 +61,7 @@ export default class ItemRenderer extends React.Component {
     /**
      * A number between 0 and 1; it represents the percentage by which `color` is lightened to obtain the second color used in the gradient.
      * @type { number }
-     * /
+     */
     gradientBrightness: PropTypes.number,
 
     /**

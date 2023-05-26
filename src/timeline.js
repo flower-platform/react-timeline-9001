@@ -1,44 +1,50 @@
 'use strict';
 
-import React, {Fragment} from 'react';
 import PropTypes from 'prop-types';
+import React, {Fragment} from 'react';
 import ReactDOM from 'react-dom';
 import Measure from 'react-measure';
 
-import moment from 'moment';
 import interact from 'interactjs';
 import _ from 'lodash';
-import {Column, Group, InteractOption, Item, RowLayer} from './index';
 import {Button, Popup} from 'semantic-ui-react';
+import {Column, Group, InteractOption, Item, RowLayer} from './index';
 
-import {pixToInt, intToPix} from './utils/commonUtils';
+import {TestsAreDemoCheat, createTestids} from '@famiprog-foundation/tests-are-demo';
+import {Table, Column as TableColumn} from 'fixed-data-table-2';
+import {GroupHeaderRenderer} from './components/GroupHeaderRenderer';
+import {GroupRenderer} from './components/GroupRenderer';
+import ItemRenderer from './components/ItemRenderer';
+import {Marker} from './components/Marker';
+import TimelineBody from './components/body';
+import SelectBox from './components/selector';
+import Timebar from './components/timebar';
+import {intToPix, pixToInt} from './utils/commonUtils';
 import {
   adjustRowTopPositionToViewport,
-  rowItemsRenderer,
-  rowLayerRenderer,
+  getMaxOverlappingItems,
   getNearestRowNumber,
   getNearestRowObject,
-  getMaxOverlappingItems,
+  getRowObjectRowNumber,
   getTrueBottom,
   getVerticalMarginBorder,
-  getRowObjectRowNumber
+  rowItemsRenderer,
+  rowLayerRenderer
 } from './utils/itemUtils';
 import {
-  timeSnap,
-  getTimeAtPixel,
+  convertDateToMoment,
+  convertMomentToDateType,
   getPixelAtTime,
   getSnapPixelFromDelta,
+  getTimeAtPixel,
   pixelsPerMillisecond,
-  convertDateToMoment,
-  convertMomentToDateType
+  timeSnap
 } from './utils/timeUtils';
-import Timebar from './components/timebar';
-import SelectBox from './components/selector';
-import ItemRenderer from './components/ItemRenderer';
-import {GroupRenderer} from './components/GroupRenderer';
-import TimelineBody from './components/body';
-import {Marker} from './components/Marker';
-import {createTestids, TestsAreDemoCheat} from '@famiprog-foundation/tests-are-demo';
+
+// startsWith polyfill for IE11 support
+import 'core-js/fn/string/starts-with';
+import SplitPane from 'react-split-pane';
+import {TimelineTable} from './components/TimelineTable';
 
 const testids = createTestids('Timeline', {
   menu: '',
@@ -49,24 +55,24 @@ const testids = createTestids('Timeline', {
   row: ``,
   group: ``,
   item: '',
-  selector: ''
+  selector: '',
+  table: '',
+  ganttBody: '',
+  splitPaneResizer: ''
 });
 export const timelineTestids = testids;
 
-// startsWith polyfill for IE11 support
-import 'core-js/fn/string/starts-with';
-import {TimelineTable} from './components/TimelineTable';
-import SplitPane from 'react-split-pane';
-
-const SINGLE_COLUMN_LABEL_PROPERTY = 'title';
 const EMPTY_GROUP_KEY = 'empty-group';
+//TODO DB this was added by bogdan. From my understanding it reprezents the table vertical scrollbar width
+// If we don't take in consideration this, a horizontal scrollbar appears
 const TABLE_OFFSET = 15;
+const DEFAULT_COLUMN_WIDTH = 150;
+export const DEFAULT_ITEM_HEIGHT = 40;
 
 export const PARENT_ELEMENT = componentId => document.querySelector(`.rct9k-id-${componentId} .parent-div`);
 
 /**
  * Timeline class
- * @extends React.Component<Timeline.propTypes>
  * @extends React.Component<Timeline.propTypes>
  */
 export default class Timeline extends React.Component {
@@ -78,6 +84,11 @@ export default class Timeline extends React.Component {
     DRAG: 2,
     RESIZE: 4
   });
+
+  /**
+   * @type {object}
+   */
+  static SINGLE_COLUMN_LABEL_PROPERTY = 'title';
 
   static propTypes = {
     /**
@@ -205,6 +216,9 @@ export default class Timeline extends React.Component {
 
     /**
      * The columns that will be rendered using data from groups.
+     * As alternative you can provide your own custom table by setting `Timeline.table`
+     *
+     * @deprecated use 'table' property for customizing the table
      * @type { Array.<Column> }
      */
     tableColumns: PropTypes.arrayOf(
@@ -230,8 +244,22 @@ export default class Timeline extends React.Component {
     ),
 
     /**
+     * The timeline can be use either by providing the `Timeline.tableColumns` and based on them the timeline renders a table (this method is depraceted)
+     * or it can receive a custom table component with its own look and feel
+     *
+     * The cell renderers of your table should take in consideration empty rows (without any data behind)
+     * The actual number of table rows can be larger than the actual requested number because
+     * empty rows will be added at bottom to fill in the remaining space.
+     *
+     * @type { JSX.element}
+     */
+    table: PropTypes.object,
+
+    /**
      * Single column mode: the renderer of a cell.
      * Multiple columns mode: the default renderer of a cell, which may be overridden on a per column basis.
+     *
+     * It has as defaut the `GroupRenderer` component
      * @type { Function }
      */
     groupRenderer: PropTypes.func,
@@ -239,6 +267,8 @@ export default class Timeline extends React.Component {
     /**
      * Single column mode: the renderer of the header cell.
      * Multiple columns mode: the default renderer of a header cell, which may be overridden on a per column basis.
+     *
+     * It has as defaut the `GroupHeaderRenderer` component
      * @type { Function }
      */
     groupTitleRenderer: PropTypes.func,
@@ -397,12 +427,13 @@ export default class Timeline extends React.Component {
   static defaultProps = {
     rowLayers: [],
     groupOffset: 150,
-    itemHeight: 40,
+    itemHeight: DEFAULT_ITEM_HEIGHT,
     snapMinutes: 15,
     cursorTimeFormat: 'D MMM YYYY HH:mm',
     componentId: 'r9k1',
     showCursorTime: true,
     groupRenderer: GroupRenderer,
+    groupTitleRenderer: GroupHeaderRenderer,
     itemRenderer: ItemRenderer,
     timelineMode: Timeline.TIMELINE_MODES.SELECT | Timeline.TIMELINE_MODES.DRAG | Timeline.TIMELINE_MODES.RESIZE,
     // in rtl9k
@@ -416,10 +447,10 @@ export default class Timeline extends React.Component {
     // in rtl9k:
     // useMoment: true,
     useMoment: false,
-    tableColumns: [],
+    tableColumns: undefined,
     selectedItems: [],
     snap: undefined,
-    groupTitleRenderer: undefined,
+    groupTitleRenderer: GroupHeaderRenderer,
     timebarFormat: undefined,
     bottomResolution: undefined,
     topResolution: undefined,
@@ -465,9 +496,25 @@ export default class Timeline extends React.Component {
    */
   static no_op = () => {};
 
+  getTableWidthFromColumns = () => {
+    return this.props.tableColumns.reduce((acc, column) => acc + column.width, 0);
+  };
+
+  getInitialTableWidth() {
+    return (
+      (this.props.tableColumns
+        ? this.getTableWidthFromColumns()
+        : this.props.table
+        ? this.props.table.props.width
+        : DEFAULT_COLUMN_WIDTH) + TABLE_OFFSET
+    );
+  }
+
   constructor(props) {
     super(props);
     this.selecting = false;
+    this.getTableWidthFromColumns = this.getTableWidthFromColumns.bind(this);
+    this.getInitialTableWidth = this.getInitialTableWidth.bind(this);
     this.state = {
       selection: [],
       cursorTime: null,
@@ -476,10 +523,11 @@ export default class Timeline extends React.Component {
       screenHeight: 0,
       gridWidth: 0,
       tableColumns: this.props.tableColumns,
-      tableWidth: 0,
+      tableWidth: this.getInitialTableWidth(),
       dragToCreateMode: false,
       openMenu: false,
-      dragCancel: false
+      dragCancel: false,
+      scrollTop: 0
     };
 
     // These functions need to be bound because they are passed as parameters.
@@ -557,10 +605,6 @@ export default class Timeline extends React.Component {
       const canDrag = Timeline.isBitSet(Timeline.TIMELINE_MODES.DRAG, timelineMode);
       const canResize = Timeline.isBitSet(Timeline.TIMELINE_MODES.RESIZE, timelineMode);
       this.setUpDragging(canSelect, canDrag, canResize);
-    }
-
-    if (colummsChanged) {
-      this.setState({tableColumns});
     }
   }
 
@@ -852,7 +896,12 @@ export default class Timeline extends React.Component {
    * @param {Object?} config Config to pass wo react-virtualized's compute func
    */
   refreshGrid = (config = {}) => {
-    this._grid?.recomputeGridSize(config);
+    // general known problem :
+    // Can not use constructions like this._grid?.recomputeGridSize(config);
+    // Because the generation of the documentation fails
+    if (this._grid) {
+      this._grid.recomputeGridSize(config);
+    }
     // fill in timeline with empty rows only on resize
     if (!_.isEmpty(config)) {
       this.fillInTimelineWithEmptyRows(this.state.groups);
@@ -863,7 +912,9 @@ export default class Timeline extends React.Component {
    * @param {number} clientX
    * @param {number} clientY
    */
-  #onDragStartSelect(clientX, clientY) {
+  // before it was #onDragStartSelect but can not use constructions like this
+  // because there documnetation fails to be generated
+  onDragStartSelect(clientX, clientY) {
     const nearestRowObject = getNearestRowObject(clientX, clientY);
     const startY = adjustRowTopPositionToViewport(nearestRowObject, nearestRowObject.getBoundingClientRect().y);
     this._selectBox.start(clientX, startY);
@@ -888,7 +939,7 @@ export default class Timeline extends React.Component {
    * @param {number} clientY
    * @param {number} startXElement
    */
-  #onDragMoveSelect(clientX, clientY, startXElement) {
+  onDragMoveSelect(clientX, clientY, startXElement) {
     if (this.state.dragCancel) {
       // do nothing if drag is canceled
       return;
@@ -936,7 +987,7 @@ export default class Timeline extends React.Component {
     }
   }
 
-  #onDragEndSelect() {
+  onDragEndSelect() {
     if (this.state.dragCancel) {
       // only reset dragCancel on dragend if drag is canceled
       this.setState({dragCancel: false});
@@ -1284,13 +1335,13 @@ export default class Timeline extends React.Component {
         })
         .styleCursor(false)
         .on('dragstart', e => {
-          this.#onDragStartSelect(e.clientX, e.clientY);
+          this.onDragStartSelect(e.clientX, e.clientY);
         })
         .on('dragmove', e => {
-          this.#onDragMoveSelect(e.clientX, e.clientY, e.page.x);
+          this.onDragMoveSelect(e.clientX, e.clientY, e.page.x);
         })
         .on('dragend', e => {
-          this.#onDragEndSelect();
+          this.onDragEndSelect();
         });
     }
   }
@@ -1333,9 +1384,6 @@ export default class Timeline extends React.Component {
     const {timelineMode, onItemHover, onItemLeave} = this.props;
     const canSelect = Timeline.isBitSet(Timeline.TIMELINE_MODES.SELECT, timelineMode);
     return ({columnIndex, key, parent, rowIndex, style}) => {
-      // the items column is the last column in the grid; itemCol is the index of this column
-      let itemCol = this.state.tableColumns && this.state.tableColumns.length > 0 ? this.state.tableColumns.length : 1;
-      //  if (itemCol == columnIndex) {
       let itemsInRow = this.rowItemMap[rowIndex];
       // Previously, `rowLayers` constant was instatiated outside the arrow function. However, I have discovered that when
       // the rowLayers were updated, the `rowLayers` constant had the previous value,
@@ -1345,6 +1393,7 @@ export default class Timeline extends React.Component {
       if (this.rowHeightCache[rowIndex]) {
         rowHeight = rowHeight * this.rowHeightCache[rowIndex];
       }
+      var props = this.props;
       return (
         <div
           key={key}
@@ -1363,7 +1412,8 @@ export default class Timeline extends React.Component {
             return this._handleItemRowEvent(e, onItemLeave, null);
           }}
           onContextMenu={e => this._handleItemRowEvent(e, this.props.onItemContextClick, this.props.onRowContextClick)}
-          onDoubleClick={e => this._handleItemRowEvent(e, this.props.onItemDoubleClick, this.props.onRowDoubleClick)}>
+          onDoubleClick={e => this._handleItemRowEvent(e, this.props.onItemDoubleClick, this.props.onRowDoubleClick)}
+          data-testid={testids.row + '_' + rowIndex}>
           {rowItemsRenderer(
             itemsInRow,
             this.getStartDate(),
@@ -1421,7 +1471,21 @@ export default class Timeline extends React.Component {
 
   table_ref_callback(reactComponent) {
     this._table = reactComponent;
-    this._tableDomNode = ReactDOM.findDOMNode(this._table);
+  }
+
+  /**
+   * Testing pourpose
+   * @param {*} splitPane
+   */
+  splitPane_ref_callback(splitPane) {
+    // We made here a querry to select the child resizer of the split pane and to put the test id on it
+    // Because if we have putted the testis on parent and querry select in tests
+    // the focus was putted on the parent split pane and we only needed to drag the resizer of the split pane
+    if (splitPane) {
+      ReactDOM.findDOMNode(splitPane)
+        .querySelector('[role="presentation"]')
+        .setAttribute('data-testid', testids.splitPaneResizer);
+    }
   }
 
   /**
@@ -1469,8 +1533,7 @@ export default class Timeline extends React.Component {
    * @returns {number} left offset
    */
   calculateLeftOffset() {
-    const {groupOffset} = this.props;
-    const {tableColumns} = this.state;
+    const {groupOffset, tableColumns} = this.props;
     if (!tableColumns || tableColumns.length == 0) {
       return groupOffset;
     }
@@ -1496,25 +1559,12 @@ export default class Timeline extends React.Component {
   };
 
   handleScrollGantt = ({scrollTop}) => {
-    // console.log(document.getElementsByClassName("fixedDataTableRowLayout_main"));
-    // if (document.getElementsByClassName("fixedDataTableRowLayout_main")) {
-    // document.getElementsByClassName("fixedDataTableRowLayout_main").scrollTop = scrollTop; }
-    // this._tableDomNode.scrollTop = scrollTop;
-    if (this._table.props.headerHeight !== 0) {
-      this._table?.scrollActions.scrollToY(scrollTop);
-    }
+    this.setState({scrollTop: scrollTop});
     return true;
   };
 
   handleDrag(width) {
-    const {tableColumns} = this.state;
-    const tableColumnsTotalWidth = tableColumns.reduce((acc, tableColumn) => acc + tableColumn.width, 0);
-    const tableColumnsPercentages = tableColumns.map(tableColumn => tableColumn.width / tableColumnsTotalWidth);
-    this.setState({
-      tableColumns: tableColumns.map((tableColumn, index) => {
-        return {...tableColumn, width: width * tableColumnsPercentages[index]};
-      })
-    });
+    this.setState({tableWidth: width});
     return true;
   }
 
@@ -1613,7 +1663,6 @@ export default class Timeline extends React.Component {
       topResolution,
       backgroundLayer
     } = this.props;
-    const {tableColumns} = this.state;
     let that = this;
 
     const divCssClass = `rct9k-timeline-div rct9k-id-${componentId}`;
@@ -1684,22 +1733,18 @@ export default class Timeline extends React.Component {
       });
     }
 
-    const getTableWidth = tableColumns => {
-      if (tableColumns.length == 0) {
-        return 0;
-      }
-      return tableColumns.reduce((acc, column) => acc + column.width) + TABLE_OFFSET;
-    };
-
     const rowsHeights = this.state.groups.map((_, index) => this.rowHeight({index}));
 
     {
       /* Instead of <Measure .../>, in the past <AutoSizer ... /> was used. However it would round with/height, which generated and endless
     scrollbar appear/disappear, depending on the parent, depending on the resolution. */
     }
+
     return (
-      <>
+      // Can not use empty <> instead of <Fragment> because it fails the documentation generation
+      <Fragment>
         <TestsAreDemoCheat objectToPublish={this} />
+        {this._table && <TestsAreDemoCheat objectToPublish={this._table} />}
         {
           // Instead of <Measure .../>, in the past <AutoSizer ... /> was used. However it would round with/height, which generated and endless
           // scrollbar appear/disappear, depending on the parent, depending on the resolution.
@@ -1707,8 +1752,9 @@ export default class Timeline extends React.Component {
         <Measure
           bounds
           onResize={contentRect => {
-            this.setState({screenHeight: contentRect.bounds?.height || 0});
-            this.refreshGrid();
+            const dimensions = {width: contentRect.bounds.width || 0, height: contentRect.bounds.height || 0};
+            this.setState({screenHeight: dimensions.height});
+            this.refreshGrid(dimensions);
           }}>
           {({measureRef}) => {
             const leftOffset = this.calculateLeftOffset();
@@ -1719,23 +1765,83 @@ export default class Timeline extends React.Component {
                 <SplitPane
                   split="vertical"
                   style={{height: this.state.screenHeight}}
-                  defaultSize={getTableWidth(this.state.tableColumns)}
-                  size={getTableWidth(this.state.tableColumns)}
-                  onChange={this.handleDrag}>
-                  <TimelineTable
-                    rowsHeights={rowsHeights}
-                    tableColumns={this.state.tableColumns}
-                    groups={this.state.groups}
-                    table_ref_callback={this.table_ref_callback}
-                    onVerticalScroll={this.handleScrollTable}
-                    headerHeight={timebarHeight}
-                    tableHeight={this.state.screenHeight}
-                  />
+                  defaultSize={this.getInitialTableWidth()}
+                  onChange={this.handleDrag}
+                  ref={this.splitPane_ref_callback}>
+                  {this.props.table ? (
+                    React.cloneElement(this.props.table, {
+                      rowsCount: this.state.groups.length,
+                      // Table can contain "buffered rows" that fill the empty space left, if any
+                      rowHeightGetter: rowIndex =>
+                        rowIndex < rowsHeights.length ? rowsHeights[rowIndex] : DEFAULT_ITEM_HEIGHT,
+                      rowHeight: this.props.itemHeight,
+                      ref: this.table_ref_callback,
+                      touchScrollEnabled: true,
+                      onVerticalScroll: this.handleScrollTable,
+                      scrollTop: this.state.scrollTop,
+                      headerHeight: timebarHeight,
+                      // TODO DB: A vertical scroll appears (only for scrolling 3 px overflow)
+                      // hint: if we add here 3 that scollbar disappear
+                      // Maybe it is due to the fact that we set 3 things: rowHeightGetter, height, and also rowCount
+                      height: this.state.screenHeight,
+                      width: this.state.tableWidth
+                    })
+                  ) : this.props.tableColumns ? (
+                    <TimelineTable
+                      rowsCount={this.state.groups.length}
+                      rowHeightGetter={rowIndex =>
+                        rowIndex < rowsHeights.length ? rowsHeights[rowIndex] : DEFAULT_ITEM_HEIGHT
+                      }
+                      rowHeight={this.props.itemHeight}
+                      tableColumns={this.props.tableColumns}
+                      width={this.state.tableWidth}
+                      groups={this.state.groups}
+                      table_ref_callback={this.table_ref_callback}
+                      onVerticalScroll={this.handleScrollTable}
+                      scrollTop={this.state.scrollTop}
+                      headerHeight={timebarHeight}
+                      tableHeight={this.state.screenHeight}
+                      groupRenderer={this.props.groupRenderer}
+                      groupTitleRenderer={this.props.groupTitleRenderer}
+                    />
+                  ) : (
+                    <Table
+                      ref={this.table_ref_callback}
+                      rowsCount={this.state.groups.length}
+                      width={this.state.tableWidth}
+                      height={this.state.screenHeight}
+                      headerHeight={timebarHeight}
+                      touchScrollEnabled={true}
+                      onVerticalScroll={this.handleScrollTable}
+                      scrollTop={this.state.scrollTop}
+                      rowHeightGetter={rowIndex =>
+                        rowIndex < rowsHeights.length ? rowsHeights[rowIndex] : DEFAULT_ITEM_HEIGHT
+                      }
+                      rowHeight={this.props.itemHeight}
+                      {...this.props}>
+                      <TableColumn
+                        key={1}
+                        columnKey={1}
+                        width={DEFAULT_COLUMN_WIDTH}
+                        flexGrow={1}
+                        header={<this.props.groupTitleRenderer />}
+                        cell={props => (
+                          <this.props.groupRenderer
+                            group={this.state.groups[props.rowIndex]}
+                            labelProperty={Timeline.SINGLE_COLUMN_LABEL_PROPERTY}
+                          />
+                        )}
+                      />
+                    </Table>
+                  )}
+
                   <div style={{flex: 1, overflow: 'hidden'}}>
                     <Measure
                       bounds
                       onResize={contentRect => {
-                        this.setState({gridWidth: contentRect.bounds?.width || 0});
+                        if (contentRect.bounds) {
+                          this.setState({gridWidth: contentRect.bounds.width || 0});
+                        }
                         this.refreshGrid();
                       }}>
                       {({measureRef, contentRect}) => {
@@ -1807,7 +1913,7 @@ export default class Timeline extends React.Component {
             );
           }}
         </Measure>
-      </>
+      </Fragment>
     );
   }
 
@@ -1830,7 +1936,7 @@ export default class Timeline extends React.Component {
 
   dragStart(element, offsetX) {
     const {x, y} = element.getBoundingClientRect();
-    this.#onDragStartSelect(offsetX + x, y);
+    this.onDragStartSelect(offsetX + x, y);
     this.setCursorTime(offsetX + x);
   }
 
@@ -1839,13 +1945,13 @@ export default class Timeline extends React.Component {
     for (let i = 0; i < x; i += delta) {
       deltaX = Math.min(i + delta, x);
       await new Promise(resolve => setTimeout(resolve, delta));
-      this.#onDragMoveSelect(this._selectBox.startX + deltaX, this._selectBox.startY + y);
+      this.onDragMoveSelect(this._selectBox.startX + deltaX, this._selectBox.startY + y);
       this.setCursorTime(this._selectBox.startX + deltaX);
     }
   }
 
   dragEnd() {
-    this.#onDragEndSelect();
+    this.onDragEndSelect();
   }
 
   rightClick() {

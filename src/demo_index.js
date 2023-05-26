@@ -8,13 +8,15 @@ import {TestsAreDemoAppWrapper} from '@famiprog-foundation/tests-are-demo';
 import {tad} from '@famiprog-foundation/tests-are-demo';
 import {ExpTestsAreDemo} from './testsAreDemo/ExpTestsAreDemo';
 import {DragToCreateTestsAreDemo} from './testsAreDemo/DragToCreateTestsAreDemo';
+import {TableTestsAreDemo} from './testsAreDemo/TableTestsAreDemo';
 
 ReactDOM.render(
   <TestsAreDemoAppWrapper
     importSemanticUiCss
     app={<DemoTimeline />}
     importTestsCallback={() => {
-      tad.addTests(DragToCreateTestsAreDemo, ExpTestsAreDemo);
+      // tad.addTests(DragToCreateTestsAreDemo, ExpTestsAreDemo);
+      tad.addTests(TableTestsAreDemo);
     }}
   />,
   document.getElementById('root')

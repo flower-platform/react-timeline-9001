@@ -6,6 +6,7 @@ import React, {Component} from 'react';
 import PropTypes from 'prop-types';
 
 import {Grid} from 'react-virtualized';
+import {timelineTestids} from '../timeline';
 
 /**
  * @extends Component<TimelineBody.propTypes>
@@ -41,6 +42,7 @@ class TimelineBody extends Component {
 
     return (
       <Grid
+        containerProps={{'data-testid': timelineTestids.ganttBody}}
         ref={grid_ref_callback}
         autoContainerWidth
         cellRenderer={cellRenderer}
@@ -52,6 +54,7 @@ class TimelineBody extends Component {
         width={width}
         className="rct9k-grid"
         onScroll={onScroll}
+        data-testid={timelineTestids.grid}
       />
     );
   }

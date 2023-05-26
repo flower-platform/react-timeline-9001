@@ -1,6 +1,6 @@
-import React from 'react';
-import {Cell, Column, Table} from 'fixed-data-table-2';
+import {Column, DataCell, Table} from 'fixed-data-table-2';
 import 'fixed-data-table-2/dist/fixed-data-table.css';
+import React from 'react';
 
 export class TimelineTable extends React.Component {
   constructor(props) {
@@ -10,47 +10,38 @@ export class TimelineTable extends React.Component {
   static defaultProps = {
     rowHeight: 50,
     tableHeight: 500,
-    isColumnResizing: false,
-    isColumnReordering: false,
-    touchScrollEnabled: true
+    touchScrollEnabled: true,
+    selectedRanges: []
   };
 
-  renderTableHeader(props, tableColumn) {
+  renderTableHeader(props, column) {
     let headerElement;
-    if (tableColumn.headerLabel) {
-      headerElement = tableColumn.headerLabel;
-    } else if (typeof tableColumn.headerRenderer === 'object') {
-      headerElement = tableColumn.headerRenderer;
+    if (column.headerRenderer) {
+      if (React.isValidElement(column.headerRenderer)) {
+        headerElement = column.headerRenderer;
+      } else {
+        headerElement = <column.headerRenderer />;
+      }
     } else {
-      const CustomRenderer = tableColumn.headerRenderer;
-      headerElement = <CustomRenderer />;
+      headerElement = <this.props.groupTitleRenderer column={column} />;
     }
-    return <Cell>{headerElement}</Cell>;
+    return <DataCell>{headerElement}</DataCell>;
   }
 
   renderTableCell(props, tableColumn, groups) {
     let cellElement;
-    if (tableColumn.labelProperty) {
-      cellElement = tableColumn.labelProperty;
-    } else if (typeof tableColumn.cellRenderer === 'object') {
-      cellElement = tableColumn.cellRenderer;
+    const group = groups[props.rowIndex];
+    if (tableColumn.cellRenderer) {
+      if (React.isValidElement(tableColumn.cellRenderer)) {
+        cellElement = tableColumn.cellRenderer;
+      } else {
+        cellElement = <tableColumn.cellRenderer group={group} />;
+      }
     } else {
-      const CustomRenderer = tableColumn.cellRenderer;
-      cellElement = <CustomRenderer group={groups[props.rowIndex]} />;
+      cellElement = <this.props.groupRenderer group={group} labelProperty={tableColumn.labelProperty} />;
     }
-    return <Cell>{cellElement}</Cell>;
-  }
 
-  getTableColumnsTotalWidth(tableColumns) {
-    return (
-      tableColumns
-        .map(tableColumn => tableColumn.width)
-        .reduce((accumulator, currentWidth) => accumulator + currentWidth, 0) + 15
-    );
-  }
-
-  getRowHeight(rowIndex) {
-    return this.props.rowsHeights ? this.props.rowsHeights[rowIndex] : this.props.rowHeight;
+    return <DataCell>{cellElement}</DataCell>;
   }
 
   render() {
@@ -60,15 +51,12 @@ export class TimelineTable extends React.Component {
     return (
       <Table
         ref={table_ref_callback}
-        rowsCount={groups.length}
         rowHeight={this.props.rowHeight}
-        width={this.getTableColumnsTotalWidth(tableColumns)}
+        width={this.props.width}
         height={this.props.tableHeight}
         headerHeight={this.props.headerHeight}
         touchScrollEnabled={this.props.touchScrollEnabled}
-        isColumnResizing={this.props.isColumnResizing}
-        isColumnReordering={this.props.isColumnReordering}
-        rowHeightGetter={rowIndex => this.getRowHeight(rowIndex)}
+        rowHeightGetter={this.props.rowHeightGetter}
         {...this.props}>
         {tableColumns.map((tableColumn, index) => (
           <Column
@@ -78,7 +66,6 @@ export class TimelineTable extends React.Component {
             width={tableColumn.width}
             isResizable={false}
             isReorderable={false}
-            // flexGrow={index === tableColumns.length - 1 ? 1 : undefined}
             header={props => this.renderTableHeader(props, tableColumn)}
             cell={props => this.renderTableCell(props, tableColumn, groups)}
           />

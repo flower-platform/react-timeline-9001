@@ -14,12 +14,13 @@ export class GroupRenderer extends React.Component {
    * @returns { string }
    */
   getLabel() {
-    return this.props.group[this.props.labelProperty];
+    // Check for any empty rows added for filling in the empty space at the bottom of the table
+    return this.props.group ? this.props.group[this.props.labelProperty] : '';
   }
 
   render() {
     return (
-      <span data-group-index={this.props.group.id}>
+      <span data-group-index={this.props.group ? this.props.group.id : undefined}>
         <span>{this.getLabel()}</span>
       </span>
     );

@@ -1,23 +1,28 @@
 'use strict';
 
-import React, {Component} from 'react';
-import PropTypes from 'prop-types';
-import moment from 'moment';
+import {Cell} from 'fixed-data-table-2';
+import React from 'react';
 import _ from 'lodash';
+import moment from 'moment';
+import {Component} from 'react';
 
-import Timeline from './timeline';
 import {
-  CustomItemRenderer,
-  CustomGroupRenderer,
   CustomCellRenderer,
-  CustomColumnHeaderRenderer
+  CustomColumnHeaderRenderer,
+  CustomGroupRenderer,
+  CustomItemRenderer
 } from './demo/customRenderers';
+import Timeline from './timeline';
 
-import {Layout, Form, InputNumber, Button, DatePicker, Checkbox, Switch, Icon} from 'antd';
+import {Button, Checkbox, DatePicker, Form, Icon, InputNumber, Switch} from 'antd';
 import 'antd/dist/antd.css';
-import './style.css';
 import './stories/storybook.css';
-import {TimelineTable} from './components/TimelineTable';
+import './style.css';
+import {DEMO_TABLE_WIDTH} from './stories/table/TableScenarios';
+import {GroupRenderer} from './components/GroupRenderer';
+import {ItemRenderer} from '.';
+import {GroupHeaderRenderer} from './components/GroupHeaderRenderer';
+import {Column, Table, DataCell} from 'fixed-data-table-2';
 
 const {TIMELINE_MODES} = Timeline;
 
@@ -25,10 +30,50 @@ const ITEM_DURATIONS = [moment.duration(6, 'hours'), moment.duration(12, 'hours'
 
 const COLORS = ['#0099cc', '#f03a36', '#06ad96', '#fce05b', '#dd5900', '#cc6699'];
 
+const headerStyle = {
+  color: '#000',
+  fontSize: '12px',
+  lineHeight: '1',
+  background: '#CCFFEE',
+  border: 'none'
+};
+
 // Moment timezones can be enabled using the following
 // import moment from 'moment-timezone';
 // moment.locale('en-au');
 // moment.tz.setDefault('Australia/Perth');
+class TitleCellRenderer extends GroupRenderer {
+  render() {
+    // Additional check for any empty rows added in for filling in the empty space at the bottom of the table
+    return (
+      <DataCell>
+        {this.props.rowIndex < this.props.groups.length ? this.props.groups[this.props.rowIndex].title : ''}
+      </DataCell>
+    );
+  }
+}
+
+class DescriptionCellRenderer extends GroupRenderer {
+  render() {
+    return (
+      <DataCell>
+        {this.props.rowIndex < this.props.groups.length ? this.props.groups[this.props.rowIndex].description : ''}
+      </DataCell>
+    );
+  }
+}
+
+class CheckBoxCellRenderer extends GroupRenderer {
+  render() {
+    return this.props.rowIndex < this.props.groups.length ? (
+      <DataCell>
+        <Checkbox> Checkbox </Checkbox>
+      </DataCell>
+    ) : (
+      <Fragment />
+    );
+  }
+}
 
 export default class DemoTimeline extends Component {
   constructor(props) {
@@ -47,6 +92,7 @@ export default class DemoTimeline extends Component {
       message: '',
       timelineMode: TIMELINE_MODES.SELECT | TIMELINE_MODES.DRAG | TIMELINE_MODES.RESIZE,
       multipleColumnsMode: false,
+      useCustomTable: false,
       useMoment: true
     };
     this.reRender = this.reRender.bind(this);
@@ -58,6 +104,7 @@ export default class DemoTimeline extends Component {
     this.toggleResizable = this.toggleResizable.bind(this);
     this.toggleUseMoment = this.toggleUseMoment.bind(this);
     this.toggleMultipleColumnsMode = this.toggleMultipleColumnsMode.bind(this);
+    this.toggleUseCustomTable = this.toggleUseCustomTable.bind(this);
   }
 
   componentWillMount() {
@@ -138,6 +185,20 @@ export default class DemoTimeline extends Component {
       }
     ];
 
+    const customTableColumns = [
+      // default renderers
+      {
+        width: 100,
+        headerLabel: 'Custom table column 1',
+        labelProperty: 'title'
+      },
+      {
+        width: 100,
+        headerLabel: 'Custom table column 1',
+        labelProperty: 'title'
+      }
+    ];
+
     // this.state = {selectedItems: [11, 12], groups, items: list};
     this.forceUpdate();
     this.setState({items: list, groups, tableColumns, useMoment});
@@ -185,6 +246,12 @@ export default class DemoTimeline extends Component {
     const {multipleColumnsMode} = this.state;
     this.setState({multipleColumnsMode: !multipleColumnsMode});
   }
+
+  toggleUseCustomTable() {
+    const {useCustomTable} = this.state;
+    this.setState({useCustomTable: !useCustomTable});
+  }
+
   handleItemClick = (e, key) => {
     const message = `Item Click ${key}`;
     const {selectedItems} = this.state;
@@ -292,6 +359,17 @@ export default class DemoTimeline extends Component {
     }
   };
 
+  /**
+   * @type { number }
+   */
+  getTableColumnsTotalWidth(tableColumns) {
+    return (
+      (tableColumns
+        .map(tableColumn => tableColumn.width)
+        .reduce((accumulator, currentWidth) => accumulator + currentWidth, 0) + 20)
+    );
+  }
+
   render() {
     const {
       selectedItems,
@@ -307,6 +385,7 @@ export default class DemoTimeline extends Component {
       timelineMode,
       useMoment,
       multipleColumnsMode,
+      useCustomTable,
       tableColumns
     } = this.state;
     const rangeValue = [startDate, endDate];
@@ -316,6 +395,7 @@ export default class DemoTimeline extends Component {
     const resizeable = (TIMELINE_MODES.RESIZE & timelineMode) === TIMELINE_MODES.RESIZE;
 
     const rowLayers = [];
+
     for (let i = 0; i < rows; i += 1) {
       if (i % 5 === 0 && i !== 0) {
         continue;
@@ -409,6 +489,11 @@ export default class DemoTimeline extends Component {
                 Multiple columns mode
               </Checkbox>
             </Form.Item>
+            <Form.Item>
+              <Checkbox onChange={this.toggleUseCustomTable} checked={useCustomTable}>
+                Use custom table
+              </Checkbox>
+            </Form.Item>
           </Form>
           <div>
             <span>Debug: </span>
@@ -422,7 +507,40 @@ export default class DemoTimeline extends Component {
           useMoment={useMoment}
           startDate={useMoment ? startDate : startDate.valueOf()}
           endDate={useMoment ? endDate : endDate.valueOf()}
-          tableColumns={multipleColumnsMode ? tableColumns : [tableColumns[0]]}
+          tableColumns={useCustomTable ? undefined : multipleColumnsMode ? tableColumns : [tableColumns[0]]}
+          table={
+            useCustomTable ? (
+              <Table rowHeight={50} width={300} isColumnResizing={true}>
+                <Column
+                  key={0}
+                  columnKey={0}
+                  width={100}
+                  header={<DataCell style={headerStyle}>Title</DataCell>}
+                  cell={<TitleCellRenderer groups={groups} />}
+                />
+                <Column
+                  key={1}
+                  columnKey={1}
+                  width={100}
+                  header={
+                    <DataCell style={headerStyle}>
+                      <Icon type="check-circle" /> <span>Custom check</span>
+                    </DataCell>
+                  }
+                  cell={<CheckBoxCellRenderer groups={groups} />}
+                />
+                <Column
+                  key={2}
+                  columnKey={2}
+                  width={100}
+                  header={<DataCell style={headerStyle}>Description</DataCell>}
+                  cell={<DescriptionCellRenderer groups={groups}></DescriptionCellRenderer>}
+                />
+              </Table>
+            ) : (
+              undefined
+            )
+          }
           rowLayers={rowLayers}
           selectedItems={selectedItems}
           timelineMode={timelineMode}
@@ -434,10 +552,9 @@ export default class DemoTimeline extends Component {
           onRowClick={this.handleRowClick}
           onRowContextClick={this.handleRowContextClick}
           onRowDoubleClick={this.handleRowDoubleClick}
-          itemRenderer={useCustomRenderers ? CustomItemRenderer : undefined}
-          groupRenderer={useCustomRenderers ? CustomGroupRenderer : undefined}
-          groupTitleRenderer={useCustomRenderers ? () => <div>Group title</div> : undefined}
-          // table={<TimelineTable tableColumns={tableColumns} groups={groups} />}
+          itemRenderer={useCustomRenderers ? CustomItemRenderer : ItemRenderer}
+          groupRenderer={useCustomRenderers ? CustomGroupRenderer : GroupRenderer}
+          groupTitleRenderer={useCustomRenderers ? () => <div>Group title</div> : GroupHeaderRenderer}
         />
       </div>
     );
