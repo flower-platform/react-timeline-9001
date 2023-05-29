@@ -29,7 +29,7 @@ export const Main: ComponentStory<typeof Timeline> = () => {
       {/* 1/ In other stories we don't have this, because we have a Storybook decorator that wraps w/ a div + CSS class. */}
       {/* 2/ You'll probably have a better flex-box layout, i.e. not hardcoded. 3/ Use CSS classes and not styles. */}
       <div style={{ display: 'flex', height: '400px' }}>
-        <Timeline startDate={d('2018-09-20')} endDate={d('2018-09-21')} groups={humanResources} items={tasks} />
+        <Timeline startDate={d('2018-09-20')} endDate={d('2018-09-21')} groups={humanResources} items={tasks}/>
       </div>
     </>
   );
@@ -41,4 +41,34 @@ Main.parameters = {
     timelineScenarios.rendererForItems,
     timelineScenarios.whenMouseMovesThenRedBar
   ]
+};
+
+export const AlternativeRowColoring: ComponentStory<typeof Timeline> = () => {
+
+  return (
+    <>
+      {/* This is an example to illustrate how you can customize your gantt to customize the row coloring by seeting 'rowClassName',  'rowEvenClassName' and 'rowClassOddName'
+
+          And defining your custom classes in your css file:
+
+          .story-custom-row {
+            border: 1px solid #94b9cf!important;
+            border-top: 0 !important;
+          }
+
+          .story-custom-row-even {
+            background-color: #DBE8F0 !important;
+          }
+
+          .story-custom-row-odd {
+            background-color: #f4f7f8 !important;
+          }
+
+      */}
+      <div style={{ display: 'flex', height: '400px' }}>
+        <Timeline startDate={d('2018-09-20')} endDate={d('2018-09-21')} groups={someHumanResources} items={someTasks} 
+                  rowClassName='story-custom-row' rowEvenClassName='story-custom-row-even' rowOddClassName='story-custom-row-odd'/>
+      </div>
+    </>
+  );
 };

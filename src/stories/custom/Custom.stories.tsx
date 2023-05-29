@@ -6,6 +6,7 @@ import Timeline from "../../timeline";
 import { d, someHumanResources, someTasks } from "../sampleData";
 import { customTimelineScenarios } from "./CustomTimelineScenarios";
 import ReactDOM from "react-dom";
+import { ItemRenderer } from "../..";
 
 export default {
   title: 'Features/Custom',
@@ -39,7 +40,7 @@ export const CustomMenuButtonRenderer: ComponentStory<typeof Timeline> = () => {
     <Segment size="mini">
       <div ref={divRef}> </div>
     </Segment>
-    <CustomTimeline startDate={d('2018-09-20')} endDate={d('2018-09-21')} groups={someHumanResources} items={someTasks} toolbarDomElement={divRef.current} />
+    <CustomTimeline startDate={d('2018-09-20')} endDate={d('2018-09-21')} groups={someHumanResources} items={someTasks} toolbarDomElement={divRef.current} itemRenderer={ItemRenderer}/>
   </>);
 
 };

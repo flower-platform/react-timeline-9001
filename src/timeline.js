@@ -1,7 +1,7 @@
 'use strict';
 
-import PropTypes from 'prop-types';
 import React, {Fragment} from 'react';
+import PropTypes from 'prop-types';
 import ReactDOM from 'react-dom';
 import Measure from 'react-measure';
 
@@ -12,9 +12,7 @@ import {Column, Group, InteractOption, Item, RowLayer} from './index';
 
 import {TestsAreDemoCheat, createTestids} from '@famiprog-foundation/tests-are-demo';
 import {Table, Column as TableColumn} from 'fixed-data-table-2';
-import {GroupHeaderRenderer} from './components/GroupHeaderRenderer';
 import {GroupRenderer} from './components/GroupRenderer';
-import ItemRenderer from './components/ItemRenderer';
 import {Marker} from './components/Marker';
 import TimelineBody from './components/body';
 import SelectBox from './components/selector';
@@ -45,6 +43,10 @@ import {
 import 'core-js/fn/string/starts-with';
 import SplitPane from 'react-split-pane';
 import {TimelineTable} from './components/TimelineTable';
+import {GroupHeaderRenderer} from './components/GroupHeaderRenderer';
+// TODO DB this is temporary. Created a copy because if we have used ItemRenderer file the default property for itemRenderer property
+// didn't work and it gets undefined
+import ItemRenderer from './components/ItemRenderer1';
 
 const testids = createTestids('Timeline', {
   menu: '',
@@ -68,8 +70,29 @@ const EMPTY_GROUP_KEY = 'empty-group';
 const TABLE_OFFSET = 15;
 const DEFAULT_COLUMN_WIDTH = 150;
 export const DEFAULT_ITEM_HEIGHT = 40;
+export const DEFAULT_ROW_CLASS = 'rct9k-row';
+export const DEFAULT_ROW_EVEN_CLASS = 'rct9k-row-even';
+/**
+ * Be default we do not use any special css for the odd rows because they are blank by default
+ * Added for the cases that user wants customize the color of the even rows also
+ **/
+export const DEFAULT_ROW_ODD_CLASS = '';
 
 export const PARENT_ELEMENT = componentId => document.querySelector(`.rct9k-id-${componentId} .parent-div`);
+
+const TableWithStyle = ({table}) => {
+  const tableStyle = `.public_fixedDataTableCell_main {
+      background-color: inherit!important;
+    }
+  `;
+
+  return (
+    <div>
+      <style>{tableStyle}</style>
+      {React.cloneElement(table)}
+    </div>
+  );
+};
 
 /**
  * Timeline class
@@ -179,6 +202,37 @@ export default class Timeline extends React.Component {
         style: PropTypes.object.isRequired
       })
     ),
+
+    /**
+     * The name of the css class that will be applied both for gantt rows and for table rows
+     * If it is not set it defaults to 'DEFAULT_ROW_CLASS'
+     *
+     * Example of usecase: change the default alternative rows coloring by setting 'rowClassName', 'rowEvenClassName' and 'rowOddClassName'
+     *
+     * @type {string}
+     */
+    rowClassName: PropTypes.string,
+
+    /**
+     * The name of the css class that will be applied both for gantt rows and for table rows that have an even row index
+     * If it is not set it defaults to 'DEFAULT_ROW_EVEN_CLASS'
+     *
+     * Example of usecase: change the default alternative rows coloring by setting 'rowClassName', 'rowEvenClassName' and 'rowOddClassName'
+     *
+     * @type {string}
+     */
+
+    rowEvenClassName: PropTypes.string,
+
+    /**
+     * The name of the css class that will be applied both for gantt and for table rows that have an odd row index
+     * If it is not set it defaults to 'DEFAULT_ROW_ODD_CLASS'
+     *
+     * Example of usecase: change the default alternative rows coloring by setting 'rowClassName', 'rowEvenClassName' and 'rowOddClassName'
+     *
+     * @type {string}
+     */
+    rowOddClassName: PropTypes.string,
 
     /**
      * Start of the displayed interval, as date (numeric/millis or moment object, cf. `useMoment`).
@@ -444,6 +498,9 @@ export default class Timeline extends React.Component {
     onItemLeave() {},
     interactOptions: {},
     itemStyle: {},
+    rowClassName: DEFAULT_ROW_CLASS,
+    rowEvenClassName: DEFAULT_ROW_EVEN_CLASS,
+    rowOddClassName: DEFAULT_ROW_ODD_CLASS,
     // in rtl9k:
     // useMoment: true,
     useMoment: false,
@@ -1399,7 +1456,11 @@ export default class Timeline extends React.Component {
           key={key}
           style={style}
           data-row-index={rowIndex}
-          className="rct9k-row"
+          className={
+            this.props.rowClassName +
+            ' ' +
+            (rowIndex % 2 == 0 ? this.props.rowOddClassName : this.props.rowEvenClassName)
+          }
           onClick={e => this._handleItemRowEvent(e, Timeline.no_op, this.props.onRowClick)}
           onMouseDown={e => (this.selecting = false)}
           onMouseMove={e => (this.selecting = true)}
@@ -1769,70 +1830,93 @@ export default class Timeline extends React.Component {
                   onChange={this.handleDrag}
                   ref={this.splitPane_ref_callback}>
                   {this.props.table ? (
-                    React.cloneElement(this.props.table, {
-                      rowsCount: this.state.groups.length,
-                      // Table can contain "buffered rows" that fill the empty space left, if any
-                      rowHeightGetter: rowIndex =>
-                        rowIndex < rowsHeights.length ? rowsHeights[rowIndex] : DEFAULT_ITEM_HEIGHT,
-                      rowHeight: this.props.itemHeight,
-                      ref: this.table_ref_callback,
-                      touchScrollEnabled: true,
-                      onVerticalScroll: this.handleScrollTable,
-                      scrollTop: this.state.scrollTop,
-                      headerHeight: timebarHeight,
-                      // TODO DB: A vertical scroll appears (only for scrolling 3 px overflow)
-                      // hint: if we add here 3 that scollbar disappear
-                      // Maybe it is due to the fact that we set 3 things: rowHeightGetter, height, and also rowCount
-                      height: this.state.screenHeight,
-                      width: this.state.tableWidth
-                    })
+                    <TableWithStyle
+                      table={React.cloneElement(this.props.table, {
+                        rowsCount: this.state.groups.length,
+                        // Table can contain "buffered rows" that fill the empty space left, if any
+                        rowHeightGetter: rowIndex =>
+                          rowIndex < rowsHeights.length ? rowsHeights[rowIndex] : DEFAULT_ITEM_HEIGHT,
+                        rowHeight: this.props.itemHeight,
+                        ref: this.table_ref_callback,
+                        touchScrollEnabled: true,
+                        onVerticalScroll: this.handleScrollTable,
+                        scrollTop: this.state.scrollTop,
+                        headerHeight: timebarHeight,
+                        // TODO DB: A vertical scroll appears (only for scrolling 3 px overflow)
+                        // hint: if we add here 3 that scollbar disappear
+                        // Maybe it is due to the fact that we set 3 things: rowHeightGetter, height, and also rowCount
+                        height: this.state.screenHeight,
+                        width: this.state.tableWidth,
+                        rowClassNameGetter: rowIndex =>
+                          this.props.rowClassName +
+                          ' ' +
+                          (rowIndex % 2 == 0 ? this.props.rowOddClassName : this.props.rowEvenClassName)
+                      })}
+                    />
                   ) : this.props.tableColumns ? (
-                    <TimelineTable
-                      rowsCount={this.state.groups.length}
-                      rowHeightGetter={rowIndex =>
-                        rowIndex < rowsHeights.length ? rowsHeights[rowIndex] : DEFAULT_ITEM_HEIGHT
+                    <TableWithStyle
+                      table={
+                        <TimelineTable
+                          rowsCount={this.state.groups.length}
+                          rowHeightGetter={rowIndex =>
+                            rowIndex < rowsHeights.length ? rowsHeights[rowIndex] : DEFAULT_ITEM_HEIGHT
+                          }
+                          rowHeight={this.props.itemHeight}
+                          tableColumns={this.props.tableColumns}
+                          width={this.state.tableWidth}
+                          groups={this.state.groups}
+                          table_ref_callback={this.table_ref_callback}
+                          onVerticalScroll={this.handleScrollTable}
+                          scrollTop={this.state.scrollTop}
+                          headerHeight={timebarHeight}
+                          tableHeight={this.state.screenHeight}
+                          groupRenderer={this.props.groupRenderer}
+                          groupTitleRenderer={this.props.groupTitleRenderer}
+                          rowClassNameGetter={rowIndex =>
+                            this.props.rowClassName +
+                            ' ' +
+                            (rowIndex % 2 == 0 ? this.props.rowOddClassName : this.props.rowEvenClassName)
+                          }
+                        />
                       }
-                      rowHeight={this.props.itemHeight}
-                      tableColumns={this.props.tableColumns}
-                      width={this.state.tableWidth}
-                      groups={this.state.groups}
-                      table_ref_callback={this.table_ref_callback}
-                      onVerticalScroll={this.handleScrollTable}
-                      scrollTop={this.state.scrollTop}
-                      headerHeight={timebarHeight}
-                      tableHeight={this.state.screenHeight}
-                      groupRenderer={this.props.groupRenderer}
-                      groupTitleRenderer={this.props.groupTitleRenderer}
                     />
                   ) : (
-                    <Table
-                      ref={this.table_ref_callback}
-                      rowsCount={this.state.groups.length}
-                      width={this.state.tableWidth}
-                      height={this.state.screenHeight}
-                      headerHeight={timebarHeight}
-                      touchScrollEnabled={true}
-                      onVerticalScroll={this.handleScrollTable}
-                      scrollTop={this.state.scrollTop}
-                      rowHeightGetter={rowIndex =>
-                        rowIndex < rowsHeights.length ? rowsHeights[rowIndex] : DEFAULT_ITEM_HEIGHT
-                      }
-                      rowHeight={this.props.itemHeight}
-                      {...this.props}>
-                      <TableColumn
-                        key={1}
-                        columnKey={1}
-                        width={DEFAULT_COLUMN_WIDTH}
-                        flexGrow={1}
-                        header={<this.props.groupTitleRenderer />}
-                        cell={props => (
-                          <this.props.groupRenderer
-                            group={this.state.groups[props.rowIndex]}
-                            labelProperty={Timeline.SINGLE_COLUMN_LABEL_PROPERTY}
+                    <TableWithStyle
+                      table={
+                        <Table
+                          ref={this.table_ref_callback}
+                          rowsCount={this.state.groups.length}
+                          width={this.state.tableWidth}
+                          height={this.state.screenHeight}
+                          headerHeight={timebarHeight}
+                          touchScrollEnabled={true}
+                          onVerticalScroll={this.handleScrollTable}
+                          scrollTop={this.state.scrollTop}
+                          rowHeightGetter={rowIndex =>
+                            rowIndex < rowsHeights.length ? rowsHeights[rowIndex] : DEFAULT_ITEM_HEIGHT
+                          }
+                          rowHeight={this.props.itemHeight}
+                          rowClassNameGetter={rowIndex =>
+                            this.props.rowClassName +
+                            ' ' +
+                            (rowIndex % 2 == 0 ? this.props.rowOddClassName : this.props.rowEvenClassName)
+                          }>
+                          <TableColumn
+                            key={1}
+                            columnKey={1}
+                            width={DEFAULT_COLUMN_WIDTH}
+                            flexGrow={1}
+                            header={<this.props.groupTitleRenderer />}
+                            cell={props => (
+                              <this.props.groupRenderer
+                                group={this.state.groups[props.rowIndex]}
+                                labelProperty={Timeline.SINGLE_COLUMN_LABEL_PROPERTY}
+                              />
+                            )}
                           />
-                        )}
-                      />
-                    </Table>
+                        </Table>
+                      }
+                    />
                   )}
 
                   <div style={{flex: 1, overflow: 'hidden'}}>

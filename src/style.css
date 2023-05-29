@@ -120,9 +120,13 @@
 .rct9k-row {
   /* white-space: nowrap; */
   box-sizing: border-box;
-  border: 1px solid black;
-  border-top: 0;
+  border: 1px solid #ccc !important;
+  border-top: 0 !important;
   border-left: 0;
+}
+
+.rct9k-row-even {
+  background-color: #f6f7f8;
 }
 
 .rct9k-items-selected {
@@ -131,7 +135,7 @@
 }
 
 .rct9k-grid {
-  border-bottom: 1px solid black;
+  border-bottom: 1px solid #ccc;
 }
 
 /**
@@ -148,14 +152,14 @@
 }
 
 .ReactVirtualized__Grid__innerScrollContainer:first-child {
-  border-top: 1px solid black;
+  border-top: 1px solid #ccc;
 }
 
 /* Timeline groups */
 .rct9k-group {
   text-align: center;
   box-sizing: border-box;
-  border: 1px solid black;
+  border: 1px solid #ccc;
   border-top: 0;
   border-right: 0;
   background-color: white;
@@ -163,7 +167,7 @@
 }
 
 .rct9k-group {
-  border-right: 2px solid black;
+  border-right: 2px solid #ccc;
 }
 
 .rct9k-timebar {
@@ -179,14 +183,15 @@
 .rct9k-timebar-group-title {
   height: 60px;
   background-color: white;
-  border: 1px solid black;
+  border: 1px solid #ccc;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
 }
 
 .rct9k-timebar-outer {
-  border-left: 1px solid black;
+  border-left: 1px solid #ccc;
+  background-image: linear-gradient(#fff, #efefef);
 }
 
 .rct9k-timebar-inner {
@@ -206,7 +211,7 @@
 }
 
 .rct9k-timebar-inner.rct9k-timebar-inner-bottom {
-  border-top: 1px solid black;
+  border-top: 1px solid #ccc;
 }
 
 .rct9k-timebar-item-selected {
@@ -214,7 +219,7 @@
 }
 
 .rct9k-timebar-group-title {
-  border-right: 2px solid black;
+  border-right: 2px solid #ccc;
 }
 
 .rct9k-timeline-div {
@@ -277,4 +282,12 @@
 
 .no-margin {
   margin: 0 !important;
+}
+
+.rct9k-timebar-inner.rct9k-timebar-inner-bottom {
+  border-top: 1px solid #ccc !important;
+}
+
+.rct9k-timebar-item {
+  border-left-color: #ccc !important;
 }
