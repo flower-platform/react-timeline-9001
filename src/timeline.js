@@ -80,13 +80,9 @@ export const ActionType = PropTypes.arrayOf(
      */
     run: PropTypes.func,
     /**
-     * Will be passed to the actions
-     */
-    selectedItems: PropTypes.array
-    /**
      *
      */
-    // subActions: PropTypes.arrayOf(ActionType)
+    subActions: PropTypes.arrayOf(ActionType)
   })
 );
 
@@ -419,6 +415,9 @@ export default class Timeline extends React.Component {
      */
     onDragToCreateEnded: PropTypes.func,
 
+    /**
+     * TODO DB comment
+     */
     actions: PropTypes.arrayOf(ActionType)
   };
 
@@ -1012,7 +1011,7 @@ export default class Timeline extends React.Component {
         this.props.onInteraction &&
         this.props.onInteraction(Timeline.changeTypes.itemsSelected, selectedItems);
 
-      //TODO DB _map {selectedItems: _.map(changes, 'key')}
+      //TODO DB _map this.setSate({selectedItems: _.map(selectedItems, 'key')})
       / / / !this.state.dragToCreateMode && this.setState({selectedItems});
 
       if (this.state.dragToCreateMode && this.props.onDragToCreateEnded) {
@@ -1302,14 +1301,6 @@ export default class Timeline extends React.Component {
         });
     }
     if (canSelect) {
-      window.oncontextmenu = e => {
-        // on right click if drag in progress cancel it
-        e.preventDefault();
-        if (this._selectBox.isStart()) {
-          this.setState({dragCancel: true});
-          this._selectBox.end();
-        }
-      };
       this._selectRectangleInteractable
         .draggable({
           enabled: true,
@@ -1356,11 +1347,17 @@ export default class Timeline extends React.Component {
       // }
       // TODO DB
       if (e.type == 'contextMenu') {
+        /**
+         * On right click select the item if not already selected
+         * And open the context menu
+         */
         // const idx = selectedItems.indexOf(itemKey);
         // if (idx < 0) {
         //   // add first to selection
-        //   newSelection.push(Number(itemKey));
+        // newSelection = [itemKey];
+        // setState(newSelection);
         // }
+        //
         // TODO DB display the cm ????
         // get mouse click coordinates -> open a popup with a ContextMenu at those coordinates via state.isContextMenuOpened and state.contextMenuCoordinates. Only if this.props.actions exists and ??? are visible for the selectedItems
         //
@@ -1842,7 +1839,7 @@ export default class Timeline extends React.Component {
                     shallowUpdateCheck={shallowUpdateCheck}
                     forceRedrawFunc={forceRedrawFunc}
                   />
-                  {/* TODO DB: define the <popup> containing a <Context menu> here */}
+                  {/* TODO DB: define the <popup open={this.state.isContextMenuOpened}> containing a <Context isOpen={this.state.isContextMenuOpened} actions={this.props.actions} selectedItems={this.state.selectedItems}> here */}
                   {backgroundLayer &&
                     React.cloneElement(backgroundLayer, {
                       startDateTimeline: this.getStartDate(),

@@ -14,6 +14,7 @@ import PropTypes from 'prop-types';
 export class ContextMenuActionEntry extends React.Component {
   static propTypes = {
     action: ActionType,
+    selectedItems,
     closeMenu: PropTypes.func,
     // Needed for actions with submenus
     isSubmenuOpened: PropTypes.bool,
@@ -47,9 +48,9 @@ export class ContextMenuActionEntry extends React.Component {
     // With a label from action.label
     // If the action.subActions =>
     //      1. display an submenu arrow
-    //      2. have a <Popup open={this.state.isSubmenuOpen}><ContextMenu actions = action.subActions closeParentMenu="this.props.closeMenu" closeMenu = "this.closeSubmenu"/> <Popup>
+    //      2. have a <Popup open={this.state.isSubmenuOpen}><ContextMenu isOpened={this.state.isSubmenuOpen} actions = action.subActions closeParentMenu="this.props.closeMenu" closeMenu = "this.closeSubmenu"/> <Popup>
     //      3. onHover delegate to parent that will set isSubMenuOpened=true for this entry and isSubMenuOpened=false for others
     // else
-    //      1. onClick => execute action.run(), close the menu this.props.closeMenu()
+    //      1. onClick => execute action.run(selectedItems), close the menu this.props.closeMenu()
   }
 }
