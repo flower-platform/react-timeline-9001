@@ -14,17 +14,38 @@ import PropTypes from 'prop-types';
 export class ContextMenuActionEntry extends React.Component {
   static propTypes = {
     action: ActionType,
+
+    /**
+     * The items (segments) selected in gantt
+     * Are passed as parameters to the 'action.run()' function when the user clicks an action
+     *
+     * @type {Array<object>}
+     */
     selectedItems,
+
+    /**
+     * Function called after the user clicks a runnable action
+     * This is also passed to submenus in closeParentMenu
+     *
+     * @type {Function}
+     */
     closeMenu: PropTypes.func,
-    // Needed for actions with submenus
+
+    /**
+     * Needed for actions with submenus
+     *
+     * @type {boolean}
+     */
     isSubmenuOpened: PropTypes.bool,
+
+    /**
+     * Call this function received from parent component when the submenu action entry is hovered
+     * In order for the parent to close the other opened submenus if any
+     *
+     * @type {function}
+     */
     onHover: PropTypes.func
   };
-
-  // For entries that opens a submenu
-  closeSubmenu() {
-    this.setState({isSubmenuOpened: false});
-  }
 
   constructor(props) {
     this.closeSubmenu = this.closeSubmenu.bind(this);
@@ -35,11 +56,14 @@ export class ContextMenuActionEntry extends React.Component {
 
   componentDidUpdate(prevProps, prevState) {
     const {isSubmenuOpened} = this.props;
+    this.setState({isSubmenuOpened});
+  }
 
-    // TODO DB
-    if (isSubmenuOpened) {
-      this.setState({isSubmenuOpened});
-    }
+  /**
+   * This is passed to the opened submenu for the time when it will need to close because user clicks on a runable action of that submenu
+   */
+  closeSubmenu() {
+    this.setState({isSubmenuOpened: false});
   }
 
   render() {

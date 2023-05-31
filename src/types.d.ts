@@ -51,3 +51,11 @@ export type DragToCreateParam = {
     itemStart: object, // Start for new item
     itemEnd?: object //  End for new item
 }
+
+export type Action = {
+    icon: string,
+    label: string,
+    isVisible: Function,
+    run: Function,
+    subActions: Action[]
+}

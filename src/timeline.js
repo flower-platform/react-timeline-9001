@@ -61,26 +61,20 @@ const EMPTY_GROUP_KEY = 'empty-group';
 
 export const PARENT_ELEMENT = componentId => document.querySelector(`.rct9k-id-${componentId} .parent-div`);
 
-/**
- * Action that will appear in the context menu. Can be of two types:
- * 1. normal actions that executes a 'run' function when they are clicked
- * 2. submenu actions that doesn't run when clicked but instead opens a submenu when mouseOver/Clicked.
- *    It should have the 'subActions' set
- */
 export const ActionType = PropTypes.arrayOf(
   PropTypes.shape({
     icon: PropTypes.string,
     label: PropTypes.string,
     /**
-     * Should return true of false whether or not the action is visible for the seelcted items received as parameter
+     * Should return true of false whether or not the action is visible for the selected items received as parameter
      */
     isVisible: PropTypes.func,
     /**
-     * Receives as parameter the selected items
+     * Function that will be called when user will click this menu entry. Will receives as parameter the current selected items
      */
     run: PropTypes.func,
     /**
-     *
+     * This should be set when needed an action that is not runnable but instead opens a submenu
      */
     subActions: PropTypes.arrayOf(ActionType)
   })
@@ -416,7 +410,14 @@ export default class Timeline extends React.Component {
     onDragToCreateEnded: PropTypes.func,
 
     /**
-     * TODO DB comment
+     * Actions that will fill the right click context menu. Can be of two types:
+     * 1. Normal actions that executes 'action.run' function when they are clicked
+     * 2. Submenu actions that doesn't run when clicked but instead open a submenu when mouseOver/Clicked.
+     *    It should have the 'action.subActions' set
+     *
+     * The action can be visible or not depending the selection. Set the action.isVisible Function for controlling the visibility of the actions
+     *
+     * @type {Array[Action]}
      */
     actions: PropTypes.arrayOf(ActionType)
   };
@@ -570,10 +571,10 @@ export default class Timeline extends React.Component {
 
   componentDidUpdate(prevProps, prevState) {
     const {timelineMode, selectedItems} = this.props;
-    const selectionChange = !_.isEqual(prevProps.selectedItems, selectedItems);
     const timelineModeChange = !_.isEqual(prevProps.timelineMode, timelineMode);
+    const selectionChange = !_.isEqual(prevProps.selectedItems, selectedItems);
 
-    //TODO DB
+    //TODO DB: pass the selectedItems to the state
     // if (selectionChange) {
     //   this.setState({selectedItems});
     // }
@@ -1011,8 +1012,8 @@ export default class Timeline extends React.Component {
         this.props.onInteraction &&
         this.props.onInteraction(Timeline.changeTypes.itemsSelected, selectedItems);
 
-      //TODO DB _map this.setSate({selectedItems: _.map(selectedItems, 'key')})
-      / / / !this.state.dragToCreateMode && this.setState({selectedItems});
+      // don't know why in demo.js was callded a _map function. See when implementing. this.setState({selectedItems: _.map(selectedItems, 'key')})
+      //TODO DB !this.state.dragToCreateMode && this.setState({selectedItems});
 
       if (this.state.dragToCreateMode && this.props.onDragToCreateEnded) {
         // get avaible itemIndex and call the onDragToCreateEnded
@@ -1329,7 +1330,7 @@ export default class Timeline extends React.Component {
       let itemKey = e.target.getAttribute('data-item-index') || e.target.parentElement.getAttribute('data-item-index');
       itemCallback && itemCallback(e, Number(itemKey));
 
-      //TODO DB add/remove from selection.
+      //TODO DB add/remove from selection. On left click or tap (no ctrl click logic as in the old flex gantt)
       // let newSelection = selectedItems.slice();
       // if (e.type == "click" || e.type == "tap") {
       // const {selectedItems} = this.state;
@@ -1342,29 +1343,27 @@ export default class Timeline extends React.Component {
       // } else {
       //   newSelection.push(Number(itemKey));
       // }
-
       // this.setState({selectedItems: newSelection});
+
+      // } else if (e.type == 'contextMenu') {
+      // On right click
+
+      // select the item if not already selected
+      // And open the context menu
+      //
+      // const idx = selectedItems.indexOf(itemKey);
+      // if (idx < 0) {
+      //  newSelection = [itemKey];
+      //  setState(newSelection);
       // }
-      // TODO DB
-      if (e.type == 'contextMenu') {
-        /**
-         * On right click select the item if not already selected
-         * And open the context menu
-         */
-        // const idx = selectedItems.indexOf(itemKey);
-        // if (idx < 0) {
-        //   // add first to selection
-        // newSelection = [itemKey];
-        // setState(newSelection);
-        // }
-        //
-        // TODO DB display the cm ????
-        // get mouse click coordinates -> open a popup with a ContextMenu at those coordinates via state.isContextMenuOpened and state.contextMenuCoordinates. Only if this.props.actions exists and ??? are visible for the selectedItems
-        //
-        // TODO DB : implement a way to for the context menu to notify the timeline to close it if it is empty (no action visible)
-        // pass to the CM the closeMenu() function -> that modifies state.isContextMenuOpened
-        //
-      }
+      //
+      // TODO DB display the cm ????
+      // Only if this.props.actions exists:
+      //    get mouse click coordinates ->
+      //    open a popup with a ContextMenu at those coordinates via state.isContextMenuOpened and state.contextMenuCoordinates.
+      //    Only if this.props.actions exists
+      //
+      // }
     } else {
       //TODO DB if click outside the CM => isContextMenuOpened = false
       let row = e.target.getAttribute('data-row-index');
@@ -1841,7 +1840,10 @@ export default class Timeline extends React.Component {
                     shallowUpdateCheck={shallowUpdateCheck}
                     forceRedrawFunc={forceRedrawFunc}
                   />
-                  {/* TODO DB: define the <popup open={this.state.isContextMenuOpened}> containing a <Context isOpen={this.state.isContextMenuOpened} actions={this.props.actions} selectedItems={this.state.selectedItems}> here */}
+                  {/**
+                   * TODO DB: see how to position the CM
+                   */}
+                  {/* TODO DB: define the <Popup open={this.state.isContextMenuOpened} coordinates={contextMenuCoordinates}/> containing a <ContextMenu isOpen={this.state.isContextMenuOpened} actions={this.props.actions} selectedItems={this.state.selectedItems}> here */}
                   {backgroundLayer &&
                     React.cloneElement(backgroundLayer, {
                       startDateTimeline: this.getStartDate(),
