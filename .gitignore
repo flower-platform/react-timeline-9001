@@ -23,4 +23,6 @@ node_modules/
 .lvimrc
 .DS_Store
 /.idea
-/storybook-static/
+
+# Storybook 
+storybook-static/
