@@ -62,6 +62,35 @@ const EMPTY_GROUP_KEY = 'empty-group';
 export const PARENT_ELEMENT = componentId => document.querySelector(`.rct9k-id-${componentId} .parent-div`);
 
 /**
+ * Action that will appear in the context menu. Can be of two types:
+ * 1. normal actions that executes a 'run' function when they are clicked
+ * 2. submenu actions that doesn't run when clicked but instead opens a submenu when mouseOver/Clicked.
+ *    It should have the 'subActions' set
+ */
+export const ActionType = PropTypes.arrayOf(
+  PropTypes.shape({
+    icon: PropTypes.string,
+    label: PropTypes.string,
+    /**
+     * Should return true of false whether or not the action is visible for the seelcted items received as parameter
+     */
+    isVisible: PropTypes.func,
+    /**
+     * Receives as parameter the selected items
+     */
+    run: PropTypes.func,
+    /**
+     * Will be passed to the actions
+     */
+    selectedItems: PropTypes.array
+    /**
+     *
+     */
+    // subActions: PropTypes.arrayOf(ActionType)
+  })
+);
+
+/**
  * Timeline class
  * @extends React.Component<Timeline.propTypes>
  * @extends React.Component<Timeline.propTypes>
@@ -388,7 +417,9 @@ export default class Timeline extends React.Component {
      * @param { DragToCreateParam } param
      * @type { Function }
      */
-    onDragToCreateEnded: PropTypes.func
+    onDragToCreateEnded: PropTypes.func,
+
+    actions: PropTypes.arrayOf(ActionType)
   };
 
   static defaultProps = {
@@ -432,7 +463,8 @@ export default class Timeline extends React.Component {
     itemRendererDefaultProps: {},
     backgroundLayer: null,
     onDragToCreateStarted: undefined,
-    onDragToCreateEnded: undefined
+    onDragToCreateEnded: undefined,
+    actions: []
   };
 
   /**
@@ -541,6 +573,11 @@ export default class Timeline extends React.Component {
     const {timelineMode, selectedItems} = this.props;
     const selectionChange = !_.isEqual(prevProps.selectedItems, selectedItems);
     const timelineModeChange = !_.isEqual(prevProps.timelineMode, timelineMode);
+
+    //TODO DB
+    // if (selectionChange) {
+    //   this.setState({selectedItems});
+    // }
 
     if (timelineModeChange || selectionChange) {
       const canSelect = Timeline.isBitSet(Timeline.TIMELINE_MODES.SELECT, timelineMode);
@@ -974,6 +1011,10 @@ export default class Timeline extends React.Component {
       !this.state.dragToCreateMode &&
         this.props.onInteraction &&
         this.props.onInteraction(Timeline.changeTypes.itemsSelected, selectedItems);
+
+      //TODO DB _map {selectedItems: _.map(changes, 'key')}
+      / / / !this.state.dragToCreateMode && this.setState({selectedItems});
+
       if (this.state.dragToCreateMode && this.props.onDragToCreateEnded) {
         // get avaible itemIndex and call the onDragToCreateEnded
         const itemIndex = Math.max(...Object.keys(this.itemRowMap)) + 1;
@@ -1147,6 +1188,7 @@ export default class Timeline extends React.Component {
         .on('resizestart', e => {
           const selected =
             this.props.onInteraction &&
+            // TODO DB change this.props => this.state ?? Move also the resize mechanism from demo to gantt??
             this.props.onInteraction(Timeline.changeTypes.resizeStart, null, this.props.selectedItems);
           _.forEach(selected, id => {
             let domItem = this._gridDomNode.querySelector("span[data-item-index='" + id + "'");
@@ -1260,6 +1302,14 @@ export default class Timeline extends React.Component {
         });
     }
     if (canSelect) {
+      window.oncontextmenu = e => {
+        // on right click if drag in progress cancel it
+        e.preventDefault();
+        if (this._selectBox.isStart()) {
+          this.setState({dragCancel: true});
+          this._selectBox.end();
+        }
+      };
       this._selectRectangleInteractable
         .draggable({
           enabled: true,
@@ -1287,7 +1337,39 @@ export default class Timeline extends React.Component {
     if (e.target.hasAttribute('data-item-index') || e.target.parentElement.hasAttribute('data-item-index')) {
       let itemKey = e.target.getAttribute('data-item-index') || e.target.parentElement.getAttribute('data-item-index');
       itemCallback && itemCallback(e, Number(itemKey));
+
+      //TODO DB add/remove from selection.
+      // let newSelection = selectedItems.slice();
+      // if (e.type == "click" || e.type == "tap") {
+      // const {selectedItems} = this.state;
+
+      // // If the item is already selected, then unselected
+      // const idx = selectedItems.indexOf(itemKey);
+      // if (idx > -1) {
+      //   // Splice modifies in place and returns removed elements
+      //   newSelection.splice(idx, 1);
+      // } else {
+      //   newSelection.push(Number(itemKey));
+      // }
+
+      // this.setState({selectedItems: newSelection});
+      // }
+      // TODO DB
+      if (e.type == 'contextMenu') {
+        // const idx = selectedItems.indexOf(itemKey);
+        // if (idx < 0) {
+        //   // add first to selection
+        //   newSelection.push(Number(itemKey));
+        // }
+        // TODO DB display the cm ????
+        // get mouse click coordinates -> open a popup with a ContextMenu at those coordinates via state.isContextMenuOpened and state.contextMenuCoordinates. Only if this.props.actions exists and ??? are visible for the selectedItems
+        //
+        // TODO DB : implement a way to for the context menu to notify the timeline to close it if it is empty (no action visible)
+        // pass to the CM the closeMenu() function -> that modifies state.isContextMenuOpened
+        //
+      }
     } else {
+      //TODO DB if click outside the CM => isContextMenuOpened = false
       let row = e.target.getAttribute('data-row-index');
       let clickedTime = getTimeAtPixel(
         e.clientX - this.calculateLeftOffset(),
@@ -1760,6 +1842,7 @@ export default class Timeline extends React.Component {
                     shallowUpdateCheck={shallowUpdateCheck}
                     forceRedrawFunc={forceRedrawFunc}
                   />
+                  {/* TODO DB: define the <popup> containing a <Context menu> here */}
                   {backgroundLayer &&
                     React.cloneElement(backgroundLayer, {
                       startDateTimeline: this.getStartDate(),
