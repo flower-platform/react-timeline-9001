@@ -55,6 +55,7 @@ export const timelineTestids = testids;
 
 // startsWith polyfill for IE11 support
 import 'core-js/fn/string/starts-with';
+import {GanttSelectionComponent} from './components/GanttSelectionComponent';
 
 const SINGLE_COLUMN_LABEL_PROPERTY = 'title';
 const EMPTY_GROUP_KEY = 'empty-group';
@@ -464,6 +465,7 @@ export default class Timeline extends React.Component {
 
   constructor(props) {
     super(props);
+    this.selectionComponent = React.createRef();
     this.selecting = false;
     this.state = {
       selection: [],
@@ -974,6 +976,12 @@ export default class Timeline extends React.Component {
       !this.state.dragToCreateMode &&
         this.props.onInteraction &&
         this.props.onInteraction(Timeline.changeTypes.itemsSelected, selectedItems);
+
+      // delegate the selection change to the selection component
+      !this.state.dragToCreateMode &&
+        !this.props.selectedItems &&
+        this.selectionComponent.setSelectedItems(selectedItems);
+
       if (this.state.dragToCreateMode && this.props.onDragToCreateEnded) {
         // get avaible itemIndex and call the onDragToCreateEnded
         const itemIndex = Math.max(...Object.keys(this.itemRowMap)) + 1;
@@ -1020,7 +1028,11 @@ export default class Timeline extends React.Component {
           let selections = [];
           const animatedItems =
             this.props.onInteraction &&
-            this.props.onInteraction(Timeline.changeTypes.dragStart, null, this.props.selectedItems);
+            this.props.onInteraction(
+              Timeline.changeTypes.dragStart,
+              null,
+              this.props.selectedItems ? this.props.selectedItems : this.selectionComponent.getSelectedItems()
+            );
 
           _.forEach(animatedItems, id => {
             let domItem = this._gridDomNode.querySelector("span[data-item-index='" + id + "'");
@@ -1147,7 +1159,11 @@ export default class Timeline extends React.Component {
         .on('resizestart', e => {
           const selected =
             this.props.onInteraction &&
-            this.props.onInteraction(Timeline.changeTypes.resizeStart, null, this.props.selectedItems);
+            this.props.onInteraction(
+              Timeline.changeTypes.resizeStart,
+              null,
+              this.props.selectedItems ? this.props.selectedItems : this.selectionComponent.getSelectedItems()
+            );
           _.forEach(selected, id => {
             let domItem = this._gridDomNode.querySelector("span[data-item-index='" + id + "'");
             if (domItem) {
@@ -1287,6 +1303,14 @@ export default class Timeline extends React.Component {
     if (e.target.hasAttribute('data-item-index') || e.target.parentElement.hasAttribute('data-item-index')) {
       let itemKey = e.target.getAttribute('data-item-index') || e.target.parentElement.getAttribute('data-item-index');
       itemCallback && itemCallback(e, Number(itemKey));
+      if (!this.props.selectedItems) {
+        // Calculate selection change by delegating to selection component
+        if (e.type == 'click' || e.type == 'tap') {
+          this.selectionComponent.onItemClickHandler(itemKey);
+        } else if (e.type == 'contextMenu') {
+          this.selectionComponent.onItemRightClickHandler(itemKey);
+        }
+      }
     } else {
       let row = e.target.getAttribute('data-row-index');
       let clickedTime = getTimeAtPixel(
@@ -1299,6 +1323,8 @@ export default class Timeline extends React.Component {
       //const roundedStartMinutes = Math.round(clickedTime.minute() / this.props.snap) * this.props.snap; // I dont know what this does
       let snappedClickedTime = timeSnap(clickedTime, this.getTimelineSnap() * 60);
       rowCallback && rowCallback(e, row, clickedTime, snappedClickedTime);
+
+      !this.props.selectedItems && this.selectionComponent.onOutsideClickHandler();
     }
   };
 
@@ -1357,7 +1383,7 @@ export default class Timeline extends React.Component {
               width,
               this.props.itemHeight,
               this.props.itemRenderer,
-              canSelect ? this.props.selectedItems : [],
+              canSelect ? (this.props.selectedItems ? this.props.selectedItems : this.state.selectedItems) : [],
               this.props.itemRendererDefaultProps,
               this.getStartFromItem,
               this.getEndFromItem
@@ -1706,78 +1732,88 @@ export default class Timeline extends React.Component {
             const bodyHeight = calculateHeight(this.state.height);
             const timebarHeight = getTimebarHeight();
             return (
-              <div
-                ref={measureRef}
-                className={divCssClass}
-                onContextMenu={e => {
-                  if (this._selectBox.isStart()) {
-                    // on right click if drag in progress cancel it
-                    e.preventDefault();
-                    this.setState({dragCancel: true});
-                    this._selectBox.end();
-                  }
-                }}>
-                <div className="parent-div" onMouseMove={this.mouseMoveFunc}>
-                  <SelectBox
-                    ref={this.select_ref_callback}
-                    className={this.state.dragToCreateMode ? 'rct9k-selector-outer-add' : ''}
-                  />
-                  <Timebar
-                    cursorTime={this.getCursor()}
-                    start={this.getStartDate()}
-                    end={this.getEndDate()}
-                    width={this.state.width}
-                    leftOffset={leftOffset}
-                    selectedRanges={this.state.selection}
-                    groupTitleRenderer={groupTitleRenderer}
-                    tableColumns={tableColumns}
-                    groupOffset={groupOffset}
-                    setVerticalGridLines={this.setVerticalGridLines}
-                    {...varTimebarProps}
-                  />
-                  {markers.map(m => (
-                    <Marker
-                      key={m.key}
-                      height={this.state.height}
-                      top={0}
-                      date={0}
-                      shouldUpdate={true}
-                      calculateHorizontalPosition={() => {
-                        return {left: m.left};
-                      }}
-                      className="rct9k-marker-overlay"
+              <GanttSelectionComponent
+                ref={this.selectionComponent}
+                onSelectionChangeHandler={this.onSelectionChangeHandler()}>
+                <div
+                  ref={measureRef}
+                  className={divCssClass}
+                  onContextMenu={e => {
+                    if (this._selectBox.isStart()) {
+                      // on right click if drag in progress cancel it
+                      e.preventDefault();
+                      this.setState({dragCancel: true});
+                      this._selectBox.end();
+                    }
+                  }}>
+                  <div className="parent-div" onMouseMove={this.mouseMoveFunc}>
+                    <SelectBox
+                      ref={this.select_ref_callback}
+                      className={this.state.dragToCreateMode ? 'rct9k-selector-outer-add' : ''}
                     />
-                  ))}
-                  <TimelineBody
-                    width={this.state.width}
-                    columnWidth={columnWidth(this.state.width)}
-                    height={bodyHeight}
-                    rowHeight={this.rowHeight}
-                    rowCount={this.state.groups.length}
-                    columnCount={(tableColumns && tableColumns.length > 0 ? tableColumns.length : 1) + 1}
-                    cellRenderer={this.cellRenderer(this.getTimelineWidth(this.state.width))}
-                    grid_ref_callback={this.grid_ref_callback}
-                    shallowUpdateCheck={shallowUpdateCheck}
-                    forceRedrawFunc={forceRedrawFunc}
-                  />
-                  {backgroundLayer &&
-                    React.cloneElement(backgroundLayer, {
-                      startDateTimeline: this.getStartDate(),
-                      endDateTimeline: this.getEndDate(),
-                      width: this.state.width,
-                      leftOffset: leftOffset,
-                      height: bodyHeight,
-                      topOffset: timebarHeight,
-                      verticalGridLines: this.state.verticalGridLines
-                    })}
-                  <div className="rct9k-menu-div">{this.renderMenuButton()}</div>
+                    <Timebar
+                      cursorTime={this.getCursor()}
+                      start={this.getStartDate()}
+                      end={this.getEndDate()}
+                      width={this.state.width}
+                      leftOffset={leftOffset}
+                      selectedRanges={this.state.selection}
+                      groupTitleRenderer={groupTitleRenderer}
+                      tableColumns={tableColumns}
+                      groupOffset={groupOffset}
+                      setVerticalGridLines={this.setVerticalGridLines}
+                      {...varTimebarProps}
+                    />
+                    {markers.map(m => (
+                      <Marker
+                        key={m.key}
+                        height={this.state.height}
+                        top={0}
+                        date={0}
+                        shouldUpdate={true}
+                        calculateHorizontalPosition={() => {
+                          return {left: m.left};
+                        }}
+                        className="rct9k-marker-overlay"
+                      />
+                    ))}
+                    <TimelineBody
+                      width={this.state.width}
+                      columnWidth={columnWidth(this.state.width)}
+                      height={bodyHeight}
+                      rowHeight={this.rowHeight}
+                      rowCount={this.state.groups.length}
+                      columnCount={(tableColumns && tableColumns.length > 0 ? tableColumns.length : 1) + 1}
+                      cellRenderer={this.cellRenderer(this.getTimelineWidth(this.state.width))}
+                      grid_ref_callback={this.grid_ref_callback}
+                      shallowUpdateCheck={shallowUpdateCheck}
+                      forceRedrawFunc={forceRedrawFunc}
+                    />
+                    {backgroundLayer &&
+                      React.cloneElement(backgroundLayer, {
+                        startDateTimeline: this.getStartDate(),
+                        endDateTimeline: this.getEndDate(),
+                        width: this.state.width,
+                        leftOffset: leftOffset,
+                        height: bodyHeight,
+                        topOffset: timebarHeight,
+                        verticalGridLines: this.state.verticalGridLines
+                      })}
+                    <div className="rct9k-menu-div">{this.renderMenuButton()}</div>
+                  </div>
                 </div>
-              </div>
+              </GanttSelectionComponent>
             );
           }}
         </Measure>
       </>
     );
+  }
+
+  onSelectionChangeHandler(selectedItems) {
+    // This is because the selectedItems are not kept in the state of the gantt but in the selection component
+    // TODO DB ask CS:  as alternative we can duplicate the selected items in this component state thus the changes will be automatically detected
+    this.forceUpdate();
   }
 
   ////////////////////////////////////////////////////////////////////////////////////////
