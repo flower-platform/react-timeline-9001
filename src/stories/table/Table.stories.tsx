@@ -12,6 +12,19 @@ export default {
     component: Timeline
 };
 
+export const GanttWithoutTable: ComponentStory<typeof Timeline> = () => {
+
+    return (
+        <Fragment>
+            <Timeline startDate={d('2018-09-20')} endDate={d('2018-09-21')} groups={manyHumanResources} items={manyTasks}/>
+        </Fragment>
+    );
+}
+
+GanttWithoutTable.parameters = {
+    scenarios: [tableScenarios.propertyTable]
+}
+
 var emphasizeStyle = { color: 'red' };
 
 const headerStyle = {
