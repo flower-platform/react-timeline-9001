@@ -251,7 +251,7 @@ export default class Timebar extends React.Component {
    * @returns {Object} Timebar component
    */
   render() {
-    const {cursorTime, tableColumns} = this.props;
+    const {cursorTime} = this.props;
     const {topBarComponent, bottomBarComponent} = this.state;
     const GroupTitleRenderer = this.props.groupTitleRenderer;
 
@@ -358,11 +358,6 @@ Timebar.propTypes = {
   timeFormats: PropTypes.object,
 
   /**
-   * @type { Array.<Column> }
-   */
-  tableColumns: PropTypes.arrayOf(PropTypes.object),
-
-  /**
    * It's passed by parent. The `vertical grid` uses the same intervals as the bottom timebar, it is redundant to calculated them again.
    * This callback passes these intervals to parent.
    * @type { Function }
@@ -375,7 +370,6 @@ Timebar.defaultProps = {
   groupTitleRenderer: GroupHeaderRenderer,
   leftOffset: 0,
   timeFormats: defaultTimebarFormat,
-  tableColumns: [],
   top_resolution: undefined,
   bottom_resolution: undefined,
   leftOffset: undefined,

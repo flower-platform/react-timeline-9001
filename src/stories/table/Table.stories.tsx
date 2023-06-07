@@ -22,88 +22,7 @@ const headerStyle = {
     border: 'none'
 };
 
-export const OverridingDefaultColumnRenderers: ComponentStory<typeof Timeline> = () => {
-    /**
-    * Need to extend the the @GroupRenderer in order to have acces to group property
-    */
-    class TitleColumnCellRenderer extends GroupRenderer {
-        render() {
-            return <DataCell style={emphasizeStyle}>{this.props.group ? this.props.group.title : ""}</DataCell>;
-        }
-    }
-
-    class TitleColumnHeaderRenderer extends React.Component {
-        render() {
-            return <DataCell style={emphasizeStyle}>Name</DataCell>;
-        }
-    }
-    return <Timeline startDate={d('2018-09-20')} endDate={d('2018-09-21')} groups={[...manyHumanResources]} items={[...manyTasks]}
-        groupRenderer={TitleColumnCellRenderer} groupTitleRenderer={TitleColumnHeaderRenderer} />
-}
-
-OverridingDefaultColumnRenderers.parameters = {
-    scenarios: [tableScenarios.propertyGroupRenderer, tableScenarios.propertyGroupTitleRenderer]
-};
-
-export const ProvidingColumnsDescriptors: ComponentStory<typeof Timeline> = () => {
-    /**
-     * Need to extend the the @GroupRenderer in order to have acces to group property
-     * 'GroupRenderer' contains additional check for any empty rows added in for filling in the empty space at the bottom of the table
-     */
-    class JobColumnCellRenderer extends GroupRenderer {
-        render() {
-            return <span>{this.props.group ? this.props.group.job : "" }</span>;
-        }
-    }
-
-    class JobColumnHeaderRenderer extends React.Component {
-        render() {
-            return <span>Description</span>;
-        }
-    }
-
-    const tableColumns = [
-        // default renderers
-        {
-            width: 100,
-            headerLabel: 'Title',
-            labelProperty: 'title'
-        },
-        // custom renderers: react elements
-        {
-            width: 150,
-            cellRenderer: <DataCell><Checkbox> Checkbox </Checkbox></DataCell>,
-            headerRenderer: (
-                <span>
-                    <Icon type="check-circle" /> <span>Custom check</span>
-                </span>
-            )
-        },
-        // custom renderers: class component
-        {
-            width: 100,
-            headerRenderer: JobColumnHeaderRenderer,
-            cellRenderer: JobColumnCellRenderer
-        }
-    ];
-    return (
-
-        <><Alert message={<>
-            The "Title" column descriptor doesn't have any custom  <code>headerRenderer</code> or <code>cellRenderer</code>.
-            In this case the default column renderers are used.
-        </>} /><Timeline startDate={d('2018-09-20')} endDate={d('2018-09-21')} groups={[...manyHumanResources]} items={[...manyTasks]} tableColumns={tableColumns} />
-        </>
-    );
-}
-
-ProvidingColumnsDescriptors.parameters = {
-    scenarios: [tableScenarios.propertyColumns, tableScenarios.propertyColumnsCellRenderer,
-    tableScenarios.propertyColumnsHeaderLabel, tableScenarios.propertyColumnsHeaderRenderer,
-    tableScenarios.propertyColumnsLabelProperty, tableScenarios.propertyColumnsWidth]
-};
-
 export const ProvidingCustomTable: ComponentStory<typeof Timeline> = () => {
-
     class TitleCellRenderer extends GroupRenderer {
         render() {
             // Additional check for any empty rows added in for filling in the empty space at the bottom of the table
@@ -126,8 +45,6 @@ export const ProvidingCustomTable: ComponentStory<typeof Timeline> = () => {
     return (
         <Fragment>
             <Timeline startDate={d('2018-09-20')} endDate={d('2018-09-21')} groups={manyHumanResources} items={manyTasks}
-            // TODO DB: remove this when fix the item renderer default properties problem
-            itemRenderer={ItemRenderer}
                 table={<Table 
                             rowHeight={50}
                             width={DEMO_TABLE_WIDTH}
@@ -144,7 +61,7 @@ export const ProvidingCustomTable: ComponentStory<typeof Timeline> = () => {
                             <Column
                                 key={1}
                                 columnKey={1}
-                                width={50}
+                                width={60}
                                 header={<DataCell style={headerStyle}><Icon type="check-circle" /> <span>Custom check</span></DataCell>}
                                 cell={<CheckBoxCellRenderer/>}
                             />

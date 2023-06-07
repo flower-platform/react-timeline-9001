@@ -32,8 +32,7 @@
 }
 
 .story-custom-row {
-  border: 1px solid #94b9cf !important;
-  border-top: 0 !important;
+  border-bottom: 1px solid #94b9cf !important;
 }
 
 .story-custom-row-even {

@@ -122,7 +122,7 @@
   box-sizing: border-box;
   border: 1px solid #ccc !important;
   border-top: 0 !important;
-  border-left: 0;
+  border-left: 0 !important;
 }
 
 .rct9k-row-even {
@@ -254,13 +254,6 @@
   height: 100%;
   display: flex;
   flex-direction: column;
-}
-
-.public_fixedDataTable_scrollbarSpacer,
-.public_fixedDataTable_header > .public_fixedDataTable_header,
-.public_fixedDataTable_scrollbarSpacer,
-.public_fixedDataTable_header .public_fixedDataTableCell_main {
-  background-image: linear-gradient(#fff, #fff) !important;
 }
 
 .Resizer.vertical {
