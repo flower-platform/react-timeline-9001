@@ -65,7 +65,7 @@ class CheckBoxCellRenderer extends GroupRenderer {
         <Checkbox> Checkbox </Checkbox>
       </DataCell>
     ) : (
-      <Fragment />
+      ''
     );
   }
 }

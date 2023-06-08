@@ -11,7 +11,6 @@ import {Button, Popup} from 'semantic-ui-react';
 import {Group, InteractOption, Item, RowLayer} from './index';
 
 import {TestsAreDemoCheat, createTestids} from '@famiprog-foundation/tests-are-demo';
-import {Table, Column as TableColumn} from 'fixed-data-table-2';
 import {GroupRenderer} from './components/GroupRenderer';
 import {Marker} from './components/Marker';
 import TimelineBody from './components/body';
@@ -557,6 +556,7 @@ export default class Timeline extends React.Component {
 
     this.cellRenderer = this.cellRenderer.bind(this);
     this.rowHeight = this.rowHeight.bind(this);
+    this.tableRowHeight = this.tableRowHeight.bind(this);
     this.setTimeMap = this.setTimeMap.bind(this);
     this.getItem = this.getItem.bind(this);
     this.changeGroup = this.changeGroup.bind(this);
@@ -1477,6 +1477,24 @@ export default class Timeline extends React.Component {
   }
 
   /**
+   * The height of the last empty row added to fill in the remaining space is different in gantt and in table because:
+   * In gantt the computed available space for rows is:
+   *        componentHeight - headerheight
+   * But in fixed data table the computed available space for the rows is:
+   *        Math.round(componentHeight) - headerheight - 2 * BORDER_HEIGHT (see roughHeights.js)
+   *
+   * If we have passed the same row height for table as for gantt a vertical scroll bar appeared (only for scrolling 2 or 3 px overflow)
+   */
+  tableRowHeight(index) {
+    var tableRowHeight = this.rowHeight({index});
+    let group = _.find(this.state.groups, g => g.id == index);
+    if (group.rowHeight && group.key.startsWith(EMPTY_GROUP_KEY)) {
+      tableRowHeight = Math.round(tableRowHeight) - 2;
+    }
+    return tableRowHeight;
+  }
+
+  /**
    * Set the grid ref.
    * @param {Object} reactComponent Grid react element
    */
@@ -1789,8 +1807,6 @@ export default class Timeline extends React.Component {
       return Math.max(height - getTimebarHeight(), 0);
     }
 
-    const rowsHeights = this.state.groups.map((_, index) => this.rowHeight({index}));
-
     {
       /* Instead of <Measure .../>, in the past <AutoSizer ... /> was used. However it would round with/height, which generated and endless
     scrollbar appear/disappear, depending on the parent, depending on the resolution. */
@@ -1826,18 +1842,13 @@ export default class Timeline extends React.Component {
                     <TableWithStyle
                       table={React.cloneElement(this.props.table, {
                         rowsCount: this.state.groups.length,
-                        // Table can contain "buffered rows" that fill the empty space left, if any
-                        rowHeightGetter: rowIndex =>
-                          rowIndex < rowsHeights.length ? rowsHeights[rowIndex] : DEFAULT_ITEM_HEIGHT,
+                        rowHeightGetter: this.tableRowHeight,
                         rowHeight: this.props.itemHeight,
                         ref: this.table_ref_callback,
                         touchScrollEnabled: true,
                         onVerticalScroll: this.handleScrollTable,
                         scrollTop: this.state.scrollTop,
                         headerHeight: timebarHeight,
-                        // TODO DB: A vertical scroll appears (only for scrolling 3 px overflow)
-                        // hint: if we add here 3 that scollbar disappear
-                        // Maybe it is due to the fact that we set 3 things: rowHeightGetter, height, and also rowCount
                         height: this.state.screenHeight,
                         width: this.state.tableWidth,
                         rowClassNameGetter: rowIndex =>
