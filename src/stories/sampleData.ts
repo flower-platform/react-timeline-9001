@@ -1,5 +1,5 @@
 import moment from 'moment';
-import { Group, Item } from '../index';
+import { Group, Item } from '../types';
 
 ////////////////////////////////////////////////////////
 // utility functions used for hardcoding our sample data
