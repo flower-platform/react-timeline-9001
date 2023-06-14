@@ -39,6 +39,7 @@ import {GroupRenderer} from './components/GroupRenderer';
 import TimelineBody from './components/body';
 import {Marker} from './components/Marker';
 import {createTestids, TestsAreDemoCheat} from '@famiprog-foundation/tests-are-demo';
+import {SelectionHolder} from './utils/SelectionHolder';
 
 const testids = createTestids('Timeline', {
   menu: '',
@@ -537,11 +538,15 @@ export default class Timeline extends React.Component {
     this.mouseMoveFunc = this.mouseMoveFunc.bind(this);
     this.getCursor = this.getCursor.bind(this);
     this.setVerticalGridLines = this.setVerticalGridLines.bind(this);
+    this.selectionChangeHandler = this.selectionChangeHandler.bind();
 
     const canSelect = Timeline.isBitSet(Timeline.TIMELINE_MODES.SELECT, this.props.timelineMode);
     const canDrag = Timeline.isBitSet(Timeline.TIMELINE_MODES.DRAG, this.props.timelineMode);
     const canResize = Timeline.isBitSet(Timeline.TIMELINE_MODES.RESIZE, this.props.timelineMode);
     this.setUpDragging(canSelect, canDrag, canResize);
+
+    this.selectionHolder = new SelectionHolder();
+    this.selectionHolder.selectionChangedHandler = this.selectionChangedHandler;
   }
 
   componentDidMount() {
@@ -571,13 +576,8 @@ export default class Timeline extends React.Component {
 
   componentDidUpdate(prevProps, prevState) {
     const {timelineMode, selectedItems} = this.props;
-    const timelineModeChange = !_.isEqual(prevProps.timelineMode, timelineMode);
     const selectionChange = !_.isEqual(prevProps.selectedItems, selectedItems);
-
-    //TODO DB: pass the selectedItems to the state
-    // if (selectionChange) {
-    //   this.setState({selectedItems});
-    // }
+    const timelineModeChange = !_.isEqual(prevProps.timelineMode, timelineMode);
 
     if (timelineModeChange || selectionChange) {
       const canSelect = Timeline.isBitSet(Timeline.TIMELINE_MODES.SELECT, timelineMode);
@@ -886,7 +886,7 @@ export default class Timeline extends React.Component {
    * @param {number} clientX
    * @param {number} clientY
    */
-  onDragStartSelect(clientX, clientY) {
+  #onDragStartSelect(clientX, clientY) {
     const nearestRowObject = getNearestRowObject(clientX, clientY);
     const startY = adjustRowTopPositionToViewport(nearestRowObject, nearestRowObject.getBoundingClientRect().y);
     // Add 2 to startY because on some occasions/browsers, when using document.elementsFromPonint(), it will return the wrong row if startY is used.
@@ -913,7 +913,7 @@ export default class Timeline extends React.Component {
    * @param {number} clientY
    * @param {number} startXElement
    */
-  onDragMoveSelect(clientX, clientY, startXElement) {
+  #onDragMoveSelect(clientX, clientY, startXElement) {
     if (this.state.dragCancel) {
       // do nothing if drag is canceled
       return;
@@ -964,7 +964,7 @@ export default class Timeline extends React.Component {
     }
   }
 
-  onDragEndSelect() {
+  #onDragEndSelect(event) {
     if (this.state.dragCancel) {
       // only reset dragCancel on dragend if drag is canceled
       this.setState({dragCancel: false});
@@ -1012,8 +1012,10 @@ export default class Timeline extends React.Component {
         this.props.onInteraction &&
         this.props.onInteraction(Timeline.changeTypes.itemsSelected, selectedItems);
 
-      // don't know why in demo.js was callded a _map function. See when implementing. this.setState({selectedItems: _.map(selectedItems, 'key')})
-      //TODO DB !this.state.dragToCreateMode && this.setState({selectedItems});
+      // delegate the selection change to the selection component
+      !this.state.dragToCreateMode &&
+        !this.props.selectedItems &&
+        this.selectionHolder.addRemoveItems(selectedItems, event);
 
       if (this.state.dragToCreateMode && this.props.onDragToCreateEnded) {
         // get avaible itemIndex and call the onDragToCreateEnded
@@ -1061,7 +1063,11 @@ export default class Timeline extends React.Component {
           let selections = [];
           const animatedItems =
             this.props.onInteraction &&
-            this.props.onInteraction(Timeline.changeTypes.dragStart, null, this.props.selectedItems);
+            this.props.onInteraction(
+              Timeline.changeTypes.dragStart,
+              null,
+              this.props.selectedItems ? this.props.selectedItems : this.selectionHolder.selectedItems
+            );
 
           _.forEach(animatedItems, id => {
             let domItem = this._gridDomNode.querySelector("span[data-item-index='" + id + "'");
@@ -1188,8 +1194,11 @@ export default class Timeline extends React.Component {
         .on('resizestart', e => {
           const selected =
             this.props.onInteraction &&
-            // TODO DB change this.props => this.state ?? Move also the resize mechanism from demo to gantt??
-            this.props.onInteraction(Timeline.changeTypes.resizeStart, null, this.props.selectedItems);
+            this.props.onInteraction(
+              Timeline.changeTypes.resizeStart,
+              null,
+              this.props.selectedItems ? this.props.selectedItems : this.selectionHolder.selectedItems
+            );
           _.forEach(selected, id => {
             let domItem = this._gridDomNode.querySelector("span[data-item-index='" + id + "'");
             if (domItem) {
@@ -1309,13 +1318,14 @@ export default class Timeline extends React.Component {
         })
         .styleCursor(false)
         .on('dragstart', e => {
-          this.onDragStartSelect(e.clientX, e.clientY);
+          this.#onDragStartSelect(e.clientX, e.clientY);
         })
         .on('dragmove', e => {
-          this.onDragMoveSelect(e.clientX, e.clientY, e.page.x);
+          this.#onDragMoveSelect(e.clientX, e.clientY, e.page.x);
         })
         .on('dragend', e => {
           this.onDragEndSelect();
+          this.#onDragEndSelect(e);
         });
     }
   }
@@ -1329,43 +1339,15 @@ export default class Timeline extends React.Component {
     if (e.target.hasAttribute('data-item-index') || e.target.parentElement.hasAttribute('data-item-index')) {
       let itemKey = e.target.getAttribute('data-item-index') || e.target.parentElement.getAttribute('data-item-index');
       itemCallback && itemCallback(e, Number(itemKey));
-
-      //TODO DB add/remove from selection. On left click or tap (no ctrl click logic as in the old flex gantt)
-      // let newSelection = selectedItems.slice();
-      // if (e.type == "click" || e.type == "tap") {
-      // const {selectedItems} = this.state;
-
-      // // If the item is already selected, then unselected
-      // const idx = selectedItems.indexOf(itemKey);
-      // if (idx > -1) {
-      //   // Splice modifies in place and returns removed elements
-      //   newSelection.splice(idx, 1);
-      // } else {
-      //   newSelection.push(Number(itemKey));
-      // }
-      // this.setState({selectedItems: newSelection});
-
-      // } else if (e.type == 'contextMenu') {
-      // On right click
-
-      // select the item if not already selected
-      // And open the context menu
-      //
-      // const idx = selectedItems.indexOf(itemKey);
-      // if (idx < 0) {
-      //  newSelection = [itemKey];
-      //  setState(newSelection);
-      // }
-      //
-      // TODO DB display the cm ????
-      // Only if this.props.actions exists:
-      //    get mouse click coordinates ->
-      //    open a popup with a ContextMenu at those coordinates via state.isContextMenuOpened and state.contextMenuCoordinates.
-      //    Only if this.props.actions exists
-      //
-      // }
+      if (!this.props.selectedItems) {
+        // Calculate new selection by delegating to selection component
+        if (e.type == 'click' || e.type == 'tap') {
+          this.selectionHolder.addRemoveItems([itemKey], e);
+        } else if (e.type == 'contextMenu') {
+          this.selectionHolder.addRemoveItems([itemKey], e);
+        }
+      }
     } else {
-      //TODO DB if click outside the CM => isContextMenuOpened = false
       let row = e.target.getAttribute('data-row-index');
       let clickedTime = getTimeAtPixel(
         e.clientX - this.calculateLeftOffset(),
@@ -1377,6 +1359,8 @@ export default class Timeline extends React.Component {
       //const roundedStartMinutes = Math.round(clickedTime.minute() / this.props.snap) * this.props.snap; // I dont know what this does
       let snappedClickedTime = timeSnap(clickedTime, this.getTimelineSnap() * 60);
       rowCallback && rowCallback(e, row, clickedTime, snappedClickedTime);
+
+      !this.props.selectedItems && this.selectionHolder.addRemoveItems([], e);
     }
   };
 
@@ -1435,7 +1419,11 @@ export default class Timeline extends React.Component {
               width,
               this.props.itemHeight,
               this.props.itemRenderer,
-              canSelect ? this.props.selectedItems : [],
+              canSelect
+                ? this.props.selectedItems
+                  ? this.props.selectedItems
+                  : this.selectionHolder.selectedItems
+                : [],
               this.props.itemRendererDefaultProps,
               this.getStartFromItem,
               this.getEndFromItem
@@ -1775,9 +1763,7 @@ export default class Timeline extends React.Component {
         <Measure
           bounds
           onResize={contentRect => {
-            const width = contentRect.bounds ? contentRect.bounds.width : 0;
-            const height = contentRect.bounds ? contentRect.bounds.height : 0;
-            const config = {width, height};
+            const config = {width: contentRect.bounds?.width || 0, height: contentRect.bounds?.height || 0};
             this.setState(config);
             this.refreshGrid(config);
           }}>
@@ -1864,6 +1850,12 @@ export default class Timeline extends React.Component {
     );
   }
 
+  selectionChangeHandler(selectedItems) {
+    // This is because the selectedItems are not kept in the state of the gantt but in the selection component
+    // TODO DB ask CS:  as alternative we can duplicate the selected items in this component state thus the changes will be automatically detected
+    this.forceUpdate();
+  }
+
   ////////////////////////////////////////////////////////////////////////////////////////
   ////// Test functions
   ////////////////////////////////////////////////////////////////////////////////////////
@@ -1883,7 +1875,7 @@ export default class Timeline extends React.Component {
 
   dragStart(element, offsetX) {
     const {x, y} = element.getBoundingClientRect();
-    this.onDragStartSelect(offsetX + x, y);
+    this.#onDragStartSelect(offsetX + x, y);
     this.setCursorTime(offsetX + x);
   }
 
@@ -1892,13 +1884,13 @@ export default class Timeline extends React.Component {
     for (let i = 0; i < x; i += delta) {
       deltaX = Math.min(i + delta, x);
       await new Promise(resolve => setTimeout(resolve, delta));
-      this.onDragMoveSelect(this._selectBox.startX + deltaX, this._selectBox.startY + y);
+      this.#onDragMoveSelect(this._selectBox.startX + deltaX, this._selectBox.startY + y);
       this.setCursorTime(this._selectBox.startX + deltaX);
     }
   }
 
   dragEnd() {
-    this.onDragEndSelect();
+    this.#onDragEndSelect({});
   }
 
   rightClick() {
