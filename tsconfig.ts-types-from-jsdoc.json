@@ -3,7 +3,7 @@
         "src"
     ],
     "exclude": [
-        "src/demo/*", "src/demo*.js", "src/setupTests.js", "src/*test.js", "src/*/*.test.js", "src/stories/*", "src/testsAreDemo"
+        "src/demo/*", "src/demo*.js", "src/setupTests.js", "src/*test.js", "src/*/*.test.js", "src/stories/*", "src/testsAreDemo", "src/tools" 
     ],
     "compilerOptions": {
         "allowJs": true,

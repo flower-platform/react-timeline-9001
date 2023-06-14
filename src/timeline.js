@@ -39,6 +39,7 @@ import {GroupRenderer} from './components/GroupRenderer';
 import TimelineBody from './components/body';
 import {Marker} from './components/Marker';
 import {createTestids, TestsAreDemoCheat} from '@famiprog-foundation/tests-are-demo';
+import {GanttSelectionTool} from './tools/GanttSelectionTool';
 
 const testids = createTestids('Timeline', {
   menu: '',
@@ -55,7 +56,6 @@ export const timelineTestids = testids;
 
 // startsWith polyfill for IE11 support
 import 'core-js/fn/string/starts-with';
-import {GanttSelectionComponent} from './components/GanttSelectionComponent';
 
 const SINGLE_COLUMN_LABEL_PROPERTY = 'title';
 const EMPTY_GROUP_KEY = 'empty-group';
@@ -465,7 +465,6 @@ export default class Timeline extends React.Component {
 
   constructor(props) {
     super(props);
-    this.selectionComponent = React.createRef();
     this.selecting = false;
     this.state = {
       selection: [],
@@ -507,11 +506,15 @@ export default class Timeline extends React.Component {
     this.mouseMoveFunc = this.mouseMoveFunc.bind(this);
     this.getCursor = this.getCursor.bind(this);
     this.setVerticalGridLines = this.setVerticalGridLines.bind(this);
+    this.selectionChangeHandler = this.selectionChangeHandler.bind();
 
     const canSelect = Timeline.isBitSet(Timeline.TIMELINE_MODES.SELECT, this.props.timelineMode);
     const canDrag = Timeline.isBitSet(Timeline.TIMELINE_MODES.DRAG, this.props.timelineMode);
     const canResize = Timeline.isBitSet(Timeline.TIMELINE_MODES.RESIZE, this.props.timelineMode);
     this.setUpDragging(canSelect, canDrag, canResize);
+
+    this.selectionTool = new GanttSelectionTool();
+    this.selectionTool.selectionChangedHandler = this.selectionChangedHandler;
   }
 
   componentDidMount() {
@@ -929,7 +932,7 @@ export default class Timeline extends React.Component {
     }
   }
 
-  #onDragEndSelect() {
+  #onDragEndSelect(event) {
     if (this.state.dragCancel) {
       // only reset dragCancel on dragend if drag is canceled
       this.setState({dragCancel: false});
@@ -980,7 +983,7 @@ export default class Timeline extends React.Component {
       // delegate the selection change to the selection component
       !this.state.dragToCreateMode &&
         !this.props.selectedItems &&
-        this.selectionComponent.setSelectedItems(selectedItems);
+        this.selectionTool.addRemoveItems(selectedItems, event.ctrlKey || event.shiftKey);
 
       if (this.state.dragToCreateMode && this.props.onDragToCreateEnded) {
         // get avaible itemIndex and call the onDragToCreateEnded
@@ -1031,7 +1034,7 @@ export default class Timeline extends React.Component {
             this.props.onInteraction(
               Timeline.changeTypes.dragStart,
               null,
-              this.props.selectedItems ? this.props.selectedItems : this.selectionComponent.getSelectedItems()
+              this.props.selectedItems ? this.props.selectedItems : this.selectionTool.selectedItems
             );
 
           _.forEach(animatedItems, id => {
@@ -1162,7 +1165,7 @@ export default class Timeline extends React.Component {
             this.props.onInteraction(
               Timeline.changeTypes.resizeStart,
               null,
-              this.props.selectedItems ? this.props.selectedItems : this.selectionComponent.getSelectedItems()
+              this.props.selectedItems ? this.props.selectedItems : this.selectionTool.selectedItems
             );
           _.forEach(selected, id => {
             let domItem = this._gridDomNode.querySelector("span[data-item-index='" + id + "'");
@@ -1289,7 +1292,7 @@ export default class Timeline extends React.Component {
           this.#onDragMoveSelect(e.clientX, e.clientY, e.page.x);
         })
         .on('dragend', e => {
-          this.#onDragEndSelect();
+          this.#onDragEndSelect(e);
         });
     }
   }
@@ -1304,11 +1307,11 @@ export default class Timeline extends React.Component {
       let itemKey = e.target.getAttribute('data-item-index') || e.target.parentElement.getAttribute('data-item-index');
       itemCallback && itemCallback(e, Number(itemKey));
       if (!this.props.selectedItems) {
-        // Calculate selection change by delegating to selection component
+        // Calculate new selection by delegating to selection component
         if (e.type == 'click' || e.type == 'tap') {
-          this.selectionComponent.onItemClickHandler(itemKey);
+          this.selectionTool.addRemoveItems([itemKey], e.ctrlKey || e.shiftKey);
         } else if (e.type == 'contextMenu') {
-          this.selectionComponent.onItemRightClickHandler(itemKey);
+          this.selectionTool.addRemoveItems([itemKey], e.ctrlKey || e.shiftKey);
         }
       }
     } else {
@@ -1324,7 +1327,7 @@ export default class Timeline extends React.Component {
       let snappedClickedTime = timeSnap(clickedTime, this.getTimelineSnap() * 60);
       rowCallback && rowCallback(e, row, clickedTime, snappedClickedTime);
 
-      !this.props.selectedItems && this.selectionComponent.onOutsideClickHandler();
+      !this.props.selectedItems && this.selectionTool.addRemoveItems([], e.ctrlKey || e.shiftKey);
     }
   };
 
@@ -1383,7 +1386,7 @@ export default class Timeline extends React.Component {
               width,
               this.props.itemHeight,
               this.props.itemRenderer,
-              canSelect ? (this.props.selectedItems ? this.props.selectedItems : this.state.selectedItems) : [],
+              canSelect ? (this.props.selectedItems ? this.props.selectedItems : this.selectionTool.selectedItems) : [],
               this.props.itemRendererDefaultProps,
               this.getStartFromItem,
               this.getEndFromItem
@@ -1732,77 +1735,73 @@ export default class Timeline extends React.Component {
             const bodyHeight = calculateHeight(this.state.height);
             const timebarHeight = getTimebarHeight();
             return (
-              <GanttSelectionComponent
-                ref={this.selectionComponent}
-                onSelectionChangeHandler={this.onSelectionChangeHandler()}>
-                <div
-                  ref={measureRef}
-                  className={divCssClass}
-                  onContextMenu={e => {
-                    if (this._selectBox.isStart()) {
-                      // on right click if drag in progress cancel it
-                      e.preventDefault();
-                      this.setState({dragCancel: true});
-                      this._selectBox.end();
-                    }
-                  }}>
-                  <div className="parent-div" onMouseMove={this.mouseMoveFunc}>
-                    <SelectBox
-                      ref={this.select_ref_callback}
-                      className={this.state.dragToCreateMode ? 'rct9k-selector-outer-add' : ''}
+              <div
+                ref={measureRef}
+                className={divCssClass}
+                onContextMenu={e => {
+                  if (this._selectBox.isStart()) {
+                    // on right click if drag in progress cancel it
+                    e.preventDefault();
+                    this.setState({dragCancel: true});
+                    this._selectBox.end();
+                  }
+                }}>
+                <div className="parent-div" onMouseMove={this.mouseMoveFunc}>
+                  <SelectBox
+                    ref={this.select_ref_callback}
+                    className={this.state.dragToCreateMode ? 'rct9k-selector-outer-add' : ''}
+                  />
+                  <Timebar
+                    cursorTime={this.getCursor()}
+                    start={this.getStartDate()}
+                    end={this.getEndDate()}
+                    width={this.state.width}
+                    leftOffset={leftOffset}
+                    selectedRanges={this.state.selection}
+                    groupTitleRenderer={groupTitleRenderer}
+                    tableColumns={tableColumns}
+                    groupOffset={groupOffset}
+                    setVerticalGridLines={this.setVerticalGridLines}
+                    {...varTimebarProps}
+                  />
+                  {markers.map(m => (
+                    <Marker
+                      key={m.key}
+                      height={this.state.height}
+                      top={0}
+                      date={0}
+                      shouldUpdate={true}
+                      calculateHorizontalPosition={() => {
+                        return {left: m.left};
+                      }}
+                      className="rct9k-marker-overlay"
                     />
-                    <Timebar
-                      cursorTime={this.getCursor()}
-                      start={this.getStartDate()}
-                      end={this.getEndDate()}
-                      width={this.state.width}
-                      leftOffset={leftOffset}
-                      selectedRanges={this.state.selection}
-                      groupTitleRenderer={groupTitleRenderer}
-                      tableColumns={tableColumns}
-                      groupOffset={groupOffset}
-                      setVerticalGridLines={this.setVerticalGridLines}
-                      {...varTimebarProps}
-                    />
-                    {markers.map(m => (
-                      <Marker
-                        key={m.key}
-                        height={this.state.height}
-                        top={0}
-                        date={0}
-                        shouldUpdate={true}
-                        calculateHorizontalPosition={() => {
-                          return {left: m.left};
-                        }}
-                        className="rct9k-marker-overlay"
-                      />
-                    ))}
-                    <TimelineBody
-                      width={this.state.width}
-                      columnWidth={columnWidth(this.state.width)}
-                      height={bodyHeight}
-                      rowHeight={this.rowHeight}
-                      rowCount={this.state.groups.length}
-                      columnCount={(tableColumns && tableColumns.length > 0 ? tableColumns.length : 1) + 1}
-                      cellRenderer={this.cellRenderer(this.getTimelineWidth(this.state.width))}
-                      grid_ref_callback={this.grid_ref_callback}
-                      shallowUpdateCheck={shallowUpdateCheck}
-                      forceRedrawFunc={forceRedrawFunc}
-                    />
-                    {backgroundLayer &&
-                      React.cloneElement(backgroundLayer, {
-                        startDateTimeline: this.getStartDate(),
-                        endDateTimeline: this.getEndDate(),
-                        width: this.state.width,
-                        leftOffset: leftOffset,
-                        height: bodyHeight,
-                        topOffset: timebarHeight,
-                        verticalGridLines: this.state.verticalGridLines
-                      })}
-                    <div className="rct9k-menu-div">{this.renderMenuButton()}</div>
-                  </div>
+                  ))}
+                  <TimelineBody
+                    width={this.state.width}
+                    columnWidth={columnWidth(this.state.width)}
+                    height={bodyHeight}
+                    rowHeight={this.rowHeight}
+                    rowCount={this.state.groups.length}
+                    columnCount={(tableColumns && tableColumns.length > 0 ? tableColumns.length : 1) + 1}
+                    cellRenderer={this.cellRenderer(this.getTimelineWidth(this.state.width))}
+                    grid_ref_callback={this.grid_ref_callback}
+                    shallowUpdateCheck={shallowUpdateCheck}
+                    forceRedrawFunc={forceRedrawFunc}
+                  />
+                  {backgroundLayer &&
+                    React.cloneElement(backgroundLayer, {
+                      startDateTimeline: this.getStartDate(),
+                      endDateTimeline: this.getEndDate(),
+                      width: this.state.width,
+                      leftOffset: leftOffset,
+                      height: bodyHeight,
+                      topOffset: timebarHeight,
+                      verticalGridLines: this.state.verticalGridLines
+                    })}
+                  <div className="rct9k-menu-div">{this.renderMenuButton()}</div>
                 </div>
-              </GanttSelectionComponent>
+              </div>
             );
           }}
         </Measure>
@@ -1810,7 +1809,7 @@ export default class Timeline extends React.Component {
     );
   }
 
-  onSelectionChangeHandler(selectedItems) {
+  selectionChangeHandler(selectedItems) {
     // This is because the selectedItems are not kept in the state of the gantt but in the selection component
     // TODO DB ask CS:  as alternative we can duplicate the selected items in this component state thus the changes will be automatically detected
     this.forceUpdate();
@@ -1850,7 +1849,7 @@ export default class Timeline extends React.Component {
   }
 
   dragEnd() {
-    this.#onDragEndSelect();
+    this.#onDragEndSelect({});
   }
 
   rightClick() {
