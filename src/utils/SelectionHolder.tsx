@@ -3,7 +3,7 @@
  * 
  * @author Daniela Buzatu
  */
-export class AbstractSelectionTool {
+export class SelectionHolder {
   /**
    * If the host components needs access to the selected items it should use this property
    */
@@ -24,9 +24,9 @@ export class AbstractSelectionTool {
    * Usually the right click on the host component works just as a left click regarding the selection.  So the host component calls should be the same in both click cases 
    * TODO DB: ask CS: in windows explorer right click works different in one special case: ctrl + simple right click (but not shift + simple right click, and not ctrl + right click selection rectangle)
    */
-  addRemoveItems(itemsKeys: string[], isCtrlOrshiftPressed: boolean) {
+  addRemoveItems(itemsKeys: string[], event: MouseEvent) {
     let newSelection;
-    if (!isCtrlOrshiftPressed) {
+    if (!(event.ctrlKey || event.shiftKey)) {
         // Single selection
         newSelection = [...itemsKeys];
     } else {

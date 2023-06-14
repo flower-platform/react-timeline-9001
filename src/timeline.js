@@ -39,7 +39,7 @@ import {GroupRenderer} from './components/GroupRenderer';
 import TimelineBody from './components/body';
 import {Marker} from './components/Marker';
 import {createTestids, TestsAreDemoCheat} from '@famiprog-foundation/tests-are-demo';
-import {GanttSelectionTool} from './tools/GanttSelectionTool';
+import {SelectionHolder} from './utils/SelectionHolder';
 
 const testids = createTestids('Timeline', {
   menu: '',
@@ -513,8 +513,8 @@ export default class Timeline extends React.Component {
     const canResize = Timeline.isBitSet(Timeline.TIMELINE_MODES.RESIZE, this.props.timelineMode);
     this.setUpDragging(canSelect, canDrag, canResize);
 
-    this.selectionTool = new GanttSelectionTool();
-    this.selectionTool.selectionChangedHandler = this.selectionChangedHandler;
+    this.selectionHolder = new SelectionHolder();
+    this.selectionHolder.selectionChangedHandler = this.selectionChangedHandler;
   }
 
   componentDidMount() {
@@ -983,7 +983,7 @@ export default class Timeline extends React.Component {
       // delegate the selection change to the selection component
       !this.state.dragToCreateMode &&
         !this.props.selectedItems &&
-        this.selectionTool.addRemoveItems(selectedItems, event.ctrlKey || event.shiftKey);
+        this.selectionHolder.addRemoveItems(selectedItems, event);
 
       if (this.state.dragToCreateMode && this.props.onDragToCreateEnded) {
         // get avaible itemIndex and call the onDragToCreateEnded
@@ -1034,7 +1034,7 @@ export default class Timeline extends React.Component {
             this.props.onInteraction(
               Timeline.changeTypes.dragStart,
               null,
-              this.props.selectedItems ? this.props.selectedItems : this.selectionTool.selectedItems
+              this.props.selectedItems ? this.props.selectedItems : this.selectionHolder.selectedItems
             );
 
           _.forEach(animatedItems, id => {
@@ -1165,7 +1165,7 @@ export default class Timeline extends React.Component {
             this.props.onInteraction(
               Timeline.changeTypes.resizeStart,
               null,
-              this.props.selectedItems ? this.props.selectedItems : this.selectionTool.selectedItems
+              this.props.selectedItems ? this.props.selectedItems : this.selectionHolder.selectedItems
             );
           _.forEach(selected, id => {
             let domItem = this._gridDomNode.querySelector("span[data-item-index='" + id + "'");
@@ -1309,9 +1309,9 @@ export default class Timeline extends React.Component {
       if (!this.props.selectedItems) {
         // Calculate new selection by delegating to selection component
         if (e.type == 'click' || e.type == 'tap') {
-          this.selectionTool.addRemoveItems([itemKey], e.ctrlKey || e.shiftKey);
+          this.selectionHolder.addRemoveItems([itemKey], e);
         } else if (e.type == 'contextMenu') {
-          this.selectionTool.addRemoveItems([itemKey], e.ctrlKey || e.shiftKey);
+          this.selectionHolder.addRemoveItems([itemKey], e);
         }
       }
     } else {
@@ -1327,7 +1327,7 @@ export default class Timeline extends React.Component {
       let snappedClickedTime = timeSnap(clickedTime, this.getTimelineSnap() * 60);
       rowCallback && rowCallback(e, row, clickedTime, snappedClickedTime);
 
-      !this.props.selectedItems && this.selectionTool.addRemoveItems([], e.ctrlKey || e.shiftKey);
+      !this.props.selectedItems && this.selectionHolder.addRemoveItems([], e);
     }
   };
 
@@ -1386,7 +1386,11 @@ export default class Timeline extends React.Component {
               width,
               this.props.itemHeight,
               this.props.itemRenderer,
-              canSelect ? (this.props.selectedItems ? this.props.selectedItems : this.selectionTool.selectedItems) : [],
+              canSelect
+                ? this.props.selectedItems
+                  ? this.props.selectedItems
+                  : this.selectionHolder.selectedItems
+                : [],
               this.props.itemRendererDefaultProps,
               this.getStartFromItem,
               this.getEndFromItem
