@@ -266,6 +266,7 @@
   margin: 0 !important;
 }
 
+/* Styles that draws the drag achors that appears on selecting an element */
 .rct9k-items-outer-selected:after {
   right: -2.5px;
   z-index: 1;

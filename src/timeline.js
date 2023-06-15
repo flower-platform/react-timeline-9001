@@ -419,8 +419,8 @@ export default class Timeline extends React.Component {
     /**
      * Actions that will fill the right click context menu. Can be of two types:
      * 1. Normal actions that executes 'action.run' function when they are clicked
-     * 2. Submenu actions that doesn't run when clicked but instead open a submenu when mouseOver/Clicked.
-     *    It should have the 'action.subActions' set
+     * 2. TODO DB: for the moment we don't implement this : Submenu actions that doesn't run when clicked but instead open a submenu when mouseOver/Clicked.
+     *    It should have the 'action.subActions' set.
      *
      * The action can be visible or not depending the selection. Set the action.isVisible Function for controlling the visibility of the actions
      *
