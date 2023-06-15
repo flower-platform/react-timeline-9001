@@ -7,7 +7,7 @@ import { MenuActionsHolder } from '../utils/MenuActionsHolder';
 
 export class ContextMenu extends React.Component {
   static propTypes = {
-    menuActionsHolder: PropTypes.objectOf<MenuActionsHolder>,
+    menuActionsHolder: PropTypes.object,
 
     /**
      * For the contextMenu to be closed by a child component (clicking a runable action)

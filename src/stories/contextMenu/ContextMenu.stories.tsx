@@ -19,7 +19,7 @@ export const ContextMenuStory: ComponentStory<typeof Timeline> = () => {
             { icon: "trash",
                 label: "Delete",
                 isVisible: selectedItems => {/*TODO DB implement this only visible for some tasks*/} ,
-                run: (selectedItems) => {this.setState({tasks: someTasks.filter(task => selectedItems.contains(task.key))})},
+                run: selectedItems => {this.setState({tasks: someTasks.filter(task => selectedItems.contains(task.key))})},
                 closeMenuAfterRun: true
             },
             { icon: "edit",
