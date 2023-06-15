@@ -53,9 +53,12 @@ export type DragToCreateParam = {
 }
 
 export type Action = {
-    icon: string,
-    label: string,
     isVisible: Function,
-    run: Function,
-    subActions: Action[]
+    icon?: string,
+    label?: string,
+    run?: Function,
+    closeMenuAfterRun?: boolean,
+    // TODO DB: will add this only if we will implement the subactions functionality
+    // subActions: Action[],
+    customRenderer?: Function
 }

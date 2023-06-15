@@ -56,6 +56,8 @@ export const timelineTestids = testids;
 
 // startsWith polyfill for IE11 support
 import 'core-js/fn/string/starts-with';
+import {MenuActionsHolder} from './utils/MenuActionsHolder';
+import {ContextMenu} from './components/ContextMenu';
 
 const SINGLE_COLUMN_LABEL_PROPERTY = 'title';
 const EMPTY_GROUP_KEY = 'empty-group';
@@ -74,10 +76,14 @@ export const ActionType = PropTypes.arrayOf(
      * Function that will be called when user will click this menu entry. Will receives as parameter the current selected items
      */
     run: PropTypes.func,
+
+    closeMenuAfterRun: PropTypes.bool,
     /**
+     * TODO DB: will add this only if we will implement the subactions functionality
      * This should be set when needed an action that is not runnable but instead opens a submenu
      */
-    subActions: PropTypes.arrayOf(ActionType)
+    // subActions: PropTypes.arrayOf(ActionType),
+    customRenderer: PropTypes.func
   })
 );
 
@@ -507,7 +513,8 @@ export default class Timeline extends React.Component {
       height: 0,
       dragToCreateMode: false,
       openMenu: false,
-      dragCancel: false
+      dragCancel: false,
+      openedContextMenuCoordinates: undefined
     };
 
     // These functions need to be bound because they are passed as parameters.
@@ -547,6 +554,7 @@ export default class Timeline extends React.Component {
 
     this.selectionHolder = new SelectionHolder();
     this.selectionHolder.selectionChangedHandler = this.selectionChangedHandler;
+    this.menuActionsHolder = new MenuActionsHolder(this.selectionHolder);
   }
 
   componentDidMount() {
@@ -886,7 +894,7 @@ export default class Timeline extends React.Component {
    * @param {number} clientX
    * @param {number} clientY
    */
-  #onDragStartSelect(clientX, clientY) {
+  onDragStartSelect(clientX, clientY) {
     const nearestRowObject = getNearestRowObject(clientX, clientY);
     const startY = adjustRowTopPositionToViewport(nearestRowObject, nearestRowObject.getBoundingClientRect().y);
     // Add 2 to startY because on some occasions/browsers, when using document.elementsFromPonint(), it will return the wrong row if startY is used.
@@ -913,7 +921,7 @@ export default class Timeline extends React.Component {
    * @param {number} clientY
    * @param {number} startXElement
    */
-  #onDragMoveSelect(clientX, clientY, startXElement) {
+  onDragMoveSelect(clientX, clientY, startXElement) {
     if (this.state.dragCancel) {
       // do nothing if drag is canceled
       return;
@@ -964,7 +972,7 @@ export default class Timeline extends React.Component {
     }
   }
 
-  #onDragEndSelect(event) {
+  onDragEndSelect(event) {
     if (this.state.dragCancel) {
       // only reset dragCancel on dragend if drag is canceled
       this.setState({dragCancel: false});
@@ -1021,6 +1029,10 @@ export default class Timeline extends React.Component {
         // get avaible itemIndex and call the onDragToCreateEnded
         const itemIndex = Math.max(...Object.keys(this.itemRowMap)) + 1;
         this.props.onDragToCreateEnded({groupIndex: topRowNumber, itemIndex, itemStart: startTime, itemEnd: endTime});
+      }
+
+      if (event.ctrlKey || event.shiftKey) {
+        this.setState(openedContextMenuCoordinates, {x: event.x, y: event.y});
       }
     }
   }
@@ -1318,14 +1330,14 @@ export default class Timeline extends React.Component {
         })
         .styleCursor(false)
         .on('dragstart', e => {
-          this.#onDragStartSelect(e.clientX, e.clientY);
+          this.onDragStartSelect(e.clientX, e.clientY);
         })
         .on('dragmove', e => {
-          this.#onDragMoveSelect(e.clientX, e.clientY, e.page.x);
+          this.onDragMoveSelect(e.clientX, e.clientY, e.page.x);
         })
         .on('dragend', e => {
           this.onDragEndSelect();
-          this.#onDragEndSelect(e);
+          this.onDragEndSelect(e);
         });
     }
   }
@@ -1361,6 +1373,15 @@ export default class Timeline extends React.Component {
       rowCallback && rowCallback(e, row, clickedTime, snappedClickedTime);
 
       !this.props.selectedItems && this.selectionHolder.addRemoveItems([], e);
+      if (!e.type == 'contextMenu') {
+        // left click on a row => close CM
+        this.setState(openedContextMenuCoordinates, undefined);
+      }
+    }
+
+    if (e.type == 'contextMenu') {
+      // right click => open CM
+      this.setState(openedContextMenuCoordinates, {x: e.x, y: e.y});
     }
   };
 
@@ -1827,9 +1848,13 @@ export default class Timeline extends React.Component {
                     forceRedrawFunc={forceRedrawFunc}
                   />
                   {/**
-                   * TODO DB: see how to position the CM
-                   */}
-                  {/* TODO DB: define the <Popup open={this.state.isContextMenuOpened} coordinates={contextMenuCoordinates}/> containing a <ContextMenu isOpen={this.state.isContextMenuOpened} actions={this.props.actions} selectedItems={this.state.selectedItems}> here */}
+                  * TODO DB: use modalExt (or another modal extendion with copied code from modalExt) in order to pass x, y (this.state.openedContextMenuCoordinates) on open and for repositioning logic, current problem: the gantt project doesn't depend on foundation project
+                  * ?? in case multiple menu opened (menu and submenus) can we use in modalExt? maybe a popupExt will be needed  
+                  * /
+                  }
+                  {/* <ModalExt open={this.state.openedContextMenuCoordinates}>
+                    <ContextMenu menuActionsHolder={this.menuActionsHolder} closeMenu={this.setState(openedContextMenuCoordinates, undefined)}/>
+                  </ModalExt> */}
                   {backgroundLayer &&
                     React.cloneElement(backgroundLayer, {
                       startDateTimeline: this.getStartDate(),
@@ -1852,7 +1877,6 @@ export default class Timeline extends React.Component {
 
   selectionChangeHandler(selectedItems) {
     // This is because the selectedItems are not kept in the state of the gantt but in the selection component
-    // TODO DB ask CS:  as alternative we can duplicate the selected items in this component state thus the changes will be automatically detected
     this.forceUpdate();
   }
 
@@ -1875,7 +1899,7 @@ export default class Timeline extends React.Component {
 
   dragStart(element, offsetX) {
     const {x, y} = element.getBoundingClientRect();
-    this.#onDragStartSelect(offsetX + x, y);
+    this.onDragStartSelect(offsetX + x, y);
     this.setCursorTime(offsetX + x);
   }
 
@@ -1884,13 +1908,13 @@ export default class Timeline extends React.Component {
     for (let i = 0; i < x; i += delta) {
       deltaX = Math.min(i + delta, x);
       await new Promise(resolve => setTimeout(resolve, delta));
-      this.#onDragMoveSelect(this._selectBox.startX + deltaX, this._selectBox.startY + y);
+      this.onDragMoveSelect(this._selectBox.startX + deltaX, this._selectBox.startY + y);
       this.setCursorTime(this._selectBox.startX + deltaX);
     }
   }
 
   dragEnd() {
-    this.#onDragEndSelect({});
+    this.onDragEndSelect({});
   }
 
   rightClick() {
