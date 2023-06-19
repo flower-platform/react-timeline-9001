@@ -23,6 +23,11 @@ export default class ItemRenderer extends React.Component {
     item: PropTypes.object,
 
     /**
+     * It's passed by the parent. A selected itemRenderer will have : 1. a brighter color, 2. a drop-shadow filter.
+     */
+    isSelected: PropTypes.bool,
+
+    /**
      * The title (label) of the segment (item).
      * @type { string }
      */
@@ -195,12 +200,14 @@ export default class ItemRenderer extends React.Component {
    * @returns { object }
    */
   getStyle() {
-    return {
+    var style = {
       ...this.props.style,
       color: this.getTextColor(),
       height: this.getHeight(),
       background: this.getBackgroundGradient()
     };
+    this.props.isSelected && (style.filter = 'drop-shadow(0px 0px 0.5rem black) brightness(1.25)');
+    return style;
   }
 
   /**

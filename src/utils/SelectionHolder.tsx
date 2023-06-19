@@ -7,7 +7,7 @@ export class SelectionHolder {
   /**
    * If the host components needs access to the selected items it should use this property
    */
-  selectedItems: string[] = [];
+  selectedItems: number[] = [];
 
   /**
      * The host component should listen when the selection changes by passing this function
@@ -24,28 +24,31 @@ export class SelectionHolder {
    * Usually the right click on the host component works just as a left click regarding the selection.  So the host component calls should be the same in both click cases 
    * TODO DB: ask CS: in windows explorer right click works different in one special case: ctrl + simple right click (but not shift + simple right click, and not ctrl + right click selection rectangle)
    */
-  addRemoveItems(itemsKeys: string[], event: MouseEvent) {
+  addRemoveItems(itemsKeys: number[], event: MouseEvent) {
     let newSelection;
     if (!(event.ctrlKey || event.shiftKey)) {
         // Single selection
         newSelection = [...itemsKeys];
     } else {
       // Multiple selection
-      newSelection = this.selectedItems.slice();
+      const oldSelection = this.selectedItems;
+      newSelection = oldSelection.slice();
       itemsKeys.forEach(function(itemKey) {
-        const idx = itemsKeys.indexOf(itemKey);
+        const idx = oldSelection.indexOf(itemKey);
         if (idx > -1) {
           // already in selection => remove it
           newSelection.splice(idx, 1);
         } else {
           // not in selection => add it
-          newSelection.push(Number(itemKey));
+          newSelection.push(itemKey);
         }
       });
     }
     this.selectedItems = newSelection;
 
     // Notify the host component about selection change
-    this.selectionChangedHandler();
+    if (this.selectionChangedHandler) {
+      this.selectionChangedHandler();
+    }
   }
 }

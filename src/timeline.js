@@ -415,7 +415,6 @@ export default class Timeline extends React.Component {
     // useMoment: true,
     useMoment: false,
     tableColumns: [],
-    selectedItems: [],
     snap: undefined,
     groupTitleRenderer: undefined,
     timebarFormat: undefined,
@@ -506,7 +505,7 @@ export default class Timeline extends React.Component {
     this.mouseMoveFunc = this.mouseMoveFunc.bind(this);
     this.getCursor = this.getCursor.bind(this);
     this.setVerticalGridLines = this.setVerticalGridLines.bind(this);
-    this.selectionChangeHandler = this.selectionChangeHandler.bind();
+    this.selectionChangedHandler = this.selectionChangedHandler.bind(this);
 
     const canSelect = Timeline.isBitSet(Timeline.TIMELINE_MODES.SELECT, this.props.timelineMode);
     const canDrag = Timeline.isBitSet(Timeline.TIMELINE_MODES.DRAG, this.props.timelineMode);
@@ -983,7 +982,7 @@ export default class Timeline extends React.Component {
       // delegate the selection change to the selection component
       !this.state.dragToCreateMode &&
         !this.props.selectedItems &&
-        this.selectionHolder.addRemoveItems(selectedItems, event);
+        this.selectionHolder.addRemoveItems(_.map(selectedItems, 'key'), event);
 
       if (this.state.dragToCreateMode && this.props.onDragToCreateEnded) {
         // get avaible itemIndex and call the onDragToCreateEnded
@@ -1306,13 +1305,13 @@ export default class Timeline extends React.Component {
     if (e.target.hasAttribute('data-item-index') || e.target.parentElement.hasAttribute('data-item-index')) {
       let itemKey = e.target.getAttribute('data-item-index') || e.target.parentElement.getAttribute('data-item-index');
       itemCallback && itemCallback(e, Number(itemKey));
-      if (!this.props.selectedItems) {
+      // window.ontouchstart added to checks is we are on mobile
+      if (
+        !this.props.selectedItems &&
+        (e.type == 'click' || (window.ontouchstart && e.type == 'tap') || e.type == 'contextmenu')
+      ) {
         // Calculate new selection by delegating to selection component
-        if (e.type == 'click' || e.type == 'tap') {
-          this.selectionHolder.addRemoveItems([itemKey], e);
-        } else if (e.type == 'contextMenu') {
-          this.selectionHolder.addRemoveItems([itemKey], e);
-        }
+        this.selectionHolder.addRemoveItems([Number(itemKey)], e);
       }
     } else {
       let row = e.target.getAttribute('data-row-index');
@@ -1327,7 +1326,12 @@ export default class Timeline extends React.Component {
       let snappedClickedTime = timeSnap(clickedTime, this.getTimelineSnap() * 60);
       rowCallback && rowCallback(e, row, clickedTime, snappedClickedTime);
 
-      !this.props.selectedItems && this.selectionHolder.addRemoveItems([], e);
+      if (
+        !this.props.selectedItems &&
+        (e.type == 'click' || (window.ontouchstart && e.type == 'tap') || e.type == 'contextmenu')
+      ) {
+        this.selectionHolder.addRemoveItems([], e);
+      }
     }
   };
 
@@ -1357,6 +1361,8 @@ export default class Timeline extends React.Component {
         if (this.rowHeightCache[rowIndex]) {
           rowHeight = rowHeight * this.rowHeightCache[rowIndex];
         }
+        let selectedItems = this.props.selectedItems;
+        let selectedItemsHolder = this.selectionHolder.selectedItems;
         return (
           <div
             data-testid={testids.row + '_' + rowIndex}
@@ -1813,10 +1819,11 @@ export default class Timeline extends React.Component {
     );
   }
 
-  selectionChangeHandler(selectedItems) {
+  selectionChangedHandler(selectedItems) {
     // This is because the selectedItems are not kept in the state of the gantt but in the selection component
     // TODO DB ask CS:  as alternative we can duplicate the selected items in this component state thus the changes will be automatically detected
-    this.forceUpdate();
+    // this.forceUpdate();
+    this._grid.forceUpdate();
   }
 
   ////////////////////////////////////////////////////////////////////////////////////////
