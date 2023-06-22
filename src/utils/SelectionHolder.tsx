@@ -25,6 +25,7 @@ export class SelectionHolder {
    * TODO DB: ask CS: in windows explorer right click works different in one special case: ctrl + simple right click (but not shift + simple right click, and not ctrl + right click selection rectangle)
    */
   addRemoveItems(itemsKeys: number[], event: MouseEvent) {
+    console.log("********" + itemsKeys.length + ": "+ itemsKeys);
     let newSelection;
     if (!(event.ctrlKey || event.shiftKey)) {
         // Single selection
@@ -34,7 +35,7 @@ export class SelectionHolder {
       const oldSelection = this.selectedItems;
       newSelection = oldSelection.slice();
       itemsKeys.forEach(function(itemKey) {
-        const idx = oldSelection.indexOf(itemKey);
+        const idx = newSelection.indexOf(itemKey);
         if (idx > -1) {
           // already in selection => remove it
           newSelection.splice(idx, 1);

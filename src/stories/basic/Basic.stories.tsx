@@ -44,6 +44,7 @@ Main.parameters = {
   scenarios: [
     timelineScenarios.rendererForGroups,
     timelineScenarios.rendererForItems,
-    timelineScenarios.whenMouseMovesThenRedBar
+    timelineScenarios.whenMouseMovesThenRedBar,
+    timelineScenarios.whenClickOrDragToSelectThenItemsSelected
   ]
 };

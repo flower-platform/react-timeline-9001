@@ -415,6 +415,7 @@ export default class Timeline extends React.Component {
     // useMoment: true,
     useMoment: false,
     tableColumns: [],
+    selectedItems: undefined,
     snap: undefined,
     groupTitleRenderer: undefined,
     timebarFormat: undefined,
@@ -474,7 +475,8 @@ export default class Timeline extends React.Component {
       height: 0,
       dragToCreateMode: false,
       openMenu: false,
-      dragCancel: false
+      dragCancel: false,
+      isRightClickDragging: false
     };
 
     // These functions need to be bound because they are passed as parameters.
@@ -503,6 +505,8 @@ export default class Timeline extends React.Component {
     this.select_ref_callback = this.select_ref_callback.bind(this);
     this.throttledMouseMoveFunc = _.throttle(this.throttledMouseMoveFunc.bind(this), 20);
     this.mouseMoveFunc = this.mouseMoveFunc.bind(this);
+    this.mouseDownFunc = this.mouseDownFunc.bind(this);
+    this.mouseUpFunc = this.mouseUpFunc.bind(this);
     this.getCursor = this.getCursor.bind(this);
     this.setVerticalGridLines = this.setVerticalGridLines.bind(this);
     this.selectionChangedHandler = this.selectionChangedHandler.bind(this);
@@ -1517,6 +1521,23 @@ export default class Timeline extends React.Component {
   mouseMoveFunc(e) {
     e.persist();
     this.throttledMouseMoveFunc(e);
+    if (this.state.isRightClickDragging) {
+      this.#onDragMoveSelect(e.clientX, e.clientY, e.pageX);
+    }
+  }
+
+  mouseDownFunc(e) {
+    if (e.button === 2) {
+      this.setState({isRightClickDragging: true});
+      this.#onDragStartSelect(e.clientX, e.clientY);
+    }
+  }
+
+  mouseUpFunc(e) {
+    if (e.button === 2) {
+      this.setState({isRightClickDragging: false});
+      this.#onDragEndSelect(e);
+    }
   }
 
   /**
@@ -1756,7 +1777,18 @@ export default class Timeline extends React.Component {
                     this._selectBox.end();
                   }
                 }}>
-                <div className="parent-div" onMouseMove={this.mouseMoveFunc}>
+                {/**
+                 * Because we wanted the drag to select feature to work similar to the one in Windows Explorer
+                 * We needed it to work also on right click. But the initial implementation of drag to select from the timeline
+                 * is based on interact js that ignores right click drag (this type of drag is not a nativelly supported one).
+                 * We choosed a basic implementation using mouseDown, mouseMove and mouseUp events for implementing the right click drag to select
+                 */}
+                <div
+                  className="parent-div"
+                  onMouseDown={this.mouseDownFunc}
+                  onMouseMove={this.mouseMoveFunc}
+                  onMouseUp={this.mouseUpFunc}
+                  onContextMenu={() => false}>
                   <SelectBox
                     ref={this.select_ref_callback}
                     className={this.state.dragToCreateMode ? 'rct9k-selector-outer-add' : ''}
@@ -1859,8 +1891,8 @@ export default class Timeline extends React.Component {
     }
   }
 
-  dragEnd() {
-    this.#onDragEndSelect({});
+  dragEnd(event = {}) {
+    this.#onDragEndSelect(event);
   }
 
   rightClick() {
