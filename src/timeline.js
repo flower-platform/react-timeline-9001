@@ -1522,21 +1522,21 @@ export default class Timeline extends React.Component {
     e.persist();
     this.throttledMouseMoveFunc(e);
     if (this.state.isRightClickDragging) {
-      this.#onDragMoveSelect(e.clientX, e.clientY, e.pageX);
+      this.onDragMoveSelect(e.clientX, e.clientY, e.pageX);
     }
   }
 
   mouseDownFunc(e) {
     if (e.button === 2) {
       this.setState({isRightClickDragging: true});
-      this.#onDragStartSelect(e.clientX, e.clientY);
+      this.onDragStartSelect(e.clientX, e.clientY);
     }
   }
 
   mouseUpFunc(e) {
     if (e.button === 2) {
       this.setState({isRightClickDragging: false});
-      this.#onDragEndSelect(e);
+      this.onDragEndSelect(e);
     }
   }
 
@@ -1894,7 +1894,7 @@ export default class Timeline extends React.Component {
   }
 
   dragEnd(event = {}) {
-    this.#onDragEndSelect(event);
+    this.onDragEndSelect(event);
   }
 
   rightClick() {
