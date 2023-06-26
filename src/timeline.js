@@ -935,7 +935,7 @@ export default class Timeline extends React.Component {
     }
   }
 
-  #onDragEndSelect(event) {
+  onDragEndSelect() {
     if (this.state.dragCancel) {
       // only reset dragCancel on dragend if drag is canceled
       this.setState({dragCancel: false});
@@ -1289,13 +1289,13 @@ export default class Timeline extends React.Component {
         })
         .styleCursor(false)
         .on('dragstart', e => {
-          this.#onDragStartSelect(e.clientX, e.clientY);
+          this.onDragStartSelect(e.clientX, e.clientY);
         })
         .on('dragmove', e => {
-          this.#onDragMoveSelect(e.clientX, e.clientY, e.page.x);
+          this.onDragMoveSelect(e.clientX, e.clientY, e.page.x);
         })
         .on('dragend', e => {
-          this.#onDragEndSelect(e);
+          this.onDragEndSelect(e);
         });
     }
   }
@@ -1522,21 +1522,21 @@ export default class Timeline extends React.Component {
     e.persist();
     this.throttledMouseMoveFunc(e);
     if (this.state.isRightClickDragging) {
-      this.#onDragMoveSelect(e.clientX, e.clientY, e.pageX);
+      this.onDragMoveSelect(e.clientX, e.clientY, e.pageX);
     }
   }
 
   mouseDownFunc(e) {
     if (e.button === 2) {
       this.setState({isRightClickDragging: true});
-      this.#onDragStartSelect(e.clientX, e.clientY);
+      this.onDragStartSelect(e.clientX, e.clientY);
     }
   }
 
   mouseUpFunc(e) {
     if (e.button === 2) {
       this.setState({isRightClickDragging: false});
-      this.#onDragEndSelect(e);
+      this.onDragEndSelect(e);
     }
   }
 
@@ -1748,7 +1748,7 @@ export default class Timeline extends React.Component {
       });
     }
     return (
-      <>
+      <Fragment>
         <TestsAreDemoCheat objectToPublish={this} />
         {
           // Instead of <Measure .../>, in the past <AutoSizer ... /> was used. However it would round with/height, which generated and endless
@@ -1757,7 +1757,9 @@ export default class Timeline extends React.Component {
         <Measure
           bounds
           onResize={contentRect => {
-            const config = {width: contentRect.bounds?.width || 0, height: contentRect.bounds?.height || 0};
+            const width = contentRect.bounds ? contentRect.bounds.width : 0;
+            const height = contentRect.bounds ? contentRect.bounds.height : 0;
+            const config = {width, height};
             this.setState(config);
             this.refreshGrid(config);
           }}>
@@ -1847,7 +1849,7 @@ export default class Timeline extends React.Component {
             );
           }}
         </Measure>
-      </>
+      </Fragment>
     );
   }
 
@@ -1877,7 +1879,7 @@ export default class Timeline extends React.Component {
 
   dragStart(element, offsetX) {
     const {x, y} = element.getBoundingClientRect();
-    this.#onDragStartSelect(offsetX + x, y);
+    this.onDragStartSelect(offsetX + x, y);
     this.setCursorTime(offsetX + x);
   }
 
@@ -1886,13 +1888,13 @@ export default class Timeline extends React.Component {
     for (let i = 0; i < x; i += delta) {
       deltaX = Math.min(i + delta, x);
       await new Promise(resolve => setTimeout(resolve, delta));
-      this.#onDragMoveSelect(this._selectBox.startX + deltaX, this._selectBox.startY + y);
+      this.onDragMoveSelect(this._selectBox.startX + deltaX, this._selectBox.startY + y);
       this.setCursorTime(this._selectBox.startX + deltaX);
     }
   }
 
   dragEnd(event = {}) {
-    this.#onDragEndSelect(event);
+    this.onDragEndSelect(event);
   }
 
   rightClick() {
