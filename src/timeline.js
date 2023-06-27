@@ -1784,7 +1784,9 @@ export default class Timeline extends React.Component {
         <Measure
           bounds
           onResize={contentRect => {
-            const config = {width: contentRect.bounds?.width || 0, height: contentRect.bounds?.height || 0};
+            const width = contentRect.bounds ? contentRect.bounds.width : 0;
+            const height = contentRect.bounds ? contentRect.bounds.height : 0;
+            const config = {width, height};
             this.setState(config);
             this.refreshGrid(config);
           }}>
