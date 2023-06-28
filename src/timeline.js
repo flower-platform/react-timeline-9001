@@ -452,7 +452,7 @@ export default class Timeline extends React.Component {
     // useMoment: true,
     useMoment: false,
     tableColumns: [],
-    selectedItems: [],
+    selectedItems: undefined,
     snap: undefined,
     groupTitleRenderer: undefined,
     timebarFormat: undefined,
@@ -514,7 +514,8 @@ export default class Timeline extends React.Component {
       dragToCreateMode: false,
       openMenu: false,
       dragCancel: false,
-      openedContextMenuCoordinates: undefined
+      openedContextMenuCoordinates: undefined,
+      isRightClickDragging: false
     };
 
     // These functions need to be bound because they are passed as parameters.
@@ -545,7 +546,7 @@ export default class Timeline extends React.Component {
     this.mouseMoveFunc = this.mouseMoveFunc.bind(this);
     this.getCursor = this.getCursor.bind(this);
     this.setVerticalGridLines = this.setVerticalGridLines.bind(this);
-    this.selectionChangeHandler = this.selectionChangeHandler.bind();
+    this.selectionChangedHandler = this.selectionChangedHandler.bind(this);
 
     const canSelect = Timeline.isBitSet(Timeline.TIMELINE_MODES.SELECT, this.props.timelineMode);
     const canDrag = Timeline.isBitSet(Timeline.TIMELINE_MODES.DRAG, this.props.timelineMode);
@@ -1023,7 +1024,7 @@ export default class Timeline extends React.Component {
       // delegate the selection change to the selection component
       !this.state.dragToCreateMode &&
         !this.props.selectedItems &&
-        this.selectionHolder.addRemoveItems(selectedItems, event);
+        this.selectionHolder.addRemoveItems(_.map(selectedItems, 'key'), event);
 
       if (this.state.dragToCreateMode && this.props.onDragToCreateEnded) {
         // get avaible itemIndex and call the onDragToCreateEnded
@@ -1336,7 +1337,6 @@ export default class Timeline extends React.Component {
           this.onDragMoveSelect(e.clientX, e.clientY, e.page.x);
         })
         .on('dragend', e => {
-          this.onDragEndSelect();
           this.onDragEndSelect(e);
         });
     }
@@ -1351,13 +1351,13 @@ export default class Timeline extends React.Component {
     if (e.target.hasAttribute('data-item-index') || e.target.parentElement.hasAttribute('data-item-index')) {
       let itemKey = e.target.getAttribute('data-item-index') || e.target.parentElement.getAttribute('data-item-index');
       itemCallback && itemCallback(e, Number(itemKey));
-      if (!this.props.selectedItems) {
+      // window.ontouchstart added to checks is we are on mobile
+      if (
+        !this.props.selectedItems &&
+        (e.type == 'click' || (window.ontouchstart && e.type == 'tap') || e.type == 'contextmenu')
+      ) {
         // Calculate new selection by delegating to selection component
-        if (e.type == 'click' || e.type == 'tap') {
-          this.selectionHolder.addRemoveItems([itemKey], e);
-        } else if (e.type == 'contextMenu') {
-          this.selectionHolder.addRemoveItems([itemKey], e);
-        }
+        this.selectionHolder.addRemoveItems([Number(itemKey)], e);
       }
     } else {
       let row = e.target.getAttribute('data-row-index');
@@ -1372,7 +1372,13 @@ export default class Timeline extends React.Component {
       let snappedClickedTime = timeSnap(clickedTime, this.getTimelineSnap() * 60);
       rowCallback && rowCallback(e, row, clickedTime, snappedClickedTime);
 
-      !this.props.selectedItems && this.selectionHolder.addRemoveItems([], e);
+      if (
+        !this.props.selectedItems &&
+        (e.type == 'click' || (window.ontouchstart && e.type == 'tap') || e.type == 'contextmenu')
+      ) {
+        this.selectionHolder.addRemoveItems([], e);
+      }
+
       if (!e.type == 'contextMenu') {
         // left click on a row => close CM
         this.setState(openedContextMenuCoordinates, undefined);
@@ -1565,6 +1571,23 @@ export default class Timeline extends React.Component {
   mouseMoveFunc(e) {
     e.persist();
     this.throttledMouseMoveFunc(e);
+    if (this.state.isRightClickDragging) {
+      this.onDragMoveSelect(e.clientX, e.clientY, e.pageX);
+    }
+  }
+
+  mouseDownFunc(e) {
+    if (e.button === 2) {
+      this.setState({isRightClickDragging: true});
+      this.onDragStartSelect(e.clientX, e.clientY);
+    }
+  }
+
+  mouseUpFunc(e) {
+    if (e.button === 2) {
+      this.setState({isRightClickDragging: false});
+      this.onDragEndSelect(e);
+    }
   }
 
   /**
@@ -1806,7 +1829,18 @@ export default class Timeline extends React.Component {
                     this._selectBox.end();
                   }
                 }}>
-                <div className="parent-div" onMouseMove={this.mouseMoveFunc}>
+                {/**
+                 * Because we wanted the drag to select feature to work similar to the one in Windows Explorer
+                 * We needed it to work also on right click. But the initial implementation of drag to select from the timeline
+                 * is based on interact js that ignores right click drag (this type of drag is not a nativelly supported one).
+                 * We choosed a basic implementation using mouseDown, mouseMove and mouseUp events for implementing the right click drag to select
+                 */}
+                <div
+                  className="parent-div"
+                  onMouseDown={this.mouseDownFunc}
+                  onMouseMove={this.mouseMoveFunc}
+                  onMouseUp={this.mouseUpFunc}
+                  onContextMenu={() => false}>
                   <SelectBox
                     ref={this.select_ref_callback}
                     className={this.state.dragToCreateMode ? 'rct9k-selector-outer-add' : ''}
@@ -1915,8 +1949,8 @@ export default class Timeline extends React.Component {
     }
   }
 
-  dragEnd() {
-    this.onDragEndSelect({});
+  dragEnd(event = {}) {
+    this.onDragEndSelect(event);
   }
 
   rightClick() {

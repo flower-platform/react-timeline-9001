@@ -23,6 +23,10 @@ node_modules/
 .lvimrc
 .DS_Store
 /.idea
+<<<<<<< HEAD
 
 # Storybook 
 storybook-static/
+=======
+/storybook-static/
+>>>>>>> refs/remotes/origin/dana-RM31483-Selection-component
