@@ -40,6 +40,7 @@ import TimelineBody from './components/body';
 import {Marker} from './components/Marker';
 import {createTestids, TestsAreDemoCheat} from '@famiprog-foundation/tests-are-demo';
 import {SelectionHolder} from './utils/SelectionHolder';
+import {IGanttAction} from './types';
 
 const testids = createTestids('Timeline', {
   menu: '',
@@ -56,8 +57,7 @@ export const timelineTestids = testids;
 
 // startsWith polyfill for IE11 support
 import 'core-js/fn/string/starts-with';
-import {MenuActionsHolder} from './utils/MenuActionsHolder';
-import {ContextMenu} from './components/ContextMenu';
+import {ContextMenu} from './components/ContextMenu/ContextMenu';
 
 const SINGLE_COLUMN_LABEL_PROPERTY = 'title';
 const EMPTY_GROUP_KEY = 'empty-group';
@@ -77,12 +77,6 @@ export const ActionType = PropTypes.arrayOf(
      */
     run: PropTypes.func,
 
-    closeMenuAfterRun: PropTypes.bool,
-    /**
-     * TODO DB: will add this only if we will implement the subactions functionality
-     * This should be set when needed an action that is not runnable but instead opens a submenu
-     */
-    // subActions: PropTypes.arrayOf(ActionType),
     customRenderer: PropTypes.func
   })
 );
@@ -417,16 +411,12 @@ export default class Timeline extends React.Component {
     onDragToCreateEnded: PropTypes.func,
 
     /**
-     * Actions that will fill the right click context menu. Can be of two types:
-     * 1. Normal actions that executes 'action.run' function when they are clicked
-     * 2. TODO DB: for the moment we don't implement this : Submenu actions that doesn't run when clicked but instead open a submenu when mouseOver/Clicked.
-     *    It should have the 'action.subActions' set.
+     * Should provide actions that will fill the right click context menu.
+     * If no actions are provided the context menu will not show
      *
-     * The action can be visible or not depending the selection. Set the action.isVisible Function for controlling the visibility of the actions
-     *
-     * @type {Array[Action]}
+     * @type {(IGanttOnContextMenuShowParam) => IGanttAction[]}
      */
-    actions: PropTypes.arrayOf(ActionType)
+    onContextMenuShow: PropTypes.func
   };
 
   static defaultProps = {
@@ -471,7 +461,7 @@ export default class Timeline extends React.Component {
     backgroundLayer: null,
     onDragToCreateStarted: undefined,
     onDragToCreateEnded: undefined,
-    actions: []
+    onContextMenuShow: undefined
   };
 
   /**
@@ -514,8 +504,9 @@ export default class Timeline extends React.Component {
       dragToCreateMode: false,
       openMenu: false,
       dragCancel: false,
+      rightClickDraggingState: undefined,
       openedContextMenuCoordinates: undefined,
-      isRightClickDragging: false
+      openedContextMenuRow: undefined
     };
 
     // These functions need to be bound because they are passed as parameters.
@@ -544,6 +535,8 @@ export default class Timeline extends React.Component {
     this.select_ref_callback = this.select_ref_callback.bind(this);
     this.throttledMouseMoveFunc = _.throttle(this.throttledMouseMoveFunc.bind(this), 20);
     this.mouseMoveFunc = this.mouseMoveFunc.bind(this);
+    this.mouseDownFunc = this.mouseDownFunc.bind(this);
+    this.mouseUpFunc = this.mouseUpFunc.bind(this);
     this.getCursor = this.getCursor.bind(this);
     this.setVerticalGridLines = this.setVerticalGridLines.bind(this);
     this.selectionChangedHandler = this.selectionChangedHandler.bind(this);
@@ -555,7 +548,6 @@ export default class Timeline extends React.Component {
 
     this.selectionHolder = new SelectionHolder();
     this.selectionHolder.selectionChangedHandler = this.selectionChangedHandler;
-    this.menuActionsHolder = new MenuActionsHolder(this.selectionHolder);
   }
 
   componentDidMount() {
@@ -1032,8 +1024,8 @@ export default class Timeline extends React.Component {
         this.props.onDragToCreateEnded({groupIndex: topRowNumber, itemIndex, itemStart: startTime, itemEnd: endTime});
       }
 
-      if (event.ctrlKey || event.shiftKey) {
-        this.setState(openedContextMenuCoordinates, {x: event.x, y: event.y});
+      if (event.button == 2) {
+        this.setState({openedContextMenuCoordinates: {x: event.clientX, y: event.clientY}});
       }
     }
   }
@@ -1377,17 +1369,18 @@ export default class Timeline extends React.Component {
         (e.type == 'click' || (window.ontouchstart && e.type == 'tap') || e.type == 'contextmenu')
       ) {
         this.selectionHolder.addRemoveItems([], e);
-      }
-
-      if (!e.type == 'contextMenu') {
-        // left click on a row => close CM
-        this.setState(openedContextMenuCoordinates, undefined);
+        if (e.type != 'contextmenu') {
+          this.setState({openedContextMenuCoordinates: undefined});
+        } else {
+          // right click on a row
+          this.setState({openedContextMenuRow: row});
+        }
       }
     }
 
-    if (e.type == 'contextMenu') {
+    if (e.type == 'contextmenu') {
       // right click => open CM
-      this.setState(openedContextMenuCoordinates, {x: e.x, y: e.y});
+      this.setState({openedContextMenuCoordinates: {x: e.clientX, y: e.clientY}});
     }
   };
 
@@ -1571,22 +1564,30 @@ export default class Timeline extends React.Component {
   mouseMoveFunc(e) {
     e.persist();
     this.throttledMouseMoveFunc(e);
-    if (this.state.isRightClickDragging) {
+    if (this.state.rightClickDraggingState == 'start') {
+      this.onDragStartSelect(e.clientX, e.clientY);
+      this.setState({rightClickDraggingState: 'move'});
+    } else if (this.state.rightClickDraggingState == 'move') {
       this.onDragMoveSelect(e.clientX, e.clientY, e.pageX);
     }
   }
 
   mouseDownFunc(e) {
+    // Because we wanted the drag to select feature to work similar to the one in Windows Explorer
+    // We needed it to work also on right click. But the initial implementation of drag to select from the timeline
+    // is based on interact js that ignores right click drag (this type of drag is not a nativelly supported one).
+    // We choosed a basic implementation using mouseDown, mouseMove and mouseUp events for implementing the right click drag to select
     if (e.button === 2) {
-      this.setState({isRightClickDragging: true});
-      this.onDragStartSelect(e.clientX, e.clientY);
+      this.setState({rightClickDraggingState: 'start'});
     }
   }
 
   mouseUpFunc(e) {
     if (e.button === 2) {
-      this.setState({isRightClickDragging: false});
-      this.onDragEndSelect(e);
+      if (this.state.rightClickDraggingState == 'move') {
+        this.onDragEndSelect(e);
+      }
+      this.setState({rightClickDraggingState: undefined});
     }
   }
 
@@ -1829,12 +1830,6 @@ export default class Timeline extends React.Component {
                     this._selectBox.end();
                   }
                 }}>
-                {/**
-                 * Because we wanted the drag to select feature to work similar to the one in Windows Explorer
-                 * We needed it to work also on right click. But the initial implementation of drag to select from the timeline
-                 * is based on interact js that ignores right click drag (this type of drag is not a nativelly supported one).
-                 * We choosed a basic implementation using mouseDown, mouseMove and mouseUp events for implementing the right click drag to select
-                 */}
                 <div
                   className="parent-div"
                   onMouseDown={this.mouseDownFunc}
@@ -1883,14 +1878,21 @@ export default class Timeline extends React.Component {
                     shallowUpdateCheck={shallowUpdateCheck}
                     forceRedrawFunc={forceRedrawFunc}
                   />
-                  {/**
-                  * TODO DB: use modalExt (or another modal extendion with copied code from modalExt) in order to pass x, y (this.state.openedContextMenuCoordinates) on open and for repositioning logic, current problem: the gantt project doesn't depend on foundation project
-                  * ?? in case multiple menu opened (menu and submenus) can we use in modalExt? maybe a popupExt will be needed  
-                  * /
-                  }
-                  {/* <ModalExt open={this.state.openedContextMenuCoordinates}>
-                    <ContextMenu menuActionsHolder={this.menuActionsHolder} closeMenu={this.setState(openedContextMenuCoordinates, undefined)}/>
-                  </ModalExt> */}
+                  {this.props.onContextMenuShow && (
+                    <ContextMenu
+                      paramsForAction={{
+                        selection: this.selectionHolder.selectedItems,
+                        row: this.state.openedContextMenuRow
+                      }}
+                      positionToOpen={this.state.openedContextMenuCoordinates}
+                      actions={this.props.onContextMenuShow({
+                        actionParam: {
+                          selection: this.selectionHolder.selectedItems,
+                          row: this.state.openedContextMenuRow
+                        }
+                      })}
+                    />
+                  )}
                   {backgroundLayer &&
                     React.cloneElement(backgroundLayer, {
                       startDateTimeline: this.getStartDate(),
@@ -1911,9 +1913,9 @@ export default class Timeline extends React.Component {
     );
   }
 
-  selectionChangeHandler(selectedItems) {
+  selectionChangedHandler() {
     // This is because the selectedItems are not kept in the state of the gantt but in the selection component
-    this.forceUpdate();
+    this._grid.forceUpdate();
   }
 
   ////////////////////////////////////////////////////////////////////////////////////////

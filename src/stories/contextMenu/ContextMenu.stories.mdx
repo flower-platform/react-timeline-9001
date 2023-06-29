@@ -1,0 +1,9 @@
+import { Meta, ArgsTable } from '@storybook/addon-docs';
+import Timeline from '../../timeline';
+import { encodeApiDocURIForSubpath, parametersDocPage } from '../StorybookUtils';
+
+<Meta title="Features/Context Menu/Doc" />
+
+## Context Menu
+In order for a context menu to be displayed at right click on a `Timeline` the `onContextMenuShow` property should be set. This should provide action descriptors for the menu entries that will fill in the menu
+<ArgsTable of={Timeline} sort="none" include={["onContextMenuShow"]}/> 

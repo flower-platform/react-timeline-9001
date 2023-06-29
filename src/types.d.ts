@@ -1,3 +1,5 @@
+import { IAction, IActionParam, IActionParamForRun, IOnContextMenuShowParam } from "./components/ContextMenu/IAction"
+
 /**
  * Most of the JS classes/functions have type information as JSDoc (included in the corresponding comments).
  * For some types this was not possible (e.g. because we didn't have actual classes), hence we define them here.
@@ -52,13 +54,18 @@ export type DragToCreateParam = {
     itemEnd?: object //  End for new item
 }
 
-export type Action = {
-    isVisible: Function,
-    icon?: string,
-    label?: string,
-    run?: Function,
-    closeMenuAfterRun?: boolean,
-    // TODO DB: will add this only if we will implement the subactions functionality
-    // subActions: Action[],
-    customRenderer?: Function
+export interface IGanttOnContextMenuShowParam extends IOnContextMenuShowParam {
+    actionParam: IGanttActionParam
+}
+
+export interface IGanttActionParam extends IActionParam {
+    row : number;
+}
+
+export interface IGanttActionParamForRun extends IGanttActionParam, IActionParamForRun {
+}
+
+export interface IGanttAction extends IAction {
+    run?: (param: IGanttActionParamForRun) => void,
+    label?: string | ((param: IGanttActionParam) => string)
 }

@@ -25,6 +25,13 @@ export class SelectionHolder {
    * TODO DB: ask CS: in windows explorer right click works different in one special case: ctrl + simple right click (but not shift + simple right click, and not ctrl + right click selection rectangle)
    */
   addRemoveItems(itemsKeys: number[], event: MouseEvent) {
+    if (event.type == "contextmenu") {
+      if (itemsKeys.length == 1 && this.selectedItems.includes(itemsKeys[0])) {
+        // right click on a selected item => doesn't change the selection
+        return;
+      }
+    }
+
     let newSelection;
     if (!(event.ctrlKey || event.shiftKey)) {
         // Single selection
