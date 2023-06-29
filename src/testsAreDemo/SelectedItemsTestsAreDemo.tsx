@@ -1,4 +1,4 @@
-import { Scenario, ScenarioOptions, render, tad } from "@famiprog-foundation/tests-are-demo";
+import { Only, Scenario, ScenarioOptions, render, tad } from "@famiprog-foundation/tests-are-demo";
 import { Main, tasksCount } from "../stories/basic/Basic.stories";
 import Timeline, { timelineTestids as testids } from "../timeline";
 
@@ -45,6 +45,22 @@ export class SelectedItemsTestsAreDemo {
         tad.demoForEndUserShow();
     }
 
+    @Scenario("GIVEN many selected items, WHEN I right click an item, THEN nothing changes")
+    @ScenarioOptions({ linkWithNextScenario: true })
+    async whenRightClickASelectedItem() {
+        tad.cc("");
+        tad.demoForEndUserHideNext();
+        await tad.userEventWaitable.click(tad.screenCapturing.getByTestId(testids.item + "_1"));
+        tad.demoForEndUserHideNext();
+        await tad.userEventWaitable.click(tad.screenCapturing.getByTestId(testids.item + "_2"), { ctrlKey: true });
+        await tad.showSpotlight({ message: "Given 2 items selected", focusOnLastElementCaptured: false });
+
+        tad.cc("Right click on one item");
+        await tad.fireEventWaitable.contextMenu(tad.screenCapturing.getByTestId(testids.item + "_1"));
+
+        await this.assertOnlyExpectedItemsAreSelected([1, 2]);
+    }
+
     @Scenario("GIVEN 2 items selected, WHEN I click/right click outside any selectable item, THEN no item is selected")
     async whenClickRightClickOutside() {
         // left click on row => no item is selected
@@ -64,7 +80,7 @@ export class SelectedItemsTestsAreDemo {
         await this.assertOnlyExpectedItemsAreSelected([], true);
         tad.demoForEndUserShow();
     }
-
+    
     @Scenario("GIVEN any previous selection, WHEN I click/rightClick an item and ctrl/shift is pressed, THEN the clicked item is added/removed from the previous selection")
     @ScenarioOptions({ linkWithNextScenario: true })
     async whenClickRightClickWithCtrlOrShiftAnItem() {
@@ -86,42 +102,39 @@ export class SelectedItemsTestsAreDemo {
         await tad.showSpotlight({ message: "No item selected", focusOnLastElementCaptured: false });
         await this.assertOnlyExpectedItemsAreSelected([]);
 
-        await tad.showSpotlight({ message: "Same as CLICK + CTRL works: CLICK + SHIFT, RIGHT CLICK + CTRL, RIGHT CLICK + SHIFT", focusOnLastElementCaptured: false });
+        await tad.showSpotlight({ message: "Same as CLICK + CTRL works: CLICK + SHIFT, RIGHT CLICK + CTRL, RIGHT CLICK + SHIFT. !!!EXCEPTION: Right click on selection doesn't do anything", focusOnLastElementCaptured: false });
         tad.demoForEndUserHide();
         // left click + SHIFT => element is selected
-        tad.cc("With SHIFT Key pressed");
         await tad.userEventWaitable.click(tad.screenCapturing.getByTestId(testids.item + "_2"), { shiftKey: true });
         await this.assertOnlyExpectedItemsAreSelected([2], true);
 
         // left click + SHIFT on another element => the new element is added to selection
-        tad.cc("With SHIFT Key pressed");
         await tad.userEventWaitable.click(tad.screenCapturing.getByTestId(testids.item + "_3"), { shiftKey: true });
         await this.assertOnlyExpectedItemsAreSelected([2, 3], true);
 
         // left click + SHIFT on same element => the element is removed from selection
-        tad.cc("With SHIFT Key pressed");
         await tad.userEventWaitable.click(tad.screenCapturing.getByTestId(testids.item + "_3"), { shiftKey: true });
-        tad.cc("With SHIFT Key pressed");
-        await tad.fireEventWaitable.contextMenu(tad.screenCapturing.getByTestId(testids.item + "_2"), { shiftKey: true });
+        await tad.fireEventWaitable.click(tad.screenCapturing.getByTestId(testids.item + "_2"), { shiftKey: true });
         await this.assertOnlyExpectedItemsAreSelected([], true);
 
         // right click + CTRL => element is added to selection
-        tad.cc("With CTRL Key pressed");
         await tad.fireEventWaitable.contextMenu(tad.screenCapturing.getByTestId(testids.item + "_5"), { ctrlKey: true });
         await this.assertOnlyExpectedItemsAreSelected([5], true);
 
         // right click + CTRL on another element => the new element is added to selection
-        tad.cc("With CTRL Key pressed");
         await tad.fireEventWaitable.contextMenu(tad.screenCapturing.getByTestId(testids.item + "_6"), { ctrlKey: true });
         await this.assertOnlyExpectedItemsAreSelected([5, 6], true);
 
-        // right click + CTRL on same element => the element is removed from selection
-        tad.cc("With CTRL Key pressed");
-        await tad.fireEventWaitable.contextMenu(tad.screenCapturing.getByTestId(testids.item + "_6"), { ctrlKey: true });
-        tad.cc("With CTRL Key pressed");
+        tad.demoForEndUserShow();
+        // right click + CTRL on same element => the selection doesn't change
+        tad.cc("Right click With CTRL Key pressed");
         await tad.fireEventWaitable.contextMenu(tad.screenCapturing.getByTestId(testids.item + "_5"), { ctrlKey: true });
-        await tad.showSpotlight({ message: "No item selected", focusOnLastElementCaptured: false });
-        await this.assertOnlyExpectedItemsAreSelected([], true);
+        await this.assertOnlyExpectedItemsAreSelected([5, 6]);
+        tad.demoForEndUserHide();
+
+        // deleselect all items
+        await tad.userEventWaitable.click(tad.screenCapturing.getByTestId(testids.item + "_5"), { shiftKey: true });
+        await tad.fireEventWaitable.click(tad.screenCapturing.getByTestId(testids.item + "_6"), { shiftKey: true });
 
         // right click + SHIFT => element is selected
         await tad.fireEventWaitable.contextMenu(tad.screenCapturing.getByTestId(testids.item + "_5"), { shiftKey: true });
@@ -131,19 +144,14 @@ export class SelectedItemsTestsAreDemo {
         await tad.fireEventWaitable.contextMenu(tad.screenCapturing.getByTestId(testids.item + "_6"), { shiftKey: true });
         await this.assertOnlyExpectedItemsAreSelected([5, 6], true);
 
-        // right click + SHIFT on same element => the element is removed from selection
+        // right click + SHIFT on same element => the selection doesn't change
         await tad.fireEventWaitable.contextMenu(tad.screenCapturing.getByTestId(testids.item + "_5"), { shiftKey: true });
-        await this.assertOnlyExpectedItemsAreSelected([6], true);
+        await this.assertOnlyExpectedItemsAreSelected([5, 6], true);
         tad.demoForEndUserShow();
     }
 
     @Scenario("GIVEN 2 items selected, WHEN I click/right click outside any selectable item and ctrl/shift is pressed, THEN selection doesn't change")
     async whenClickRightClickOutsideWithCtrlOrShift() {
-        // Given I select another item
-        tad.cc("With CTRL Key pressed");
-        tad.demoForEndUserHideNext();
-        await tad.userEventWaitable.click(tad.screenCapturing.getByTestId(testids.item + "_5"), { ctrlKey: true });
-
         // When I click outside + Ctrl key => selection doesn't change
         tad.cc("Click outside with CTRL Key pressed");
         await tad.userEventWaitable.click(tad.screenCapturing.getByTestId(testids.row + "_1"), { ctrlKey: true });

@@ -1564,7 +1564,8 @@ export default class Timeline extends React.Component {
   mouseMoveFunc(e) {
     e.persist();
     this.throttledMouseMoveFunc(e);
-    if (this.state.rightClickDraggingState == 'start') {
+    if (this.state.rightClickDraggingState && this.state.rightClickDraggingState != 'move') {
+      e = this.state.rightClickDraggingState;
       this.onDragStartSelect(e.clientX, e.clientY);
       this.setState({rightClickDraggingState: 'move'});
     } else if (this.state.rightClickDraggingState == 'move') {
@@ -1578,7 +1579,7 @@ export default class Timeline extends React.Component {
     // is based on interact js that ignores right click drag (this type of drag is not a nativelly supported one).
     // We choosed a basic implementation using mouseDown, mouseMove and mouseUp events for implementing the right click drag to select
     if (e.button === 2) {
-      this.setState({rightClickDraggingState: 'start'});
+      this.setState({rightClickDraggingState: e});
     }
   }
 
