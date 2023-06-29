@@ -16,7 +16,7 @@ export const Main: ComponentStory<typeof Timeline> = () => {
         constructor(props) {
             super(props);
             this.state = {
-                tasks: someTasks,
+                tasks: [...someTasks],
                 editTask: undefined,
                 editTaskTitle: undefined,
             };
@@ -39,14 +39,7 @@ export const Main: ComponentStory<typeof Timeline> = () => {
                                         label: "Delete",
                                         isVisible: (param) => { return param.selection.length > 0; },
                                         run: (param) => {
-                                            let tasks = this.state.tasks;
-                                            const selectedTasks = tasks.filter(task => param.selection.includes(task.key));
-                                            selectedTasks.forEach(function (selectedTask) {
-                                                // already in selection => remove it
-                                                tasks.splice(tasks.indexOf(selectedTask), 1);
-                                            });
-                                            this.setState({ tasks });
-                                            // Close the context menu
+                                            this.setState({ tasks: this.state.tasks.filter(task => !param.selection.includes(task.key)) });
                                             param.closeContextMenu();
                                         }
                                     },
@@ -69,8 +62,7 @@ export const Main: ComponentStory<typeof Timeline> = () => {
                                             return "Add task for " + someHumanResources[param.row].title
                                         },
                                         run: (param) => {
-                                            this.state.tasks.push({ key: this.state.tasks.length, row: param.row, title: 'NEW TASK', start: d('2018-09-20 1:00'), end: d('2018-09-20 3:00') });
-                                            this.forceUpdate();
+                                            this.setState({ tasks: [...this.state.tasks, { key: this.state.tasks.length, row: param.row, title: 'NEW TASK', start: d('2018-09-20 1:00'), end: d('2018-09-20 3:00') }] })
                                             param.closeContextMenu();
                                         }
                                     });
@@ -99,8 +91,7 @@ export const Main: ComponentStory<typeof Timeline> = () => {
                                 labelPosition='right'
                                 icon='checkmark'
                                 onClick={() => {
-                                    this.state.editTask.title = this.state.editTaskTitle;
-                                    this.forceUpdate();
+                                    this.setState({ tasks: this.state.tasks.map((task) => task == this.state.editTask ? { ...task, title: this.state.editTaskTitle } : task) });
                                     this.closeEditor();
                                 }}
                                 positive
