@@ -10,18 +10,27 @@ export default {
   component: Timeline
 };
 
+/**
+ * Needed in tests.
+ */
+export const tasksCount = someTasks.length + 2;
+
 export const Main: ComponentStory<typeof Timeline> = () => {
   // the rows (aka groups)
   // id is mandatory; should: be numeric, start from 0, have consecutive values
   const humanResources: Group[] = [...someHumanResources, { id: 4, title: 'George Walsh' }];
 
-  // the segments
+  // the segments (aka segments)
   // key is mandatory; row should point to the "id" of a row/group
   const tasks: Item[] = [
-    ...someTasks, // we split this array in 2 parts for illustration purposes, i.e. to capture the data shape in the storybook
+    ...someTasks,
     { key: 11, row: 4, title: 'Task GW1', start: d('2018-09-20 7:00'), end: d('2018-09-20 8:00') },
     { key: 12, row: 4, title: 'Task GW2', start: d('2018-09-20 17:00'), end: d('2018-09-20 19:00') }
   ];
+
+  // NOTE: for DRY purposes, we store the sample data (e.g. humanResources, segments) in sampleData.ts.
+  // If you look at this function from within Storybook, you don't see easily sampleData.ts.
+  // That's why we added some additional records here, so that the shape of data is clear.
 
   return (
     <>
@@ -39,6 +48,7 @@ Main.parameters = {
   scenarios: [
     timelineScenarios.rendererForGroups,
     timelineScenarios.rendererForItems,
-    timelineScenarios.whenMouseMovesThenRedBar
+    timelineScenarios.whenMouseMovesThenRedBar,
+    timelineScenarios.whenClickOrDragToSelectThenItemsSelected
   ]
 };

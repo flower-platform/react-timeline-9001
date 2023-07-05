@@ -86,7 +86,14 @@ export function rowItemsRenderer(
         data-item-index={i.key}
         className={outerClassnames}
         style={{left, width, top, backgroundColor: 'transparent'}}>
-        <Comp {...itemRendererDefaultProps} {...i} item={i} className={compClassnames} height={adjustedItemHeight} />
+        <Comp
+          {...itemRendererDefaultProps}
+          {...i}
+          item={i}
+          className={compClassnames}
+          height={adjustedItemHeight}
+          isSelected={isSelected}
+        />
       </span>
     );
   });
@@ -257,7 +264,7 @@ export function getMaxOverlappingItems(items, getStartFromItem, getEndFromItem, 
 
 /**
  * It finds the ancestor with the provided className of the element.
- * @param {Object} the DOM element
+ * @param {Object} element the DOM element
  * @param {string} className
  * @returns {Object} ancestor with className
  */
