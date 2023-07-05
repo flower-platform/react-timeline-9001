@@ -5,6 +5,45 @@ import Timeline, { timelineTestids as testids } from "../timeline";
 /**
 * @author Daniela Buzatu
 */
+/* TODO CSR
+- interesul meu principal, este maximul de impact vizual; impresionare
+- ma pun in pielea privitorului: ce mi-ar placea sa vad?
+- (*) afisarea tuturor functionalitatilor e obositoare? Ar inseamna ca trebuie sa avem un mod mai mini. Si/sau musai un bullet list de lucruri pe care 
+le voi vedea sau le-am vazut. Prima parte nu e usoara in modul "live"; in modul "poze inregistrate", se schimba treaba
+- fir narativ natural care sa atinga toate functionalitatile: pot testa cu metodele "clasice" TAD? Adica fara sa fiu nevoit sa fac functii precum: 
+assertOnlyExpectedItemsAreSelected
+
+Ca user cred ca mi-ar prinde bine o chestie de genul:
+(si nu cred ca se intra in cazul *)
+
+WHEN click on a segment, THEN only that segment is selected
+> intr-adevar pt notiunea de "is selected" parca as face si eu o functie auxiliara, care ar verifica ca elem respectiv are ancore, ca .getSelected() == el si
+> faptul ca listenerul de "on selection changed" == el
+
+WHEN click on another segment, THEN only that segment is selected (so the previously selected segment is no more selected)
+> ca si scenariu, de fapt e cam acelasi; ca demo, imi pare natural; 
+
+WHEN CTRL + click on a segment, THEN that segment is ADDED to the selection, AND both are now selected
+
+WHEN CTRL + click on a selected segment, THEN that segment is REMOVED from the selection, AND only one is now selected
+
+WHEN CTRL + click outside segments, THEN the selection doesn't change
+
+WHEN click outside segments, THEN the selection becomes empty
+
+WHEN drag a selection rectangle over 2 segments, THEN only those 2 segments are selected
+
+WHEN drag a selection rectangle over another segment, THEN only that segment is selected (so the previous 2 segments are not selected any more)
+
+WHEN hold CTRL + drag a selection rectangle over another segment, THEN that segment is ADDED to the selection, AND both are now selected
+
+WHEN hold CTRL + drag a selection rectangle over an already selected segment, THEN that segment is REMOVED from the selection, AND only one is selected
+
+WHEN hold CTRL + drag a selection rectangle over an empty area, THEN the selection doesn't change
+
+WHEN drag a selection rectangle over an empty area, THEN the selection becomes empty
+
+*/
 export class SelectedItemsTestsAreDemo {
     async before() {
         render(<Main />);
@@ -268,6 +307,7 @@ export class SelectedItemsTestsAreDemo {
     ////// Helper methods
     ////////////////////////////////////////////////////////////////////////////////////////
 
+    // TODO CSR: de ce nu functioneaza functia tad.drag(), si suntem nevoiti sa facem acest cod complicat?
     async dragToSelect(startingRowIndex, endingRowIndex, startingItemIndex, endingItemIndex, rightClick?, ctrlKey = false, shiftKey = false) {
         let startingRow = tad.screenCapturing.getByTestId(testids.row + "_" + startingRowIndex);
         let startingRowRect = startingRow.getBoundingClientRect();
@@ -306,12 +346,16 @@ export class SelectedItemsTestsAreDemo {
         }
     }
 
+    // TODO CSR: regula cu teste "dumb" e violata. Avem aici ditamai codul. Sa discutam, sa vedem daca putem obtine un procent de testare identic
+    // sau mai mic dar comparabil, cu putine linii de cod
     async assertOnlyExpectedItemsAreSelected(expectedSelectedItems: number[], demoForEndUserHide?) {
         for (var i = 0; i < tasksCount; i++) {
             const item = tad.screenCapturing.getByTestId(testids.item + "_" + i);
             const innerItem = item.getElementsByClassName("rct9k-items-inner")[0];
             if (expectedSelectedItems.indexOf(i) >= 0) {
                 tad.cc("Item " + i + " is selected (has resize anchors, brighter color and shadow effect)");
+                // TODO CSR: sa inteleg ca afisarea "selected", inseamna folosirea acestor 3 chestii? De ce sunt 2 clase? De ce filterul nu e si el clasa?
+                // Datorita ultimei, testul nu e stabil in cazul in care dorim o modificare mica, e.g. alt brightness
                 await tad.assertWaitable.include(Array.from(item.classList), "rct9k-items-outer-selected");
                 tad.demoForEndUserHide();
                 await tad.assertWaitable.include(Array.from(innerItem.classList), "rct9k-items-selected");
