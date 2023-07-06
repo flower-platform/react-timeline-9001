@@ -15,8 +15,7 @@ ReactDOM.render(
     importSemanticUiCss
     app={<DemoTimeline />}
     importTestsCallback={() => {
-      // tad.addTests(DragToCreateTestsAreDemo, ExpTestsAreDemo, SelectedItemsTestsAreDemo);
-      tad.addTests(SelectedItemsTestsAreDemo);
+      tad.addTests(DragToCreateTestsAreDemo, ExpTestsAreDemo, SelectedItemsTestsAreDemo);
     }}
   />,
   document.getElementById('root')
