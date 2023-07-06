@@ -7,7 +7,8 @@ import { Group, Item } from '../../index';
 
 export default {
   title: 'Features/Basic',
-  component: Timeline
+  component: Timeline,
+  includeStories: /^[A-Z]/
 };
 
 /**

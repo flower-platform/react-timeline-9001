@@ -1,6 +1,4 @@
 /**
- * TODO DB: Selection logic for mobile - to discuss with CS
- * 
  * @author Daniela Buzatu
  */
 export class SelectionHolder {
@@ -22,7 +20,6 @@ export class SelectionHolder {
    * It adds/removes from selection (in case of multiple selection) or set the selection (in case of single selection)
    * 
    * Usually the right click on the host component works just as a left click regarding the selection.  So the host component calls should be the same in both click cases 
-   * TODO DB: ask CS: in windows explorer right click works different in one special case: ctrl + simple right click (but not shift + simple right click, and not ctrl + right click selection rectangle)
    */
   addRemoveItems(itemsKeys: number[], event: MouseEvent) {
     if (event.type == "contextmenu") {
