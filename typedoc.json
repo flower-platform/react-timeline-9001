@@ -1,5 +1,4 @@
 {
     "entryPoints": ["src/index.js"],
-    "tsconfig": "./tsconfig.ts-types-from-typedoc.json",
-    "jsDocCompatibility": true
+    "tsconfig": "./tsconfig.ts-types-from-jsdoc.json"
 }
