@@ -297,6 +297,7 @@ export class SelectedItemsTestsAreDemo {
 
             await tad.fireEventWaitable.mouseUp(tad.screenCapturing.getByTestId(testids.row + "_1"), { button: 2, ctrlKey: ctrlKey, shiftKey: shiftKey });
             tad.demoForEndUserHide();
+            tad.dra
         } else {
             // 150 is the group offset
             // we needed to subtract -5 because else the the selection rectangle (that snapps to row) will get till the endingRow + 1, instead endingRow
