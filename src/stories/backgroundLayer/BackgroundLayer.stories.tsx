@@ -5,7 +5,7 @@ import { HighlightedInterval } from '../../components/HighlightedInterval';
 import { Marker } from '../../components/Marker';
 import { someHumanResources, startOfCurrentMonth, endOfCurrentMonth, dateAndHourOfCurrentMonth } from '../sampleData';
 import { backgroundLayerScenarios } from './BackgroundLayerScenarios';
-import { Item } from '../../index';
+import { Item } from '../../types';
 import { Table, Column, DataCell} from 'fixed-data-table-2';
 export default {
   title: 'Features/Background Layer'
@@ -84,7 +84,7 @@ export const CustomClassNamesAndStyles = () => {
 CustomClassNamesAndStyles.parameters = {
   scenarios: [
     backgroundLayerScenarios.verticalGridClassName,
-    backgroundLayerScenarios.nowMarkerClassName,
+    backgroundLayerScenarios.nowMaSrkerClassName,
     backgroundLayerScenarios.highlightWeekendsClassName,
     backgroundLayerScenarios.classNameForMarker,
     backgroundLayerScenarios.highlightedIntervalClassName
