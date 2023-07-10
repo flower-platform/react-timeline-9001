@@ -136,6 +136,24 @@
 
 .rct9k-grid {
   border-bottom: 1px solid #ccc;
+
+  /* This was added because we needed to have the highlighted intervals and markers behind the segments, 
+  but in front of the rows (because they are opaque, being colored). 
+  The only way to achive this via css is by having the z-index of the segments > z-index of the highlighted intervals and markers,
+  and the segments not being in a different stacking context than the highlighted intervals 
+  (for understanding the "stacking context" concept see https://www.joshwcomeau.com/css/stacking-contexts/)
+
+  As stated in the above article, "will-change" creates a stacking context for its children so 
+  even if segments.z-index > highlightedIntervals.z-index, the segments were displayed behind the highlighted intervals
+  
+  !!! We need to pay attention for this to not cause any performance issue: 
+  the "will-change: transform;" was set by the virtualized grid component to prevent a performance issue: https://github.com/bvaughn/react-virtualized/blob/e78651c3d844c6f639347d1fb796072783c175d2/CHANGELOG.md?plain=1#L1082
+  But strange thing: from our tests this seems to improve the performance of the scroll.  
+  
+  If we'll have problems in the future the solution to the initial problem will be to refactor the structure of our components (the dom)
+  so that the highlighted intervals and markers to be children of rct9k-grid (now they are siblings)
+  */
+  will-change: unset !important;
 }
 
 /**
@@ -148,7 +166,6 @@
 
 .ReactVirtualized__Grid {
   overflow-x: hidden;
-  z-index: 1;
 }
 
 .ReactVirtualized__Grid__innerScrollContainer:first-child {

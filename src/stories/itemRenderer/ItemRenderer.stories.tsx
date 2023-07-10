@@ -6,7 +6,7 @@ import {d, someHumanResources, someTasks} from '../sampleData';
 import {itemRendererScenarios} from './ItemRendererScenarios';
 import {timelineScenarios} from '../TimelineScenarios';
 import { ComponentStory } from '@storybook/react';
-import { Item } from '../../index';
+import { Item } from '../../types';
 import { Table, Column, DataCell} from 'fixed-data-table-2';
 
 export default {

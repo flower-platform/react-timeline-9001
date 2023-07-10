@@ -46,7 +46,7 @@ import 'fixed-data-table-2/dist/fixed-data-table.css';
 import {GroupHeaderRenderer} from './components/GroupHeaderRenderer';
 // TODO DB this is temporary. Created a copy because if we have used ItemRenderer file the default property for itemRenderer property
 // didn't work and it gets undefined
-import ItemRenderer from './components/ItemRenderer1';
+import ItemRenderer from './components/ItemRenderer';
 
 const testids = createTestids('Timeline', {
   menu: '',
@@ -1440,7 +1440,8 @@ export default class Timeline extends React.Component {
             canSelect ? this.props.selectedItems : [],
             this.props.itemRendererDefaultProps,
             this.getStartFromItem,
-            this.getEndFromItem
+            this.getEndFromItem,
+            timelineTestids
           )}
           {rowLayerRenderer(
             layersInRow,
