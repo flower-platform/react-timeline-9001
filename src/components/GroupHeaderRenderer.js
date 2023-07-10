@@ -1,5 +1,5 @@
 import React from 'react';
-import {Column} from '../index';
+import {Column} from '../types';
 
 /**
  * Renderer for column header.

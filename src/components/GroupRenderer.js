@@ -1,5 +1,5 @@
 import React from 'react';
-import {Group} from '../index';
+import {Group} from '../types';
 
 /**
  * Group (row) renderer class

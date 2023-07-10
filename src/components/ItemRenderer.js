@@ -1,7 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import Color from 'color';
-import {Item} from '../index';
+import {Item} from '../utils/itemUtils';
 
 const ITEM_RENDERER_CLS = 'rct9k-item-renderer';
 const ITEM_RENDERER_GLOW_CLS = 'rct9k-item-glow';

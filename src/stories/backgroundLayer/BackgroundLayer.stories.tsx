@@ -5,7 +5,7 @@ import { HighlightedInterval } from '../../components/HighlightedInterval';
 import { Marker } from '../../components/Marker';
 import { someHumanResources, startOfCurrentMonth, endOfCurrentMonth, dateAndHourOfCurrentMonth } from '../sampleData';
 import { backgroundLayerScenarios } from './BackgroundLayerScenarios';
-import { Item } from '../../index';
+import { Item } from '../../types';
 export default {
   title: 'Features/Background Layer'
 };

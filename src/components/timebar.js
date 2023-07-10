@@ -7,7 +7,7 @@ import moment from 'moment';
 import {intToPix} from '../utils/commonUtils';
 import {GroupHeaderRenderer} from './GroupHeaderRenderer';
 import {timebarFormat as defaultTimebarFormat} from '../consts/timebarConsts';
-import {Column} from '../index';
+import {Column} from '../types';
 
 /**
  * Timebar component - displays the current time on top of the timeline.
