@@ -2,10 +2,16 @@
     "include": [
         "src"
     ],
+    "exclude": [
+        "src/demo/*", "src/demo*.js", "src/setupTests.js", "src/*test.js", "src/*/*.test.js", "src/stories/*", "src/testsAreDemo"
+    ],
     "compilerOptions": {
-        "outDir": "dist-ts",
+        "outDir": "types",
         "allowJs": true,
+        "declaration": true,
+        "declarationMap": true,
         "esModuleInterop": true,
+        "skipLibCheck": true,
         "jsx": "react-jsx",
         "experimentalDecorators": true,
         "sourceMap": true
