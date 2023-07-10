@@ -1,7 +1,7 @@
 'use strict';
 
 import {Cell} from 'fixed-data-table-2';
-import React from 'react';
+import React, {Fragment} from 'react';
 import _ from 'lodash';
 import moment from 'moment';
 import {Component} from 'react';
@@ -65,7 +65,7 @@ class CheckBoxCellRenderer extends GroupRenderer {
         <Checkbox> Checkbox </Checkbox>
       </DataCell>
     ) : (
-      ''
+      <Fragment />
     );
   }
 }
