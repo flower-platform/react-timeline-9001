@@ -287,6 +287,7 @@ export class SelectedItemsTestsAreDemo {
     ////// Helper methods
     ////////////////////////////////////////////////////////////////////////////////////////
 
+    // TODO CSR: de ce nu functioneaza functia tad.drag(), si suntem nevoiti sa facem acest cod complicat?
     async dragToSelect(startingRowIndex, endingRowIndex, startingSegmentIndex, endingSegmentIndex, rightClick?, ctrlKey = false, shiftKey = false) {
         let startingRow = tad.screenCapturing.getByTestId(testids.row + "_" + startingRowIndex);
         let startingRowRect = startingRow.getBoundingClientRect();
@@ -325,6 +326,8 @@ export class SelectedItemsTestsAreDemo {
         }
     }
 
+    // TODO CSR: regula cu teste "dumb" e violata. Avem aici ditamai codul. Sa discutam, sa vedem daca putem obtine un procent de testare identic
+    // sau mai mic dar comparabil, cu putine linii de cod
     async assertOnlyExpectedSegmentsAreSelected(expectedSelectedSegments: number[], demoForEndUserHide?) {
         for (var i = 0; i < tasksCount; i++) {
             const segment = tad.screenCapturing.getByTestId(testids.item + "_" + i);

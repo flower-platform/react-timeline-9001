@@ -1,4 +1,8 @@
 /**
+
+ * In the future, maybe we extract this in another library, so that it can also be reused by other components. 
+ * E.g. a table, a list.
+ * 
  * @author Daniela Buzatu
  */
 export class SelectionHolder {
