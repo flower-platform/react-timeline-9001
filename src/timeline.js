@@ -117,9 +117,9 @@ export default class Timeline extends React.Component {
     ).isRequired,
 
     /**
-     * @type { Array.<number> }
+     * @type { Array.<number | string> }
      */
-    selectedItems: PropTypes.arrayOf(PropTypes.number),
+    selectedItems: PropTypes.arrayOf(PropTypes.number | PropTypes.string),
 
     /**
      * The component that is the item (segment) renderer. You can change the default component (i.e. `ItemRenderer`). We
@@ -1286,7 +1286,7 @@ export default class Timeline extends React.Component {
     }
     if (e.target.hasAttribute('data-item-index') || e.target.parentElement.hasAttribute('data-item-index')) {
       let itemKey = e.target.getAttribute('data-item-index') || e.target.parentElement.getAttribute('data-item-index');
-      itemCallback && itemCallback(e, Number(itemKey));
+      itemCallback && itemCallback(e, itemKey);
     } else {
       let row = e.target.getAttribute('data-row-index');
       let clickedTime = getTimeAtPixel(
