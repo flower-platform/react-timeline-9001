@@ -23,5 +23,5 @@ export interface IAction {
     icon?: string | ((param: IActionParam) => string),
     label?: string | ((param: IActionParam) => string),
     run?: (param: IActionParamForRun) => void,
-    renderInMenu?: (param: IActionParam) => React.ReactNode
+    renderInMenu?: (param: IActionParamForRun) => React.ReactElement
 }

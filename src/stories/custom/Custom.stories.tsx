@@ -8,11 +8,10 @@ import { customTimelineScenarios } from "./CustomTimelineScenarios";
 import ReactDOM from "react-dom";
 
 export default {
-  title: 'Features/Custom',
-  component: Timeline
+  title: 'Features/Custom'
 };
 
-export const CustomMenuButtonRenderer: ComponentStory<typeof Timeline> = () => {
+export const CustomMenuButtonRenderer = () => {
 
   class CustomTimeline extends Timeline {
     static propTypes = {

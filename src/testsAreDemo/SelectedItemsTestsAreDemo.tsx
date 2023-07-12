@@ -1,14 +1,15 @@
 import { Only, Scenario, ScenarioOptions, render, tad } from "@famiprog-foundation/tests-are-demo";
-import { Main, tasksCount } from "../stories/basic/Basic.stories";
+import { assert } from "chai";
+import { Selection, selectionStoryTestIds } from "../stories/contextMenuAndSelection/ContextMenuAndSelection.stories";
+import { someTasks } from "../stories/sampleData";
 import Timeline, { timelineTestids as testids } from "../timeline";
-import AnchorLink from "antd/lib/anchor/AnchorLink";
 
 /**
 * @author Daniela Buzatu
 */
 export class SelectedItemsTestsAreDemo {
     async before() {
-        render(<Main />);
+        render(<Selection />);
     }
 
     @Only()
@@ -283,6 +284,12 @@ export class SelectedItemsTestsAreDemo {
         tad.demoForEndUserShow();
     }
 
+    // @Scenario("When click a segment the onSelectionChange handler is called")
+    // async whenClickASegmentSelectionHandlerIsCalled() {
+    //     await tad.userEventWaitable.click(tad.screenCapturing.getByTestId(testids.item + "_0"));
+    //     // tad.assertWaitable.equal(tad.screenCapturing.getByTestId(basicStoriesTestIds.selectedItemsSpan), task);
+    // }
+
     ////////////////////////////////////////////////////////////////////////////////////////
     ////// Helper methods
     ////////////////////////////////////////////////////////////////////////////////////////
@@ -303,20 +310,7 @@ export class SelectedItemsTestsAreDemo {
         // These events can not be tested using testing-library (we have tried using fireEvent.mouseDown, mouseOver, and mouseUp, but with no success). That's why the "cheat" was needed
         // 2. Drag to select on right click: triggered by mouseDown, mouseMove, mouseUp events
         if (rightClick) {
-            tad.demoForEndUserHide();
-            await tad.fireEventWaitable.mouseDown(startingRow, { clientX: startingSegmentRect.x, clientY: startingRowRect.y, button: 2, ctrlKey: ctrlKey, shiftKey: shiftKey });
-            // inspired from timeline#dragMove
-            // Triggers each 5 ms a mouse move of 5 px on x axes
-            let delta;
-            for (let i = 0; i < deltaX; i += 5) {
-                delta = Math.min(i + 5, deltaX);
-                await new Promise(resolve => setTimeout(resolve, 5));
-                // we needed to subtract -5 because else the the selection rectangle (that snapps to row) will get till the endingRow + 1, instead endingRow
-                await tad.fireEventWaitable.mouseMove(endingRow, { clientX: startingSegmentRect.x + deltaX, clientY: startingRowRect.y + deltaY - 5, pageX: startingSegmentRect.x + deltaX });
-            }
-
-            await tad.fireEventWaitable.mouseUp(tad.screenCapturing.getByTestId(testids.row + "_1"), { button: 2, ctrlKey: ctrlKey, shiftKey: shiftKey });
-            tad.demoForEndUserHide();
+            await tad.drag(startingRow, {from: {x: startingSegmentRect.x, y: startingRowRect.y}, to: {x: endingSegmentRect.x + endingSegmentRect.width, y: endingRowRect.y + endingRowRect.height - 5}, options: {button: 2, ctrlKey: ctrlKey, shiftKey: shiftKey}});
         } else {
             // 150 is the group offset
             // we needed to subtract -5 because else the the selection rectangle (that snapps to row) will get till the endingRow + 1, instead endingRow
@@ -326,27 +320,19 @@ export class SelectedItemsTestsAreDemo {
         }
     }
 
-    // TODO CSR: regula cu teste "dumb" e violata. Avem aici ditamai codul. Sa discutam, sa vedem daca putem obtine un procent de testare identic
-    // sau mai mic dar comparabil, cu putine linii de cod
     async assertOnlyExpectedSegmentsAreSelected(expectedSelectedSegments: number[], demoForEndUserHide?) {
-        for (var i = 0; i < tasksCount; i++) {
-            const segment = tad.screenCapturing.getByTestId(testids.item + "_" + i);
-            const innerSegment = segment.getElementsByClassName("rct9k-items-inner")[0];
+        for (var i = 0; i < someTasks.length; i++) {
+            const segment = tad.screenCapturing.getByTestId(testids.item + "_" + i).getElementsByClassName("rct9k-items-inner")[0];
             if (expectedSelectedSegments.indexOf(i) >= 0) {
                 tad.cc("Segment " + i + " is selected (has resize anchors, brighter color and shadow effect)");
-                await tad.assertWaitable.include(Array.from(segment.classList), "rct9k-items-outer-selected");
-                tad.demoForEndUserHide();
-                await tad.assertWaitable.include(Array.from(innerSegment.classList), "rct9k-items-selected");
-                tad.cc("And it has a brighter color and a shadow effect");
-                await tad.assertWaitable.include(innerSegment.getAttribute('style').split(";"), " filter: drop-shadow(black 0px 0px 0.5rem) brightness(1.25)");
-                !demoForEndUserHide && tad.demoForEndUserShow();
+                await tad.assertWaitable.include(Array.from(segment.classList), "rct9k-items-selected");
             } else {
                 tad.demoForEndUserHide();
-                await tad.assertWaitable.notInclude(Array.from(segment.classList), "rct9k-items-outer-selected");
-                await tad.assertWaitable.notInclude(Array.from(innerSegment.classList), "rct9k-items-selected");
-                await tad.assertWaitable.notInclude(innerSegment.getAttribute('style').split(";"), " filter: drop-shadow(black 0px 0px 0.5rem) brightness(1.25)");
+                await tad.assertWaitable.notInclude(Array.from(segment.classList), "rct9k-items-selected");
                 !demoForEndUserHide && tad.demoForEndUserShow();
             }
         }
+
+        assert.equal(tad.screenCapturing.getByTestId(selectionStoryTestIds.selectedItemsSpan).textContent, expectedSelectedSegments.sort().join(" ,"));
     }
 }

@@ -75,8 +75,6 @@ export function rowItemsRenderer(
 
     if (isSelected) {
       compClassnames += ' rct9k-items-selected';
-      outerClassnames += ' rct9k-items-outer-selected';
-      style = {};
     }
 
     return (
@@ -86,14 +84,7 @@ export function rowItemsRenderer(
         data-item-index={i.key}
         className={outerClassnames}
         style={{left, width, top, backgroundColor: 'transparent'}}>
-        <Comp
-          {...itemRendererDefaultProps}
-          {...i}
-          item={i}
-          className={compClassnames}
-          height={adjustedItemHeight}
-          isSelected={isSelected}
-        />
+        <Comp {...itemRendererDefaultProps} {...i} item={i} className={compClassnames} height={adjustedItemHeight} />
       </span>
     );
   });

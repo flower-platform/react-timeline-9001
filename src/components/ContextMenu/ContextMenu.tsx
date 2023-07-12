@@ -67,7 +67,7 @@ export class ContextMenu extends React.Component<ContextMenuProps, { isOpened?: 
               icon={action.icon instanceof Function ? action.icon({ ...this.props.paramsForAction }) : action.icon} content={action.label instanceof Function ? action.label({ ...this.props.paramsForAction }) : action.label}
               onClick={() => { action.run({ ...this.props.paramsForAction, closeContextMenu: this.close }); }}>
             </Menu.Item>
-            : action.renderInMenu(this.props.paramsForAction)
+            : React.cloneElement(action.renderInMenu({ ...this.props.paramsForAction, closeContextMenu: this.close }), {key: visibleActions.indexOf(action)})
           );
         })
         }

@@ -137,6 +137,8 @@ export default class Timeline extends React.Component {
     ).isRequired,
 
     /**
+     * By default when the user clicks/drag to select items they gets selected.
+     * By setting this property the gantt selection mechanism (mentioned above) is disabled, and the selected items are only the ones "dictated" by this property
      * @type { Array.<number> }
      */
     selectedItems: PropTypes.arrayOf(PropTypes.number),
@@ -344,7 +346,7 @@ export default class Timeline extends React.Component {
     /**
      * @type { Function }
      */
-    onItemContext: PropTypes.func,
+    onItemContextClick: PropTypes.func,
 
     /**
      * @type { Function }
@@ -359,7 +361,7 @@ export default class Timeline extends React.Component {
     /**
      * @type { Function }
      */
-    onRowContext: PropTypes.func,
+    onRowContextClick: PropTypes.func,
 
     /**
      * @type { Function }
@@ -411,10 +413,18 @@ export default class Timeline extends React.Component {
     onDragToCreateEnded: PropTypes.func,
 
     /**
+     * Function called everytime the segments selection changes.
+     * It receives as parameter the indexes of the selected items.
+     *
+     * @type {(selectedItems: number[]) => void}
+     */
+    onSelectionChange: PropTypes.func,
+
+    /**
      * Should provide actions that will fill the right click context menu.
      * If no actions are provided the context menu will not show
      *
-     * @type {(IGanttOnContextMenuShowParam) => IGanttAction[]}
+     * @type {(param: IGanttOnContextMenuShowParam) => IGanttAction[]}
      */
     onContextMenuShow: PropTypes.func
   };
@@ -450,9 +460,9 @@ export default class Timeline extends React.Component {
     topResolution: undefined,
     onItemClick() {},
     onItemDoubleClick() {},
-    onItemContext() {},
+    onItemContextClick() {},
     onRowClick() {},
-    onRowContext() {},
+    onRowContextClick() {},
     onRowDoubleClick() {},
     onGroupRowClick() {},
     onGroupRowDoubleClick() {},
@@ -461,7 +471,8 @@ export default class Timeline extends React.Component {
     backgroundLayer: null,
     onDragToCreateStarted: undefined,
     onDragToCreateEnded: undefined,
-    onContextMenuShow: undefined
+    onContextMenuShow: undefined,
+    onSelectionChange() {}
   };
 
   /**
@@ -533,6 +544,7 @@ export default class Timeline extends React.Component {
     this.updateDimensions = this.updateDimensions.bind(this);
     this.grid_ref_callback = this.grid_ref_callback.bind(this);
     this.select_ref_callback = this.select_ref_callback.bind(this);
+    this.selectionHolder_ref_callback = this.selectionHolder_ref_callback.bind(this);
     this.throttledMouseMoveFunc = _.throttle(this.throttledMouseMoveFunc.bind(this), 20);
     this.mouseMoveFunc = this.mouseMoveFunc.bind(this);
     this.mouseDownFunc = this.mouseDownFunc.bind(this);
@@ -545,9 +557,6 @@ export default class Timeline extends React.Component {
     const canDrag = Timeline.isBitSet(Timeline.TIMELINE_MODES.DRAG, this.props.timelineMode);
     const canResize = Timeline.isBitSet(Timeline.TIMELINE_MODES.RESIZE, this.props.timelineMode);
     this.setUpDragging(canSelect, canDrag, canResize);
-
-    this.selectionHolder = new SelectionHolder();
-    this.selectionHolder.selectionChangedHandler = this.selectionChangedHandler;
   }
 
   componentDidMount() {
@@ -1014,9 +1023,7 @@ export default class Timeline extends React.Component {
         this.props.onInteraction(Timeline.changeTypes.itemsSelected, selectedItems);
 
       // delegate the selection change to the selection component
-      !this.state.dragToCreateMode &&
-        !this.props.selectedItems &&
-        this.selectionHolder.addRemoveItems(_.map(selectedItems, 'key'), event);
+      !this.state.dragToCreateMode && this._selectionHolder.addRemoveItems(_.map(selectedItems, 'key'), event);
 
       if (this.state.dragToCreateMode && this.props.onDragToCreateEnded) {
         // get avaible itemIndex and call the onDragToCreateEnded
@@ -1042,7 +1049,13 @@ export default class Timeline extends React.Component {
     }
 
     const topDivClassId = `rct9k-id-${this.props.componentId}`;
-    const selectedItemSelector = '.rct9k-items-outer-selected';
+
+    /**
+     * This selector selects the "rct9k-items-outer" ancestors of the items that are selected.
+     * This was added to have only ".rct9k-items-selected" class for the selected items functionality
+     * Before it also existed "rct9k-items-outer-selected"class
+     */
+    const selectedItemSelector = '.rct9k-items-outer:has(.rct9k-items-selected)';
     if (this._itemInteractable) this._itemInteractable.unset();
     if (this._selectRectangleInteractable) this._selectRectangleInteractable.unset();
 
@@ -1068,11 +1081,7 @@ export default class Timeline extends React.Component {
           let selections = [];
           const animatedItems =
             this.props.onInteraction &&
-            this.props.onInteraction(
-              Timeline.changeTypes.dragStart,
-              null,
-              this.props.selectedItems ? this.props.selectedItems : this.selectionHolder.selectedItems
-            );
+            this.props.onInteraction(Timeline.changeTypes.dragStart, null, this._selectionHolder.state.selectedItems);
 
           _.forEach(animatedItems, id => {
             let domItem = this._gridDomNode.querySelector("span[data-item-index='" + id + "'");
@@ -1199,11 +1208,7 @@ export default class Timeline extends React.Component {
         .on('resizestart', e => {
           const selected =
             this.props.onInteraction &&
-            this.props.onInteraction(
-              Timeline.changeTypes.resizeStart,
-              null,
-              this.props.selectedItems ? this.props.selectedItems : this.selectionHolder.selectedItems
-            );
+            this.props.onInteraction(Timeline.changeTypes.resizeStart, null, this._selectionHolder.state.selectedItems);
           _.forEach(selected, id => {
             let domItem = this._gridDomNode.querySelector("span[data-item-index='" + id + "'");
             if (domItem) {
@@ -1344,12 +1349,9 @@ export default class Timeline extends React.Component {
       let itemKey = e.target.getAttribute('data-item-index') || e.target.parentElement.getAttribute('data-item-index');
       itemCallback && itemCallback(e, Number(itemKey));
       // window.ontouchstart added to checks is we are on mobile
-      if (
-        !this.props.selectedItems &&
-        (e.type == 'click' || (window.ontouchstart && e.type == 'tap') || e.type == 'contextmenu')
-      ) {
+      if (e.type == 'click' || (window.ontouchstart && e.type == 'tap') || e.type == 'contextmenu') {
         // Calculate new selection by delegating to selection component
-        this.selectionHolder.addRemoveItems([Number(itemKey)], e);
+        this._selectionHolder.addRemoveItems([Number(itemKey)], e);
       }
     } else {
       let row = e.target.getAttribute('data-row-index');
@@ -1364,16 +1366,13 @@ export default class Timeline extends React.Component {
       let snappedClickedTime = timeSnap(clickedTime, this.getTimelineSnap() * 60);
       rowCallback && rowCallback(e, row, clickedTime, snappedClickedTime);
 
-      if (
-        !this.props.selectedItems &&
-        (e.type == 'click' || (window.ontouchstart && e.type == 'tap') || e.type == 'contextmenu')
-      ) {
-        this.selectionHolder.addRemoveItems([], e);
+      if (e.type == 'click' || (window.ontouchstart && e.type == 'tap') || e.type == 'contextmenu') {
+        this._selectionHolder.addRemoveItems([], e);
         if (e.type != 'contextmenu') {
           this.setState({openedContextMenuCoordinates: undefined});
         } else {
           // right click on a row
-          this.setState({openedContextMenuRow: row});
+          this.setState({openedContextMenuRow: Number(row)});
         }
       }
     }
@@ -1439,11 +1438,7 @@ export default class Timeline extends React.Component {
               width,
               this.props.itemHeight,
               this.props.itemRenderer,
-              canSelect
-                ? this.props.selectedItems
-                  ? this.props.selectedItems
-                  : this.selectionHolder.selectedItems
-                : [],
+              canSelect ? this._selectionHolder.state.selectedItems : [],
               this.props.itemRendererDefaultProps,
               this.getStartFromItem,
               this.getEndFromItem
@@ -1532,6 +1527,10 @@ export default class Timeline extends React.Component {
    */
   select_ref_callback(reactComponent) {
     this._selectBox = reactComponent;
+  }
+
+  selectionHolder_ref_callback(reactComponent) {
+    this._selectionHolder = reactComponent;
   }
 
   /**
@@ -1802,6 +1801,11 @@ export default class Timeline extends React.Component {
     return (
       <Fragment>
         <TestsAreDemoCheat objectToPublish={this} />
+        <SelectionHolder
+          selectionChangedHandler={this.selectionChangedHandler}
+          ref={this.selectionHolder_ref_callback}
+          selectedItems={this.props.selectedItems}
+        />
         {
           // Instead of <Measure .../>, in the past <AutoSizer ... /> was used. However it would round with/height, which generated and endless
           // scrollbar appear/disappear, depending on the parent, depending on the resolution.
@@ -1882,13 +1886,13 @@ export default class Timeline extends React.Component {
                   {this.props.onContextMenuShow && (
                     <ContextMenu
                       paramsForAction={{
-                        selection: this.selectionHolder.selectedItems,
+                        selection: this._selectionHolder ? this._selectionHolder.state.selectedItems : [],
                         row: this.state.openedContextMenuRow
                       }}
                       positionToOpen={this.state.openedContextMenuCoordinates}
                       actions={this.props.onContextMenuShow({
                         actionParam: {
-                          selection: this.selectionHolder.selectedItems,
+                          selection: this._selectionHolder ? this._selectionHolder.state.selectedItems : [],
                           row: this.state.openedContextMenuRow
                         }
                       })}
@@ -1914,9 +1918,10 @@ export default class Timeline extends React.Component {
     );
   }
 
-  selectionChangedHandler() {
+  selectionChangedHandler(selectedItems) {
     // This is because the selectedItems are not kept in the state of the gantt but in the selection component
     this._grid.forceUpdate();
+    this.props.onSelectionChange(selectedItems);
   }
 
   ////////////////////////////////////////////////////////////////////////////////////////

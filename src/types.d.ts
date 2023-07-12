@@ -67,5 +67,6 @@ export interface IGanttActionParamForRun extends IGanttActionParam, IActionParam
 
 export interface IGanttAction extends IAction {
     run?: (param: IGanttActionParamForRun) => void,
-    label?: string | ((param: IGanttActionParam) => string)
+    label?: string | ((param: IGanttActionParam) => string),
+    renderInMenu?: (param: IGanttActionParamForRun) => React.ReactElement
 }

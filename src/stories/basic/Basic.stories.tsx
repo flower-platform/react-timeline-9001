@@ -1,27 +1,20 @@
-import React from 'react';
+import { ComponentStory } from '@storybook/react';
+import { Group, Item } from '../../index';
 import Timeline from '../../timeline';
 import { timelineScenarios } from '../TimelineScenarios';
 import { d, someHumanResources, someTasks } from '../sampleData';
-import { ComponentStory } from '@storybook/react';
-import { Group, Item } from '../../index';
 
 export default {
   title: 'Features/Basic',
-  component: Timeline,
-  includeStories: /^[A-Z]/
+  component: Timeline
 };
 
-/**
- * Needed in tests.
- */
-export const tasksCount = someTasks.length + 2;
-
-export const Main: ComponentStory<typeof Timeline> = () => {
+export const Main = () => {
   // the rows (aka groups)
   // id is mandatory; should: be numeric, start from 0, have consecutive values
   const humanResources: Group[] = [...someHumanResources, { id: 4, title: 'George Walsh' }];
 
-  // the segments (aka segments)
+  // the segments
   // key is mandatory; row should point to the "id" of a row/group
   const tasks: Item[] = [
     ...someTasks,
@@ -49,7 +42,6 @@ Main.parameters = {
   scenarios: [
     timelineScenarios.rendererForGroups,
     timelineScenarios.rendererForItems,
-    timelineScenarios.whenMouseMovesThenRedBar,
-    timelineScenarios.whenClickOrDragToSelectThenItemsSelected
+    timelineScenarios.whenMouseMovesThenRedBar
   ]
 };
