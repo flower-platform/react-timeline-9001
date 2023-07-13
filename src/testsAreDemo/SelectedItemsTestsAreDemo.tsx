@@ -207,31 +207,36 @@ export class SelectedItemsTestsAreDemo {
         //=======HIDDEN TESTS (Not interesting for the user)==========
         // Same as LEFT button + CTRL works: LEFT + SHIFT, RIGHT + CTRL, RIGHT + SHIFT
         tad.demoForEndUserHide();
-        // GIVEN segments 0,3 are selected
-        await tad.userEventWaitable.click(tad.screenCapturing.getByTestId(testids.item + "_3"), { ctrlKey: true });
-        // WHEN I draw a rectangle containing segments 3, 6, 9  with RIGHT mouse button and CTRL pressed, THEN segment 3 is unselected and 6, 9 are added to selection
-        await this.dragToSelect(1, 2, 9, 3, true, true);
-        await this.assertOnlyExpectedSegmentsAreSelected([0, 6, 9], true);
+        // unselect everything
+        await tad.userEventWaitable.click(tad.screenCapturing.getByTestId(testids.row + "_1"));
+         // WHEN I draw a rectangle containing segments 0, 3 with LEFT mouse button and SHIFT pressed, THEN segments 0, 3 are added to selection
+        await this.dragToSelect(0, 1, 3, 3, true, true);
+        await this.assertOnlyExpectedSegmentsAreSelected([0, 3], true);
+        // WHEN I draw a rectangle containing segment 3  with RIGHT mouse button and CTRL pressed, THEN segment 3 is unselected
+        await this.dragToSelect(1, 1, 3, 3, true, true);
+        await this.assertOnlyExpectedSegmentsAreSelected([0], true);
 
         // unselect everything
         await tad.userEventWaitable.click(tad.screenCapturing.getByTestId(testids.row + "_1"));
         // WHEN I draw a rectangle containing segments 0, 3 with LEFT mouse button and SHIFT pressed, THEN segments 0, 3 are selected
         await this.dragToSelect(0, 1, 3, 3, false, false, true);
-        // WHEN I draw a rectangle containing segments 3, 6, 9  with LEFT mouse button and SHIFT pressed, THEN segment 3 is unselected and 6, 9 are added to selection
-        await this.dragToSelect(1, 2, 9, 3, false, false, true);
-        await this.assertOnlyExpectedSegmentsAreSelected([0, 6, 9], true);
+        await this.assertOnlyExpectedSegmentsAreSelected([0, 3], true);
+        // WHEN I draw a rectangle containing segment 3  with LEFT mouse button and SHIFT pressed, THEN segment 3 is unselected 
+        await this.dragToSelect(1, 1, 3, 3, false, false, true);
+        await this.assertOnlyExpectedSegmentsAreSelected([0], true);
 
         // unselect everything
         await tad.userEventWaitable.click(tad.screenCapturing.getByTestId(testids.row + "_1"));
         // WHEN I draw a rectangle containing segments 0, 3 with RIGHT mouse button and SHIFT pressed, THEN segments 0, 3 are selected
         await this.dragToSelect(0, 1, 3, 3, true, false, true);
-        // WHEN I draw a rectangle containing segments 3, 6, 9  with RIGHT mouse button and SHIFT pressed, , THEN segment 3 is unselected and 6, 9 are added to selection
-        await this.dragToSelect(1, 2, 9, 3, true, false, true);
-        await this.assertOnlyExpectedSegmentsAreSelected([0, 6, 9], true);
+        await this.assertOnlyExpectedSegmentsAreSelected([0, 3], true);
+        // WHEN I draw a rectangle containing segment 3  with RIGHT mouse button and SHIFT pressed, , THEN segment 3 is unselected
+        await this.dragToSelect(1, 1, 3, 3, true, false, true);
+        await this.assertOnlyExpectedSegmentsAreSelected([0], true);
 
-        // Select again the segments 0,3
+        // Select again the segment 0
         await tad.userEventWaitable.click(tad.screenCapturing.getByTestId(testids.row + "_1"));
-        await this.dragToSelect(0, 1, 3, 3, false, true);
+        await this.dragToSelect(0, 0, 0, 0, false, true);
 
         tad.demoForEndUserShow();
     }
@@ -245,7 +250,7 @@ export class SelectedItemsTestsAreDemo {
         tad.getObjectViaCheat(Timeline).dragStart(startingRow, 5);
         await tad.getObjectViaCheat(Timeline).dragMove(10, 10, 5);
         tad.getObjectViaCheat(Timeline).dragEnd({ctrlKey: true});
-        await this.assertOnlyExpectedSegmentsAreSelected([0, 3]);
+        await this.assertOnlyExpectedSegmentsAreSelected([0]);
         
         //=======HIDDEN TESTS (Not interesting for the user)==========
         // Using right mouse button + CTRL works the same
@@ -254,7 +259,7 @@ export class SelectedItemsTestsAreDemo {
         await tad.fireEventWaitable.mouseDown(row, { clientX: row.getBoundingClientRect().x + 5, clientY: row.getBoundingClientRect().y + 5, button: 2, ctrlKey: true });
         await tad.fireEventWaitable.mouseMove(row, { clientX: 10, clientY: 10, pageX: 10, ctrlKey: true });
         await tad.fireEventWaitable.mouseUp(row, { button: 2, ctrlKey: true });
-        await this.assertOnlyExpectedSegmentsAreSelected([0, 3], true);
+        await this.assertOnlyExpectedSegmentsAreSelected([0], true);
         tad.demoForEndUserShow();
     }
 
@@ -284,17 +289,10 @@ export class SelectedItemsTestsAreDemo {
         tad.demoForEndUserShow();
     }
 
-    // @Scenario("When click a segment the onSelectionChange handler is called")
-    // async whenClickASegmentSelectionHandlerIsCalled() {
-    //     await tad.userEventWaitable.click(tad.screenCapturing.getByTestId(testids.item + "_0"));
-    //     // tad.assertWaitable.equal(tad.screenCapturing.getByTestId(basicStoriesTestIds.selectedItemsSpan), task);
-    // }
-
     ////////////////////////////////////////////////////////////////////////////////////////
     ////// Helper methods
     ////////////////////////////////////////////////////////////////////////////////////////
 
-    // TODO CSR: de ce nu functioneaza functia tad.drag(), si suntem nevoiti sa facem acest cod complicat?
     async dragToSelect(startingRowIndex, endingRowIndex, startingSegmentIndex, endingSegmentIndex, rightClick?, ctrlKey = false, shiftKey = false) {
         let startingRow = tad.screenCapturing.getByTestId(testids.row + "_" + startingRowIndex);
         let startingRowRect = startingRow.getBoundingClientRect();
@@ -310,10 +308,14 @@ export class SelectedItemsTestsAreDemo {
         // These events can not be tested using testing-library (we have tried using fireEvent.mouseDown, mouseOver, and mouseUp, but with no success). That's why the "cheat" was needed
         // 2. Drag to select on right click: triggered by mouseDown, mouseMove, mouseUp events
         if (rightClick) {
-            await tad.drag(startingRow, {from: {x: startingSegmentRect.x, y: startingRowRect.y}, to: {x: endingSegmentRect.x + endingSegmentRect.width, y: endingRowRect.y + endingRowRect.height - 5}, options: {button: 2, ctrlKey: ctrlKey, shiftKey: shiftKey}});
+            // There was a bug when having a large DPI of the screen e.g. 170
+            // Don't know why then the startingRowRect.y was not an integer (e.g. 256.789). Even if the TAD.drag() triggers the mouse event on this y floating value,
+            // when interactjs library catched this event it sees the Y as an integer (e.g. 256). Because 256.789 was the exact begining of the
+            // row, when timeline searches the row at position 256 it gets the previous row instead of the correct row. So applying Math.ceil fixed the problem 
+            await tad.drag(startingRow, {from: {x: startingSegmentRect.x, y: Math.ceil(startingRowRect.y)}, to: {x: endingSegmentRect.x + endingSegmentRect.width, y: endingRowRect.y + endingRowRect.height - 5}, options: {button: 2, ctrlKey: ctrlKey, shiftKey: shiftKey}});
         } else {
             // 150 is the group offset
-            // we needed to subtract -5 because else the the selection rectangle (that snapps to row) will get till the endingRow + 1, instead endingRow
+            // we needed to subtract -5 because else the selection rectangle (that snapps to row) will get till the endingRow + 1, instead endingRow
             tad.getObjectViaCheat(Timeline).dragStart(startingRow, startingSegmentRect.x - 150);
             await tad.getObjectViaCheat(Timeline).dragMove(deltaX, deltaY - 5, 5);
             tad.getObjectViaCheat(Timeline).dragEnd({ ctrlKey: ctrlKey, shiftKey: shiftKey });

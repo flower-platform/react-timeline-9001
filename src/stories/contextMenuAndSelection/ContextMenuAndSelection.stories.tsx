@@ -18,7 +18,7 @@ export const ContextMenu = () => {
         const [tasks, setTasks] = useState<Item[]>([...someTasks]);
         return (
             <Fragment>
-                <Alert message={<><b>Add task</b> action is provided or not depending on the selection. It also has a diferent label depending for which row is displayed</>}/>
+                <Alert message={<><b>Add task</b> action is provided only for empty selection. It also has a different label depending on which row is displayed</>}/>
                 <div style={{ display: 'flex', height: '400px' }}>
                     <Timeline startDate={d('2018-09-20')} endDate={d('2018-09-21')} groups={someHumanResources} items={tasks}
                         onContextMenuShow={(contextMenuShowParam: IGanttOnContextMenuShowParam) => {
@@ -40,6 +40,7 @@ export const ContextMenu = () => {
                                 {
                                     icon: "trash",
                                     label: "Delete",
+                                    isVisible: (param) => { return param.selection.length == 1; },
                                     renderInMenu: (param) => {
                                         return <Menu.Item onClick={() => { 
                                                         setTasks(tasks.filter(task => !param.selection.includes(task.key)));
