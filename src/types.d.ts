@@ -60,6 +60,10 @@ export interface IGanttOnContextMenuShowParam extends IOnContextMenuShowParam {
 
 export interface IGanttActionParam extends IActionParam {
     row : number;
+    /**
+     * numeric/millis or moment object, cf. `timeline.useMoment`
+     */
+    time: number | object;
 }
 
 export interface IGanttActionParamForRun extends IGanttActionParam, IActionParamForRun {

@@ -27,6 +27,23 @@
   border-left: 1px solid;
 }
 
+/**
+* By default semantic ui vertical menu has a width of 15rem. That's why larger content were truncated
+* in the context menu 
+*/
+.rct9k-context-menu {
+  width: unset !important;
+  min-width: 15rem;
+}
+
+.rct9k-drag-to-create-popup-buttons-div {
+  text-align: center;
+}
+
+.rct9k-drag-to-create-popup-buttons-div > button {
+  margin-top: 5px !important;
+}
+
 .rct9k-timebar-item:first-child {
   border: 0 !important;
 }

@@ -1,6 +1,7 @@
 import React from 'react';
 import { Menu, Popup } from 'semantic-ui-react';
-import { IAction } from './IAction';
+import { IAction, IActionParamForRun } from './IAction';
+import { createTestids } from '@famiprog-foundation/tests-are-demo';
 
 type Point = { x: number, y: number };
 
@@ -17,6 +18,12 @@ interface ContextMenuProps {
    */
   positionToOpen?: Point;
 }
+
+const testids = createTestids('ContextMenu', {
+  popup: '',
+  menuItem: ''  
+});
+export const contextMenuTestIds = testids;
 
 export class ContextMenu extends React.Component<ContextMenuProps, { isOpened?: boolean }> {
 
@@ -59,15 +66,25 @@ export class ContextMenu extends React.Component<ContextMenuProps, { isOpened?: 
 
   render() {
     const visibleActions = this.getVisisbleActions(this.props.actions);
-    return <Popup basic context={this.getPopupContext()} onClose={() => this.setState({ isOpened: false })} open={(this.state.isOpened && visibleActions.length > 0)}>
-      <Menu secondary vertical>
+    return <Popup basic wide='very' data-testid={testids.popup} context={this.getPopupContext()} 
+                onClose={() => this.setState({ isOpened: false })} open={(this.state.isOpened && visibleActions.length > 0)}>
+      <Menu className="rct9k-context-menu" secondary vertical>
         {visibleActions.map((action: IAction) => {
+          const key = visibleActions.indexOf(action);
           return (!action.renderInMenu ?
-            <Menu.Item key={visibleActions.indexOf(action)}
+            <Menu.Item
+              data-testid={testids.menuItem + "_" + key} 
+              key={key}
               icon={action.icon instanceof Function ? action.icon({ ...this.props.paramsForAction }) : action.icon} content={action.label instanceof Function ? action.label({ ...this.props.paramsForAction }) : action.label}
-              onClick={() => { action.run({ ...this.props.paramsForAction, closeContextMenu: this.close }); }}>
+              onClick={() => {
+                let params:IActionParamForRun = { ...this.props.paramsForAction, closeContextMenu: this.close }
+                action.run(params);
+                if (!params.dontCloseContextMenuAfterRunAutomatically) {
+                  this.close();
+                }
+                }}>
             </Menu.Item>
-            : React.cloneElement(action.renderInMenu({ ...this.props.paramsForAction, closeContextMenu: this.close }), {key: visibleActions.indexOf(action)})
+            : React.cloneElement(action.renderInMenu({ ...this.props.paramsForAction, closeContextMenu: this.close }), {key: visibleActions.indexOf(action), "data-testid": testids.menuItem + "_" + key})
           );
         })
         }

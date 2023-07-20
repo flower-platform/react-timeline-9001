@@ -4,8 +4,15 @@ export interface IActionParam {
     selection: any[]
 }
 
-export interface IActionParamForRun {
-    closeContextMenu: () => void
+export interface IActionParamForRun extends IActionParam {
+    closeContextMenu: () => void,
+    
+    /**
+     * By default the context menu closes immediately after the action is run
+     * If the user wants to avoid the closing of the menu after action runs he needs to set this property to true
+     * and maybe explicitly call closeContextMenu() when needed
+     */
+    dontCloseContextMenuAfterRunAutomatically?: boolean
 }
 
 export interface IOnContextMenuShowParam {

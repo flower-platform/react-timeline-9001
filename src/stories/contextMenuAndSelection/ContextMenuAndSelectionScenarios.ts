@@ -1,7 +1,8 @@
 export const contextMenuScenarios = {
     whenRightClickThenContextMenu: 'WHEN right click on gantt, THEN a context menu is shown containing actions (each having a label and an icon)',
     whenClickActionThenRunAndCloseMenu: 'WHEN click an action, THEN a specific action is run and the context menu is closed',
-    propertyOnContextMenuShow: 'PROPERTY onContextMenuShow'
+    propertyOnContextMenuShow: 'PROPERTY onContextMenuShow',
+    propertyDontCloseContextMenuAfterRunAutomatically: 'PROPERTY IActionParamForRun.dontCloseContextMenuAfterRunAutomatically'
 };
 
 export const selectionScenarios = {
