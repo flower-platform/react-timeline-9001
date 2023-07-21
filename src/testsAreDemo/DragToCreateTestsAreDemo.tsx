@@ -30,14 +30,13 @@ export class DragToCreateTestsAreDemo {
         tad.cc("Click 'Drag To Create' menu entry");
         await tad.userEventWaitable.click(tad.screenCapturing.getByTestId(contextMenuTestIds.menuItem + "_0"));
 
-	// THEN
+	    // THEN
         await tad.assertWaitable.isTrue(tad.getObjectViaCheat(Timeline).state.dragToCreateMode, "Drag to create mode should be active");
 	
-	const popup = tad.screenCapturing.getByTestId(timelineTestids.dragToCreatePopup);
+	    const popup = tad.screenCapturing.getByTestId(timelineTestids.dragToCreatePopup);
         tad.cc("Check if drag to create popup exists");
         await tad.assertWaitable.exists(popup);
-        t
-        ad.cc("Check if the mesage of popup is 'Drag to create mode'");
+        tad.cc("Check if the mesage of popup is 'Drag to create mode'");
         await tad.assertWaitable.equal(popup.querySelector("div").querySelector("div").innerHTML, "<b>Click and drag</b> to create a new segment");
         
         const cancelButton = tad.withinCapturing(popup).getByTestId(timelineTestids.dragToCreatePopupCancelButton);
@@ -63,7 +62,7 @@ export class DragToCreateTestsAreDemo {
         tad.cc("Click 'Drag To Create' menu entry");
         await tad.userEventWaitable.click(tad.screenCapturing.getByTestId(contextMenuTestIds.menuItem + "_0"));
 
-	// WHEN
+	    // WHEN
         tad.cc("Click on `Cancel 'drag to create' mode` button from the drag to create popup");
         await tad.userEventWaitable.click(tad.screenCapturing.getByTestId(timelineTestids.dragToCreatePopupCancelButton));
         

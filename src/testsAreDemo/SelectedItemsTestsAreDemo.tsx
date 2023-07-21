@@ -335,6 +335,6 @@ export class SelectedItemsTestsAreDemo {
             }
         }
 
-        assert.equal(tad.screenCapturing.getByTestId(selectionStoryTestIds.selectedItemsSpan).textContent, expectedSelectedSegments.sort().join(" ,"));
+        assert.equal(tad.screenCapturing.getByTestId(selectionStoryTestIds.selectedItemsSpan).textContent, expectedSelectedSegments.sort().join(", "));
     }
 }

@@ -78,7 +78,7 @@ export class ContextMenu extends React.Component<ContextMenuProps, { isOpened?: 
               icon={action.icon instanceof Function ? action.icon({ ...this.props.paramsForAction }) : action.icon} content={action.label instanceof Function ? action.label({ ...this.props.paramsForAction }) : action.label}
               onClick={() => {
                 let params:IActionParamForRun = { ...this.props.paramsForAction, closeContextMenu: this.close }
-                action.run(params);
+                action?.run(params);
                 if (!params.dontCloseContextMenuAfterRunAutomatically) {
                   this.close();
                 }

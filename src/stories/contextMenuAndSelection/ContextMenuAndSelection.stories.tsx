@@ -26,11 +26,8 @@ export const deleteActionLabel = "Delete";
 export const ContextMenu = () => {
         const [tasks, setTasks] = useState<Item[]>([...someTasks]);
         const [segmentHeight, setSegmentHeight] = useState<number>(40);
-        // let end = moment('2018-09-20').valueOf(); 
-        // end.add(3, 'hours');
-        // d(moment().startOf('month').hours(15));
         return (
-            <Fragment>
+            <>
                 <Alert message={<><b>Add task</b> action is provided only for empty selection. It also has a different label depending on which row is displayed</>}/>
                 <div style={{ display: 'flex', height: '400px' }}>
                     <Timeline startDate={d('2018-09-20')} endDate={d('2018-09-21')} groups={someHumanResources} items={tasks} itemHeight={segmentHeight}
@@ -39,8 +36,8 @@ export const ContextMenu = () => {
                                 {
                                     icon: "edit",
                                     label: editActionLabel,
-                                    isVisible: (param) => { return param.selection.length == 1; },
-                                    run: (param) => {
+                                    isVisible: param => param.selection.length == 1,
+                                    run: param => {
                                         const selectedTask = tasks.find((task) => task.key == param.selection[0]);
                                         let newTitle = prompt("Task new title:", selectedTask.title);
                                         newTitle && setTasks(tasks.map((task) => task == selectedTask ? { ...task, title: newTitle } : task));
@@ -50,25 +47,28 @@ export const ContextMenu = () => {
                                 {
                                     label: deleteActionLabel,
                                     icon: "trash",
-                                    isVisible: (param) => param.selection.length > 0 ,
-                                    run: (param) => setTasks(tasks.filter(task => !param.selection.includes(task.key)))
+                                    isVisible: param => param.selection.length > 0 ,
+                                    run: param => setTasks(tasks.filter(task => !param.selection.includes(task.key)))
                                 }
                             ];
                             // We can filter the actions that will be displayed directly here in the actions provider    
-                            if (contextMenuShowParam.actionParam.selection.length == 0 && contextMenuShowParam.actionParam.row < someHumanResources.length) {
-                                actions.push({
+                            if (contextMenuShowParam.actionParam.row < someHumanResources.length) {
+                                actions.splice(0, 0, {
                                     icon: addTaskActionIcon,
-                                    label: (param) => addTaskActionLabel + someHumanResources[param.row].title,
-                                    run: (param) => { 
+                                    label: param => addTaskActionLabel + someHumanResources[param.row].title,
+                                    run: param => { 
                                         let end = moment(param.time); 
                                         end.hours(end.hours() + 3); 
                                         setTasks([...tasks, { key: tasks.length, row: param.row, title: 'NEW TASK', start: param.time, end: end}]);
                                     }
                                 });
-                            }
-                            // This is an example of how to add an action having a custom renderer
+                            } else {
+                            	actions.splice(0, 0, { icon: addTaskActionIcon, label: () => "Add task: not possible. Please right click over a row with a person."});
+                        	}
+
+                            // This is an example of an action with a custom renderer
                             actions.push({
-                                renderInMenu: (param) => {
+                                renderInMenu: param => {
                                     return <MenuItem><Form>
                                         <Form.Group inline>
                                             <Form.Field>
@@ -105,7 +105,7 @@ export const ContextMenu = () => {
                             return actions;
                         }} />
                 </div>
-            </Fragment>);
+            </>);
 };
 
 ContextMenu.parameters = {
@@ -120,23 +120,24 @@ export const selectionStoryTestIds = createTestids('SelectionStory', {
 
 export const Selection = () => {
     const [selectedItems, setSelectedItems] = useState<number[]>([]);
-    const [isSelectionDictated, setIsSelectionDictated] = useState<boolean>(false);
+    const [isSelectionForced, setIsSelectionForced] = useState<boolean>(false);
     return (
-      <Fragment>
+      <>
         <span>
-            <Button toggle active={isSelectionDictated} onClick={() => setIsSelectionDictated(!isSelectionDictated)}>
-                Dictate selection (disable click/drag to select selection)
+            <Button toggle active={isSelectionForced} onClick={() => setIsSelectionForced(!isSelectionForced)}>
+                Force selection programmatically
             </Button>
+            (The user cannot change the selection via interaction)
         </span>
-        <Alert message={<>Selected segments: <span data-testid={selectionStoryTestIds.selectedItemsSpan}> {selectedItems.sort().join(" ,")}</span></>}/>
+        <Alert message={<>Selected segments: <span data-testid={selectionStoryTestIds.selectedItemsSpan}>{selectedItems.sort().join(", ")}</span></>}/>
         {/* This is an example illustrates: 
             1.adding onSelectionChange handler 
             2.setting selectedItems property */}
         <div style={{ display: 'flex', height: '400px' }}>
           <Timeline startDate={d('2018-09-20')} endDate={d('2018-09-21')} groups={someHumanResources} items={someTasks} 
-                    selectedItems={isSelectionDictated ? [0] : undefined} onSelectionChange={(selectedItems) => setSelectedItems(selectedItems)}/>
+                    selectedItems={isSelectionForced ? [0, 1] : undefined} onSelectionChange={selectedItems => setSelectedItems(selectedItems)}/>
         </div>
-      </Fragment>
+      </>
     );
   };
 
