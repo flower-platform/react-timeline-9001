@@ -1,7 +1,7 @@
 import { Only, Scenario, ScenarioOptions, render, tad } from "@famiprog-foundation/tests-are-demo";
 import { contextMenuTestIds } from "../components/ContextMenu/ContextMenu";
-import { ContextMenu, addTaskActionIcon, addTaskActionLabel, contextMenuStoryTestIds, deleteActionLabel, editActionLabel } from "../stories/contextMenuAndSelection/ContextMenuAndSelection.stories";
-import { someHumanResources } from "../stories/sampleData";
+import { ContextMenu, addTaskActionIcon, addTaskActionLabel, addTaskNotPossibleAction, contextMenuStoryTestIds, deleteActionIcon, deleteActionIconColor, deleteActionLabel, editActionLabel } from "../stories/contextMenuAndSelection/ContextMenuAndSelection.stories";
+import { someHumanResources, someTasks } from "../stories/sampleData";
 import { timelineTestids as testids } from "../timeline";
 
 export class ContextMenuTestsAreDemo {
@@ -11,7 +11,7 @@ export class ContextMenuTestsAreDemo {
     }
 
     @Only()
-    @Scenario("WHEN I right click on a row, THEN a context menu with two actions opens (one with custom renderer)")
+    @Scenario("WHEN I right click on a row, THEN a context menu with one action opens")
     @ScenarioOptions({ linkWithNextScenario: true })
     async whenRightClickOnARow() {
         // WHEN right click on a row
@@ -26,19 +26,28 @@ export class ContextMenuTestsAreDemo {
         await this.isPopupPositionedNearPoint(popup.getBoundingClientRect(), { x: clickPosition.clientX, y: clickPosition.clientY });
         tad.demoForEndUserShow();
 
-        // AND it has: 'Add' and 'Change segments height' actions
+        // AND it has an 'Add task' actions
         let menuEntry = tad.withinCapturing(popup).getByTestId(contextMenuTestIds.menuItem + "_0");
         tad.cc("The context menu contains an 'Add' action");
         await tad.assertWaitable.equal(menuEntry.textContent, addTaskActionLabel + someHumanResources[0].title);
-        tad.demoForEndUserHideNext()
+        tad.demoForEndUserHideNext();
         await tad.assertWaitable.include(menuEntry.querySelector("i").className, addTaskActionIcon);
-        // This is a custom action
-        tad.cc("And a global action for changing the segments height (with custom radio buttons renderer)");
-        await tad.assertWaitable.exists(tad.screenCapturing.getByTestId(contextMenuStoryTestIds.customRendererRadioSmall));
-        tad.demoForEndUserHide();
-        await tad.assertWaitable.exists(tad.screenCapturing.getByTestId(contextMenuStoryTestIds.customRendererRadioMedium));
-        await tad.assertWaitable.exists(tad.screenCapturing.getByTestId(contextMenuStoryTestIds.customRendererRadioLarge));
-        tad.demoForEndUserShow();
+    }
+
+    @Scenario("WHEN I click on an action, THEN the action is run (w/ or w/o closing the menu)")
+    @ScenarioOptions({ linkWithNextScenario: true })
+    async whenClickAnAction() {
+        // WHEN I click on "Add"
+        const popup = tad.screenCapturing.getByTestId(contextMenuTestIds.popup);
+        await tad.userEventWaitable.click(tad.withinCapturing(popup).getByTestId(contextMenuTestIds.menuItem + "_0"));
+
+        // THEN a new task is added
+        await tad.assertWaitable.exists(tad.screenCapturing.getByTestId(testids.item + "_" + someTasks.length));
+        // TODO test the correct row and time
+
+        // AND CM is closed
+        tad.demoForEndUserHideNext();
+        await tad.assertWaitable.notExists(tad.screenCapturing.queryByTestId(contextMenuTestIds.popup));
     }
 
     @Scenario("WHEN I right click on a segment, THEN a context menu with 3 actions is shown")
@@ -55,13 +64,20 @@ export class ContextMenuTestsAreDemo {
         const popup = tad.screenCapturing.getByTestId(contextMenuTestIds.popup);
         await tad.assertWaitable.exists(popup);
 
-        // AND it has: 'Edit', 'Delete' and 'Change segments height' actions
-        tad.cc("The context menu contains an 'Edit' action");
-        await tad.assertWaitable.equal(tad.withinCapturing(popup).getByTestId(contextMenuTestIds.menuItem + "_0").textContent, editActionLabel);
+        // AND it has: 'Add', 'Edit' and 'Delete' actions
+        tad.cc("The context menu contains an 'Add' action");
+        await tad.assertWaitable.equal(tad.withinCapturing(popup).getByTestId(contextMenuTestIds.menuItem + "_0").textContent, addTaskActionLabel + someHumanResources[0].title);
+        
+        tad.cc("And an 'Edit' action");
+        await tad.assertWaitable.equal(tad.withinCapturing(popup).getByTestId(contextMenuTestIds.menuItem + "_1").textContent, editActionLabel);
+        
         tad.cc("And a 'Delete' action");
-        await tad.assertWaitable.equal(tad.withinCapturing(popup).getByTestId(contextMenuTestIds.menuItem + "_1").textContent, deleteActionLabel);
-        tad.cc("And a global action for changing the segments height");
-        await tad.assertWaitable.exists(tad.withinCapturing(tad.screenCapturing.getByTestId(contextMenuTestIds.menuItem + "_2")).getByTestId(contextMenuStoryTestIds.customRendererRadioSmall));
+        let menuEntry = tad.withinCapturing(popup).getByTestId(contextMenuTestIds.menuItem + "_2");
+        await tad.assertWaitable.equal(menuEntry.textContent, deleteActionLabel);
+        tad.cc("With a custom red renderer");
+        tad.demoForEndUserHideNext();
+        await tad.assertWaitable.include(menuEntry.querySelector("i").className, deleteActionIcon);
+        await tad.assertWaitable.include(menuEntry.querySelector("i").className, deleteActionIconColor);
     }
 
     @Scenario("WHEN I CTRL + right click on another segment, THEN a context menu with 2 actions is shown")
@@ -77,42 +93,12 @@ export class ContextMenuTestsAreDemo {
         const popup = tad.screenCapturing.getByTestId(contextMenuTestIds.popup);
         await tad.assertWaitable.exists(popup);
 
-        // AND it has: 'Delete' and 'Change segments height' actions
-        tad.cc("The context menu contains a 'Delete' action");
-        await tad.assertWaitable.equal(tad.withinCapturing(popup).getByTestId(contextMenuTestIds.menuItem + "_0").textContent, deleteActionLabel);
-        tad.cc("And a global action for changing the segments height");
-        await tad.assertWaitable.exists(tad.withinCapturing(tad.screenCapturing.getByTestId(contextMenuTestIds.menuItem + "_1")).getByTestId(contextMenuStoryTestIds.customRendererRadioSmall));
-    }
-
-    @Scenario("WHEN I click on an action, THEN the action is run (w/ or w/o closing the menu)")
-    @ScenarioOptions({ linkWithNextScenario: true })
-    async whenClickAnAction() {
-        // WHEN I click on action 2 on its custom "large" radio button 
-        await tad.userEventWaitable.click(tad.screenCapturing.getByTestId(contextMenuStoryTestIds.customRendererRadioLarge));
-
-        // THEN the segments becomes larger
-        let row = tad.screenCapturing.getByTestId(testids.row + "_0");
-        // Needed Math.round() => because on large dpi (175%) the height has some additional decimals: e.g.: 50.000003814697266
-        tad.cc("Segments became larger");
-        await tad.assertWaitable.equal(Math.round(tad.withinCapturing(row).getByTestId(testids.item + "_0").getBoundingClientRect().height), 50);
-
-        // AND the CM doesn't close
-        tad.demoForEndUserHideNext();
-        const popup = tad.screenCapturing.getByTestId(contextMenuTestIds.popup);
-        await tad.assertWaitable.exists(popup);
-
-        // WHEN I click on "Delete"
-        await tad.userEventWaitable.click(tad.withinCapturing(popup).getByTestId(contextMenuTestIds.menuItem + "_0"));
-
-        // THEN the two segments are deleted
-        tad.cc("Selected segments were deleted");
-        await tad.assertWaitable.notExists(tad.screenCapturing.queryByTestId(testids.item + "_0"));
-        tad.demoForEndUserHideNext();
-        await tad.assertWaitable.notExists(tad.screenCapturing.queryByTestId(testids.item + "_3"));
-
-        // AND CM is closed
-        tad.demoForEndUserHideNext();
-        await tad.assertWaitable.notExists(tad.screenCapturing.queryByTestId(contextMenuTestIds.popup));
+        // AND it has: 'Add' and 'Delete' actions
+        tad.cc("The context menu contains an 'Add' action");
+        await tad.assertWaitable.equal(tad.withinCapturing(popup).getByTestId(contextMenuTestIds.menuItem + "_0").textContent, addTaskActionLabel + someHumanResources[1].title);
+        
+        tad.cc("And a 'Delete' action");
+        await tad.assertWaitable.equal(tad.withinCapturing(popup).getByTestId(contextMenuTestIds.menuItem + "_1").textContent, deleteActionLabel);
     }
 
     @Scenario("WHEN I click the hamburger button, THEN the context menu is shown besides that button")
@@ -133,13 +119,20 @@ export class ContextMenuTestsAreDemo {
         await this.isPopupPositionedNearPoint(popup.getBoundingClientRect(), menuButtonCenter);
         tad.demoForEndUserShow();
 
-        // AND it has: 'Edit', 'Delete' and 'Change segments height' actions
-        tad.cc("The context menu contains an 'Edit' action");
-        await tad.assertWaitable.equal(tad.withinCapturing(popup).getByTestId(contextMenuTestIds.menuItem + "_0").textContent, editActionLabel);
+        // AND it has: 'Add task: not possible', 'Edit' adn 'Delete' actions
+        tad.cc("The context menu contains an 'Add task not possible' action");
+        await tad.assertWaitable.equal(tad.withinCapturing(popup).getByTestId(contextMenuTestIds.menuItem + "_0").textContent, addTaskNotPossibleAction);
+        tad.cc("And an 'Edit' action");
+        await tad.assertWaitable.equal(tad.withinCapturing(popup).getByTestId(contextMenuTestIds.menuItem + "_1").textContent, editActionLabel);
         tad.cc("And a 'Delete' action");
-        await tad.assertWaitable.equal(tad.withinCapturing(popup).getByTestId(contextMenuTestIds.menuItem + "_1").textContent, deleteActionLabel);
-        tad.cc("And a global action for changing the segments height");
-        await tad.assertWaitable.exists(tad.withinCapturing(tad.screenCapturing.getByTestId(contextMenuTestIds.menuItem + "_2")).getByTestId(contextMenuStoryTestIds.customRendererRadioSmall));
+        await tad.assertWaitable.equal(tad.withinCapturing(popup).getByTestId(contextMenuTestIds.menuItem + "_2").textContent, deleteActionLabel);
+
+        // WHEN click 'Edit' (dontCloseContextMenuAfterRunAutomatically = true) THEN the CM doesn't close 
+        // We putted this verification at the end of the tests, because else we needed to close the prompt for the next scenarios, and this was not trivial 
+        tad.demoForEndUserHide();
+        await tad.userEventWaitable.click(tad.withinCapturing(popup).getByTestId(contextMenuTestIds.menuItem + "_1"));
+        await tad.assertWaitable.exists(tad.screenCapturing.getByTestId(contextMenuTestIds.popup));
+        tad.demoForEndUserShow();
     }
 
     async isPopupPositionedNearPoint({ x: popupX, y: popupY, width: popupWidth, height: popupHeight }, { x, y }) {
