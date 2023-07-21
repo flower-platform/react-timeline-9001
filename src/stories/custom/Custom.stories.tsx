@@ -13,22 +13,6 @@ export default {
 
 export const CustomMenuButtonRenderer = () => {
 
-  class CustomTimeline extends Timeline {
-    static propTypes = {
-      ...Timeline.propTypes,
-      /**
-       * @type { JSX.Element }
-       */
-      toolbarDomElement: PropTypes.object.isRequired
-    };
-
-    renderMenuButton() {
-      return this.props.toolbarDomElement
-        ? ReactDOM.createPortal(super.renderMenuButton(), this.props.toolbarDomElement)
-        : super.renderMenuButton();
-    }
-  }
-
   const divRef = useRef<any>();
   const [value, setValue] = useState(0);
   // after first render when the div dom element is created for re-render 

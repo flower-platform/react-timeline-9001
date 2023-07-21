@@ -1379,11 +1379,16 @@ export default class Timeline extends React.Component {
       return;
     }
     let row;
-    if (e.target.hasAttribute('data-item-index') || e.target.parentElement.hasAttribute('data-item-index')) {
-      row =
-        e.target.parentElement.getAttribute('data-row-index') ||
-        e.target.parentElement.parentElement.getAttribute('data-row-index');
-      let itemKey = e.target.getAttribute('data-item-index') || e.target.parentElement.getAttribute('data-item-index');
+    let target = e.target;
+    while (target) {
+      if (target.hasAttribute('data-item-index')) {
+        break;
+      }
+      target = target.parentElement;
+    }
+    if (target) {
+      row = target.parentElement.getAttribute('data-row-index');
+      let itemKey = target.getAttribute('data-item-index');
       itemCallback && itemCallback(e, Number(itemKey));
       // window.ontouchstart added to checks is we are on mobile
       if (e.type == 'click' || (window.ontouchstart && e.type == 'tap') || e.type == 'contextmenu') {
