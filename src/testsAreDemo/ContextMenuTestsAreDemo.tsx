@@ -1,9 +1,11 @@
 import { Only, Scenario, ScenarioOptions, render, tad } from "@famiprog-foundation/tests-are-demo";
 import { contextMenuTestIds } from "../components/ContextMenu/ContextMenu";
-import { ContextMenu, addTaskActionIcon, addTaskActionLabel, addTaskNotPossibleAction, contextMenuStoryTestIds, deleteActionIcon, deleteActionIconColor, deleteActionLabel, editActionLabel } from "../stories/contextMenuAndSelection/ContextMenuAndSelection.stories";
+import { ContextMenu, addTaskActionIcon, addTaskActionLabel, addTaskNotPossibleAction, deleteActionIcon, deleteActionIconColor, deleteActionLabel, editActionLabel } from "../stories/contextMenuAndSelection/ContextMenuAndSelection.stories";
 import { someHumanResources, someTasks } from "../stories/sampleData";
-import { timelineTestids as testids } from "../timeline";
+import Timeline, { PARENT_ELEMENT, timelineTestids as testids } from "../timeline";
+import { getPixelAtTime, getTimeAtPixel } from "../utils/timeUtils";
 
+const CLICK_X =30;
 export class ContextMenuTestsAreDemo {
 
     async before() {
@@ -16,7 +18,7 @@ export class ContextMenuTestsAreDemo {
     async whenRightClickOnARow() {
         // WHEN right click on a row
         const firstRow = tad.screenCapturing.getByTestId(testids.row + "_0");
-        const clickPosition = { clientX: Math.round(firstRow.getBoundingClientRect().x) + 30, clientY: Math.round(firstRow.getBoundingClientRect().y) + 30 };
+        const clickPosition = { clientX: Math.round(firstRow.getBoundingClientRect().x) + CLICK_X, clientY: Math.round(firstRow.getBoundingClientRect().y) + 20 };
         await tad.fireEventWaitable.contextMenu(firstRow, clickPosition);
 
         // THEN CM is opened at the clicked position
@@ -42,12 +44,28 @@ export class ContextMenuTestsAreDemo {
         await tad.userEventWaitable.click(tad.withinCapturing(popup).getByTestId(contextMenuTestIds.menuItem + "_0"));
 
         // THEN a new task is added
-        await tad.assertWaitable.exists(tad.screenCapturing.getByTestId(testids.item + "_" + someTasks.length));
-        // TODO test the correct row and time
+        let newSegment = tad.screenCapturing.getByTestId(testids.item + "_" + someTasks.length);
+        await tad.assertWaitable.exists(newSegment);
 
-        // AND CM is closed
-        tad.demoForEndUserHideNext();
+        tad.demoForEndUserHide();
+        // AND the CM is closed
         await tad.assertWaitable.notExists(tad.screenCapturing.queryByTestId(contextMenuTestIds.popup));
+
+        // AND the new task is position correctly on x axes
+        // Gantt works with times "snapped to grid" so the position for the new task should be snapped to grid 
+        const timeline = tad.getObjectViaCheat(Timeline);
+        const firstRow = tad.screenCapturing.getByTestId(testids.row + "_0");
+        const ganttLeftOffset = timeline.calculateLeftOffset() + PARENT_ELEMENT(timeline.props.componentId).getBoundingClientRect().left;
+        const clickedX = firstRow.getBoundingClientRect().x + CLICK_X;
+        const clickedXInGantt = clickedX - ganttLeftOffset;
+        const clickedTime = getTimeAtPixel(clickedXInGantt, timeline.getStartDate(), timeline.getEndDate(), timeline.getTimelineWidth(undefined), timeline.getTimelineSnap());
+        const clickedXSnappedToGrid = getPixelAtTime(clickedTime, timeline.getStartDate(), timeline.getEndDate(), timeline.getTimelineWidth(undefined))
+             + ganttLeftOffset;     
+        await tad.assertWaitable.equal(Math.round(newSegment.getBoundingClientRect().x), Math.round(clickedXSnappedToGrid));
+        
+        // AND is correctly added to the clicked row
+        await tad.assertWaitable.equal(newSegment.getBoundingClientRect().y, firstRow.getBoundingClientRect().y);
+        tad.demoForEndUserShow();
     }
 
     @Scenario("WHEN I right click on a segment, THEN a context menu with 3 actions is shown")
