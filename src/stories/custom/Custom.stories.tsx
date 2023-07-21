@@ -1,11 +1,8 @@
-import { ComponentStory } from "@storybook/react";
 import { useEffect, useRef, useState } from "react";
 import { Segment } from "semantic-ui-react";
-import PropTypes from 'prop-types';
-import Timeline from "../../timeline";
 import { d, someHumanResources, someTasks } from "../sampleData";
+import { CustomTimeline } from "./CustomTimeline";
 import { customTimelineScenarios } from "./CustomTimelineScenarios";
-import ReactDOM from "react-dom";
 
 export default {
   title: 'Features/Custom'
