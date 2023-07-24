@@ -6,12 +6,7 @@ import _ from 'lodash';
 import moment from 'moment';
 import {Component} from 'react';
 
-import {
-  CustomCellRenderer,
-  CustomColumnHeaderRenderer,
-  CustomGroupRenderer,
-  CustomItemRenderer
-} from './demo/customRenderers';
+import {CustomGroupRenderer, CustomItemRenderer} from './demo/customRenderers';
 import Timeline from './timeline';
 
 import {Button, Checkbox, DatePicker, Form, Icon, InputNumber, Switch} from 'antd';
@@ -92,7 +87,7 @@ export default class DemoTimeline extends Component {
       message: '',
       timelineMode: TIMELINE_MODES.SELECT | TIMELINE_MODES.DRAG | TIMELINE_MODES.RESIZE,
       multipleColumnsMode: false,
-      useCustomTable: false,
+      useTable: true,
       useMoment: true
     };
     this.reRender = this.reRender.bind(this);
@@ -104,7 +99,7 @@ export default class DemoTimeline extends Component {
     this.toggleResizable = this.toggleResizable.bind(this);
     this.toggleUseMoment = this.toggleUseMoment.bind(this);
     this.toggleMultipleColumnsMode = this.toggleMultipleColumnsMode.bind(this);
-    this.toggleUseCustomTable = this.toggleUseCustomTable.bind(this);
+    this.toggleUseTable = this.toggleUseTable.bind(this);
   }
 
   componentWillMount() {
@@ -160,48 +155,9 @@ export default class DemoTimeline extends Component {
       }
     }
 
-    const tableColumns = [
-      // default renderers
-      {
-        width: 100,
-        headerLabel: 'Title',
-        labelProperty: 'title'
-      },
-      // custom renderers: react elements
-      {
-        width: 150,
-        cellRenderer: <Checkbox>Checkbox</Checkbox>,
-        headerRenderer: (
-          <span>
-            <Icon type="check-circle" /> Custom check
-          </span>
-        )
-      },
-      // custom renderers: class component
-      {
-        width: 100,
-        headerRenderer: CustomColumnHeaderRenderer,
-        cellRenderer: CustomCellRenderer
-      }
-    ];
-
-    const customTableColumns = [
-      // default renderers
-      {
-        width: 100,
-        headerLabel: 'Custom table column 1',
-        labelProperty: 'title'
-      },
-      {
-        width: 100,
-        headerLabel: 'Custom table column 1',
-        labelProperty: 'title'
-      }
-    ];
-
     // this.state = {selectedItems: [11, 12], groups, items: list};
     this.forceUpdate();
-    this.setState({items: list, groups, tableColumns, useMoment});
+    this.setState({items: list, groups, useMoment});
   }
 
   handleRowClick = (e, rowNumber, clickedTime, snappedClickedTime) => {
@@ -247,9 +203,9 @@ export default class DemoTimeline extends Component {
     this.setState({multipleColumnsMode: !multipleColumnsMode});
   }
 
-  toggleUseCustomTable() {
-    const {useCustomTable} = this.state;
-    this.setState({useCustomTable: !useCustomTable});
+  toggleUseTable() {
+    const {useTable} = this.state;
+    this.setState({useTable: !useTable});
   }
 
   handleItemClick = (e, key) => {
@@ -359,17 +315,6 @@ export default class DemoTimeline extends Component {
     }
   };
 
-  /**
-   * @type { number }
-   */
-  getTableColumnsTotalWidth(tableColumns) {
-    return (
-      (tableColumns
-        .map(tableColumn => tableColumn.width)
-        .reduce((accumulator, currentWidth) => accumulator + currentWidth, 0) + 20)
-    );
-  }
-
   render() {
     const {
       selectedItems,
@@ -385,8 +330,7 @@ export default class DemoTimeline extends Component {
       timelineMode,
       useMoment,
       multipleColumnsMode,
-      useCustomTable,
-      tableColumns
+      useTable
     } = this.state;
     const rangeValue = [startDate, endDate];
 
@@ -490,8 +434,8 @@ export default class DemoTimeline extends Component {
               </Checkbox>
             </Form.Item>
             <Form.Item>
-              <Checkbox onChange={this.toggleUseCustomTable} checked={useCustomTable}>
-                Use custom table
+              <Checkbox onChange={this.toggleUseTable} checked={useTable}>
+                Use table
               </Checkbox>
             </Form.Item>
           </Form>
@@ -507,9 +451,8 @@ export default class DemoTimeline extends Component {
           useMoment={useMoment}
           startDate={useMoment ? startDate : startDate.valueOf()}
           endDate={useMoment ? endDate : endDate.valueOf()}
-          tableColumns={useCustomTable ? undefined : multipleColumnsMode ? tableColumns : [tableColumns[0]]}
           table={
-            useCustomTable ? (
+            useTable ? (
               <Table rowHeight={50} width={300} isColumnResizing={true}>
                 <Column
                   key={0}

@@ -6,26 +6,11 @@ import { encodeApiDocURIForSubpath, parametersDocPage } from '../StorybookUtils'
 <Meta title="Features/Table/Doc"  />
 
 ## Custom table
- By default the gantt diagram has a table with only one column displaying the field <code><a href={encodeApiDocURIForSubpath("/class/src/timeline.js~Timeline.html#static-member-SINGLE_COLUMN_LABEL_PROPERTY")}>SINGLE_COLUMN_LABEL_PROPERTY</a></code> of the <code>groups</code>
-
-You can customize the table of your <code><a href={encodeApiDocURIForSubpath("/class/src/timeline.js~Timeline.html")}>Timeline</a></code> in three ways:
-
- * Overriding default column renderers by setting the <code>groupRenderer</code> or <code>groupTitleRenderer</code> properties
-  <ArgsTable of={Timeline} sort="none" include={["groupRenderer", "groupTitleRenderer"]}/>
-
-
-    
-  * Providing table columns descriptors by setting <code>tableColumns</code> property
-   
-  For each column you can customize only the <code>headerLabel</code> or <code>labelProperty</code> (defaults to SINGLE_COLUMN_LABEL_PROPERTY)
-  or you can provide your own <code>cellRenderer</code> or <code>headerRenderer</code>
-
-  <ArgsTable of={Timeline} sort="none" include={["tableColumns"]}/>
-  
+ By default the gantt diagram doesn't display any table for showing the details of the <code>groups</code>
  
-
-  * Providing an entire custom table by setting the <code>table</code> property. It should be a table from the <code>fixed-data-table-2</code> library. 
+You can add one and customize the table of your <code><a href={encodeApiDocURIForSubpath("/class/src/timeline.js~Timeline.html")}>Timeline</a></code> by setting the <code>table</code> property. It should be a table from the <code>fixed-data-table-2</code> library. 
   
-  The cell renderer of your custom table should thake in consideration that there could be empty rows (without any data behinde) added by gantt just for filling the remaining empty space
+**IMPORTANT:** The cell renderer of your custom table should take in consideration that there could be empty rows (without any data behind) added by gantt just for filling in the remaining empty space
 
+## `Timeline`
   <ArgsTable of={Timeline} sort="none" include={["table"]}/>

@@ -4,6 +4,7 @@ import { d, someHumanResources, someTasks } from '../sampleData';
 import { ComponentStory } from '@storybook/react';
 import { dragToCreateScenarios } from './DragToCreateScenarios';
 import { DragToCreateParam } from '../../types';
+import { Table, Column, DataCell} from 'fixed-data-table-2';
 
 export default {
     title: 'Features/Drag to create',
@@ -16,6 +17,13 @@ export const Main: ComponentStory<typeof Timeline> = () => {
         groups = [...someHumanResources, { id: 4, title: 'Andy' }];
         render() {
             return <Timeline startDate={d('2018-09-20')} endDate={d('2018-09-21')} groups={this.groups} items={this.someTasks}
+                table={<Table width={100}>
+                            <Column
+                                columnKey="title"
+                                width={100}
+                                header={<DataCell>Title</DataCell>}
+                                cell={({rowIndex}) => <DataCell>{rowIndex < someHumanResources.length ? someHumanResources[rowIndex].title : ""}</DataCell>}/>
+                        </Table>}
                 onDragToCreateEnded={(param: DragToCreateParam) => {
                     if (this.groups[param.groupIndex]) {
                         const task = {
