@@ -11,7 +11,6 @@ import {Button, Popup} from 'semantic-ui-react';
 import {Group, InteractOption, Item, RowLayer} from './index';
 
 import {TestsAreDemoCheat, createTestids} from '@famiprog-foundation/tests-are-demo';
-import {Table, Column as TableColumn} from 'fixed-data-table-2';
 import {GroupRenderer} from './components/GroupRenderer';
 import {Marker} from './components/Marker';
 import TimelineBody from './components/body';
@@ -557,6 +556,7 @@ export default class Timeline extends React.Component {
 
     this.cellRenderer = this.cellRenderer.bind(this);
     this.rowHeight = this.rowHeight.bind(this);
+    this.tableRowHeight = this.tableRowHeight.bind(this);
     this.setTimeMap = this.setTimeMap.bind(this);
     this.getItem = this.getItem.bind(this);
     this.changeGroup = this.changeGroup.bind(this);
@@ -1482,6 +1482,24 @@ export default class Timeline extends React.Component {
   }
 
   /**
+   * The height of the last empty row added to fill in the remaining space is different in gantt and in table because:
+   * In gantt the computed available space for rows is:
+   *        componentHeight - headerheight
+   * But in fixed data table the computed available space for the rows is:
+   *        Math.round(componentHeight) - headerheight - 2 * BORDER_HEIGHT (see roughHeights.js)
+   *
+   * If we have passed the same row height for table as for gantt a vertical scroll bar appeared (only for scrolling 2 or 3 px overflow)
+   */
+  tableRowHeight(index) {
+    var tableRowHeight = this.rowHeight({index});
+    let group = _.find(this.state.groups, g => g.id == index);
+    if (group.rowHeight && group.key.startsWith(EMPTY_GROUP_KEY)) {
+      tableRowHeight = Math.round(tableRowHeight) - 2;
+    }
+    return tableRowHeight;
+  }
+
+  /**
    * Set the grid ref.
    * @param {Object} reactComponent Grid react element
    */
@@ -1652,10 +1670,8 @@ export default class Timeline extends React.Component {
     );
   }
 
-  render() {
+  renderGanttPart({bodyHeight, timebarHeight}) {
     const {
-      onInteraction,
-      groupOffset,
       showCursorTime,
       timebarFormat,
       componentId,
@@ -1668,12 +1684,106 @@ export default class Timeline extends React.Component {
     } = this.props;
     let that = this;
 
-    const divCssClass = `rct9k-timeline-div rct9k-id-${componentId}`;
     let varTimebarProps = {};
     if (timebarFormat) varTimebarProps['timeFormats'] = timebarFormat;
     if (bottomResolution) varTimebarProps['bottom_resolution'] = bottomResolution;
     if (topResolution) varTimebarProps['top_resolution'] = topResolution;
 
+    const divCssClass = `rct9k-timeline-div rct9k-id-${componentId}`;
+
+    // Markers (only current time marker atm)
+    const markers = [];
+    if (showCursorTime && this.mouse_snapped_time) {
+      const cursorPix = getPixelAtTime(
+        this.mouse_snapped_time,
+        this.getStartDate(),
+        this.getEndDate(),
+        this.getTimelineWidth()
+      );
+      markers.push({
+        left: cursorPix,
+        key: 1
+      });
+    }
+
+    return (
+      <div style={{flex: 1, overflow: 'hidden'}}>
+        <Measure
+          bounds
+          onResize={contentRect => {
+            if (contentRect.bounds) {
+              this.setState({gridWidth: contentRect.bounds.width || 0});
+            }
+            this.refreshGrid();
+          }}>
+          {({measureRef, contentRect}) => {
+            return (
+              <div ref={measureRef} className={divCssClass}>
+                <div className="parent-div" onMouseMove={this.mouseMoveFunc}>
+                  <SelectBox
+                    ref={this.select_ref_callback}
+                    className={this.state.dragToCreateMode ? 'rct9k-selector-outer-add' : ''}
+                  />
+                  <Timebar
+                    cursorTime={this.getCursor()}
+                    start={this.getStartDate()}
+                    end={this.getEndDate()}
+                    width={this.state.gridWidth}
+                    leftOffset={0}
+                    selectedRanges={this.state.selection}
+                    groupTitleRenderer={groupTitleRenderer}
+                    groupOffset={0}
+                    setVerticalGridLines={this.setVerticalGridLines}
+                    {...varTimebarProps}
+                  />
+                  {markers.map(m => (
+                    <Marker
+                      key={m.key}
+                      height={this.state.screenHeight}
+                      top={0}
+                      date={0}
+                      shouldUpdate={true}
+                      calculateHorizontalPosition={() => {
+                        return {left: m.left};
+                      }}
+                      className="rct9k-marker-overlay"
+                    />
+                  ))}
+                  <TimelineBody
+                    width={this.state.gridWidth}
+                    columnWidth={() => this.state.gridWidth}
+                    height={bodyHeight}
+                    rowHeight={this.rowHeight}
+                    rowCount={this.state.groups.length}
+                    columnCount={1}
+                    cellRenderer={this.cellRenderer(this.getTimelineWidth(this.state.gridWidth))}
+                    grid_ref_callback={this.grid_ref_callback}
+                    shallowUpdateCheck={shallowUpdateCheck}
+                    forceRedrawFunc={forceRedrawFunc}
+                    onScroll={this.handleScrollGantt}
+                  />
+                  {backgroundLayer &&
+                    React.cloneElement(backgroundLayer, {
+                      startDateTimeline: this.getStartDate(),
+                      endDateTimeline: this.getEndDate(),
+                      width: this.state.gridWidth,
+                      leftOffset: 0,
+                      height: bodyHeight,
+                      topOffset: timebarHeight,
+                      verticalGridLines: this.state.verticalGridLines
+                    })}
+                  <div className="rct9k-menu-div">{this.renderMenuButton()}</div>
+                </div>
+              </div>
+            );
+          }}
+        </Measure>
+      </div>
+    );
+  }
+
+  render() {
+    const {componentId} = this.props;
     /**
      * @returns { number } height of the timebar
      */
@@ -1702,28 +1812,10 @@ export default class Timeline extends React.Component {
       return Math.max(height - getTimebarHeight(), 0);
     }
 
-    // Markers (only current time marker atm)
-    const markers = [];
-    if (showCursorTime && this.mouse_snapped_time) {
-      const cursorPix = getPixelAtTime(
-        this.mouse_snapped_time,
-        this.getStartDate(),
-        this.getEndDate(),
-        this.getTimelineWidth()
-      );
-      markers.push({
-        left: cursorPix,
-        key: 1
-      });
-    }
-
-    const rowsHeights = this.state.groups.map((_, index) => this.rowHeight({index}));
-
     {
       /* Instead of <Measure .../>, in the past <AutoSizer ... /> was used. However it would round with/height, which generated and endless
     scrollbar appear/disappear, depending on the parent, depending on the resolution. */
     }
-
     return (
       // Can not use empty <> instead of <Fragment> because it fails the documentation generation
       <Fragment>
@@ -1748,28 +1840,23 @@ export default class Timeline extends React.Component {
             const timebarHeight = getTimebarHeight();
             return (
               <div ref={measureRef} style={{display: 'flex', flexDirection: 'row', flex: 1, height: '100%'}}>
-                <SplitPane
-                  split="vertical"
-                  style={{height: this.state.screenHeight}}
-                  defaultSize={this.getInitialTableWidth()}
-                  onChange={this.handleDrag}
-                  ref={this.splitPane_ref_callback}>
-                  {this.props.table && (
+                {this.props.table ? (
+                  <SplitPane
+                    split="vertical"
+                    style={{height: this.state.screenHeight}}
+                    defaultSize={this.props.table ? this.getInitialTableWidth() : 0}
+                    onChange={this.handleDrag}
+                    ref={this.splitPane_ref_callback}>
                     <TableWithStyle
                       table={React.cloneElement(this.props.table, {
                         rowsCount: this.state.groups.length,
-                        // Table can contain "buffered rows" that fill the empty space left, if any
-                        rowHeightGetter: rowIndex =>
-                          rowIndex < rowsHeights.length ? rowsHeights[rowIndex] : DEFAULT_ITEM_HEIGHT,
+                        rowHeightGetter: this.tableRowHeight,
                         rowHeight: this.props.itemHeight,
                         ref: this.table_ref_callback,
                         touchScrollEnabled: true,
                         onVerticalScroll: this.handleScrollTable,
                         scrollTop: this.state.scrollTop,
                         headerHeight: timebarHeight,
-                        // TODO DB: A vertical scroll appears (only for scrolling 3 px overflow)
-                        // hint: if we add here 3 that scollbar disappear
-                        // Maybe it is due to the fact that we set 3 things: rowHeightGetter, height, and also rowCount
                         height: this.state.screenHeight,
                         width: this.state.tableWidth,
                         rowClassNameGetter: rowIndex =>
@@ -1778,91 +1865,11 @@ export default class Timeline extends React.Component {
                           (rowIndex % 2 == 0 ? this.props.rowOddClassName : this.props.rowEvenClassName)
                       })}
                     />
-                  )}
-
-                  <div style={{flex: 1, overflow: 'hidden'}}>
-                    <Measure
-                      bounds
-                      onResize={contentRect => {
-                        if (contentRect.bounds) {
-                          this.setState({gridWidth: contentRect.bounds.width || 0});
-                        }
-                        this.refreshGrid();
-                      }}>
-                      {({measureRef, contentRect}) => {
-                        return (
-                          <div
-                            ref={measureRef}
-                            className={divCssClass}
-                            onContextMenu={e => {
-                              if (this._selectBox.isStart()) {
-                                // on right click if drag in progress cancel it
-                                e.preventDefault();
-                                this.setState({dragCancel: true});
-                                this._selectBox.end();
-                              }
-                            }}>
-                            <div className="parent-div" onMouseMove={this.mouseMoveFunc}>
-                              <SelectBox
-                                ref={this.select_ref_callback}
-                                className={this.state.dragToCreateMode ? 'rct9k-selector-outer-add' : ''}
-                              />
-                              <Timebar
-                                cursorTime={this.getCursor()}
-                                start={this.getStartDate()}
-                                end={this.getEndDate()}
-                                width={this.state.gridWidth}
-                                leftOffset={0}
-                                selectedRanges={this.state.selection}
-                                groupTitleRenderer={groupTitleRenderer}
-                                groupOffset={0}
-                                setVerticalGridLines={this.setVerticalGridLines}
-                                {...varTimebarProps}
-                              />
-                              {markers.map(m => (
-                                <Marker
-                                  key={m.key}
-                                  height={this.state.screenHeight}
-                                  top={0}
-                                  date={0}
-                                  shouldUpdate={true}
-                                  calculateHorizontalPosition={() => {
-                                    return {left: m.left};
-                                  }}
-                                  className="rct9k-marker-overlay"
-                                />
-                              ))}
-                              <TimelineBody
-                                width={this.state.gridWidth}
-                                columnWidth={() => this.state.gridWidth}
-                                height={bodyHeight}
-                                rowHeight={this.rowHeight}
-                                rowCount={this.state.groups.length}
-                                columnCount={1}
-                                cellRenderer={this.cellRenderer(this.getTimelineWidth(this.state.gridWidth))}
-                                grid_ref_callback={this.grid_ref_callback}
-                                shallowUpdateCheck={shallowUpdateCheck}
-                                forceRedrawFunc={forceRedrawFunc}
-                                onScroll={this.handleScrollGantt}
-                              />
-                              {backgroundLayer &&
-                                React.cloneElement(backgroundLayer, {
-                                  startDateTimeline: this.getStartDate(),
-                                  endDateTimeline: this.getEndDate(),
-                                  width: this.state.gridWidth,
-                                  leftOffset: 0,
-                                  height: bodyHeight,
-                                  topOffset: timebarHeight,
-                                  verticalGridLines: this.state.verticalGridLines
-                                })}
-                              <div className="rct9k-menu-div">{this.renderMenuButton()}</div>
-                            </div>
-                          </div>
-                        );
-                      }}
-                    </Measure>
-                  </div>
-                </SplitPane>
+                    {this.renderGanttPart({bodyHeight, timebarHeight})}
+                  </SplitPane>
+                ) : (
+                  this.renderGanttPart({bodyHeight, timebarHeight})
+                )}
               </div>
             );
           }}
