@@ -122,7 +122,7 @@ TimelineBody.propTypes = {
 };
 
 TimelineBody.defaultProps = {
-  columnCount: 2,
+  columnCount: 1,
   shallowUpdateCheck: false,
   forceRedrawFunc: null
 };

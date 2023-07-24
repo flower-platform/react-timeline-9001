@@ -1,14 +1,4 @@
-type ColumnBase = {
-    headerLabel?: string,
-    headerRenderer?: Function | JSX.Element,
-    width: number
-}
-/**
- * Most of the JS classes/functions have type information as JSDoc (included in the corresponding comments).
- * For some types this was not possible (e.g. because we didn't have actual classes), hence we define them here.
- * They are "included" by the class Timeline.
- */
-export type Column = ColumnBase & ({labelProperty: string } | {cellRenderer: Function | JSX.Element});
+import { IAction, IActionParam, IActionParamForRun, IOnContextMenuShowParam } from "./components/ContextMenu/IAction"
 
 export type Group = {
     id: number,
@@ -49,4 +39,26 @@ export type DragToCreateParam = {
     itemIndex: number, // Index for new item
     itemStart: object, // Start for new item
     itemEnd?: object //  End for new item
+}
+
+export interface IGanttOnContextMenuShowParam extends IOnContextMenuShowParam {
+    actionParam: IGanttActionParam
+}
+
+export interface IGanttActionParam extends IActionParam {
+    row : number;
+    /**
+     * numeric/millis or moment object, cf. `timeline.useMoment`
+     */
+    time: number | object;
+}
+
+export interface IGanttActionParamForRun extends IGanttActionParam, IActionParamForRun {
+    selection: (number | string)[];
+}
+
+export interface IGanttAction extends IAction {
+    run?: (param: IGanttActionParamForRun) => void,
+    label?: string | ((param: IGanttActionParam) => string),
+    renderInMenu?: (param: IGanttActionParamForRun) => React.ReactElement
 }

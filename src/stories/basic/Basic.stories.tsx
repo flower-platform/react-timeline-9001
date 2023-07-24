@@ -3,15 +3,14 @@ import Timeline from '../../timeline';
 import { timelineScenarios } from '../TimelineScenarios';
 import { d, someHumanResources, someTasks } from '../sampleData';
 import { ComponentStory } from '@storybook/react';
-import { Group, Item } from '../../types';
+import { Group, Item } from '../../index';
 import { Table, Column, DataCell } from 'fixed-data-table-2';
 
 export default {
-  title: 'Features/Basic',
-  component: Timeline
+  title: 'Features/Basic'
 };
 
-export const Main: ComponentStory<typeof Timeline> = () => {
+export const Main = () => {
   // the rows (aka groups)
   // id is mandatory; should: be numeric, start from 0, have consecutive values
   const humanResources: Group[] = [...someHumanResources, { id: 4, title: 'George Walsh' }];
@@ -23,6 +22,10 @@ export const Main: ComponentStory<typeof Timeline> = () => {
     { key: 11, row: 4, title: 'Task GW1', start: d('2018-09-20 7:00'), end: d('2018-09-20 8:00') },
     { key: 12, row: 4, title: 'Task GW2', start: d('2018-09-20 17:00'), end: d('2018-09-20 19:00') }
   ];
+
+  // NOTE: for DRY purposes, we store the sample data (e.g. humanResources, segments) in sampleData.ts.
+  // If you look at this function from within Storybook, you don't see easily sampleData.ts.
+  // That's why we added some additional records here, so that the shape of data is clear.
 
   return (
     <>
@@ -36,7 +39,7 @@ export const Main: ComponentStory<typeof Timeline> = () => {
                                 columnKey="title"
                                 width={100}
                                 header={<DataCell>Title</DataCell>}
-                                cell={({rowIndex}) => <DataCell>{rowIndex < someHumanResources.length ? someHumanResources[rowIndex].title : ""}</DataCell>}/>
+                                cell={({rowIndex}) => <DataCell>{rowIndex < humanResources.length ? humanResources[rowIndex].title : ""}</DataCell>}/>
                         </Table>}
           />
       </div>
@@ -56,7 +59,7 @@ export const AlternativeRowColoring: ComponentStory<typeof Timeline> = () => {
 
   return (
     <>
-      {/* This is an example to illustrate how you can customize your gantt to customize the row coloring by seeting 'rowClassName',  'rowEvenClassName' and 'rowClassOddName'
+      {/* This is an example to illustrate how you can customize your gantt to customize the row coloring by setting 'rowClassName',  'rowEvenClassName' and 'rowClassOddName'
 
           And defining your custom classes in your css file:
 
@@ -87,4 +90,12 @@ export const AlternativeRowColoring: ComponentStory<typeof Timeline> = () => {
       </div>
     </>
   );
+};
+
+AlternativeRowColoring.parameters = {
+  scenarios: [
+    timelineScenarios.propertyRowClassName,
+    timelineScenarios.propertyRowEvenClassName,
+    timelineScenarios.propertyRowOddClassName
+  ]
 };

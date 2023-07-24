@@ -6,18 +6,15 @@ import _ from 'lodash';
 import moment from 'moment';
 import {Component} from 'react';
 
-import {CustomGroupRenderer, CustomItemRenderer} from './demo/customRenderers';
 import Timeline from './timeline';
 
 import {Button, Checkbox, DatePicker, Form, Icon, InputNumber, Switch} from 'antd';
 import 'antd/dist/antd.css';
 import './stories/storybook.css';
 import './style.css';
-import {DEMO_TABLE_WIDTH} from './stories/table/TableScenarios';
-import {GroupRenderer} from './components/GroupRenderer';
 import {ItemRenderer} from '.';
-import {GroupHeaderRenderer} from './components/GroupHeaderRenderer';
-import {Column, Table, DataCell} from 'fixed-data-table-2';
+import {Table, Column, DataCell} from 'fixed-data-table-2';
+import {CustomItemRenderer} from './demo/customRenderers';
 
 const {TIMELINE_MODES} = Timeline;
 
@@ -37,38 +34,6 @@ const headerStyle = {
 // import moment from 'moment-timezone';
 // moment.locale('en-au');
 // moment.tz.setDefault('Australia/Perth');
-class TitleCellRenderer extends GroupRenderer {
-  render() {
-    // Additional check for any empty rows added in for filling in the empty space at the bottom of the table
-    return (
-      <DataCell>
-        {this.props.rowIndex < this.props.groups.length ? this.props.groups[this.props.rowIndex].title : ''}
-      </DataCell>
-    );
-  }
-}
-
-class DescriptionCellRenderer extends GroupRenderer {
-  render() {
-    return (
-      <DataCell>
-        {this.props.rowIndex < this.props.groups.length ? this.props.groups[this.props.rowIndex].description : ''}
-      </DataCell>
-    );
-  }
-}
-
-class CheckBoxCellRenderer extends GroupRenderer {
-  render() {
-    return this.props.rowIndex < this.props.groups.length ? (
-      <DataCell>
-        <Checkbox> Checkbox </Checkbox>
-      </DataCell>
-    ) : (
-      <Fragment />
-    );
-  }
-}
 
 export default class DemoTimeline extends Component {
   constructor(props) {
@@ -86,7 +51,6 @@ export default class DemoTimeline extends Component {
       endDate,
       message: '',
       timelineMode: TIMELINE_MODES.SELECT | TIMELINE_MODES.DRAG | TIMELINE_MODES.RESIZE,
-      multipleColumnsMode: false,
       useTable: true,
       useMoment: true
     };
@@ -98,7 +62,6 @@ export default class DemoTimeline extends Component {
     this.toggleDraggable = this.toggleDraggable.bind(this);
     this.toggleResizable = this.toggleResizable.bind(this);
     this.toggleUseMoment = this.toggleUseMoment.bind(this);
-    this.toggleMultipleColumnsMode = this.toggleMultipleColumnsMode.bind(this);
     this.toggleUseTable = this.toggleUseTable.bind(this);
   }
 
@@ -198,10 +161,6 @@ export default class DemoTimeline extends Component {
     const {useMoment} = this.state;
     this.reRender(!useMoment);
   }
-  toggleMultipleColumnsMode() {
-    const {multipleColumnsMode} = this.state;
-    this.setState({multipleColumnsMode: !multipleColumnsMode});
-  }
 
   toggleUseTable() {
     const {useTable} = this.state;
@@ -215,12 +174,11 @@ export default class DemoTimeline extends Component {
     let newSelection = selectedItems.slice();
 
     // If the item is already selected, then unselected
-    const idx = selectedItems.indexOf(key);
-    if (idx > -1) {
-      // Splice modifies in place and returns removed elements
-      newSelection.splice(idx, 1);
+    const isSelected = selectedItems.find(item => item == key);
+    if (isSelected) {
+      newSelection = newSelection.filter(item => item != key);
     } else {
-      newSelection.push(Number(key));
+      newSelection.push(key);
     }
 
     this.setState({selectedItems: newSelection, message});
@@ -329,7 +287,6 @@ export default class DemoTimeline extends Component {
       useCustomRenderers,
       timelineMode,
       useMoment,
-      multipleColumnsMode,
       useTable
     } = this.state;
     const rangeValue = [startDate, endDate];
@@ -429,11 +386,6 @@ export default class DemoTimeline extends Component {
               </Checkbox>
             </Form.Item>
             <Form.Item>
-              <Checkbox onChange={this.toggleMultipleColumnsMode} checked={multipleColumnsMode}>
-                Multiple columns mode
-              </Checkbox>
-            </Form.Item>
-            <Form.Item>
               <Checkbox onChange={this.toggleUseTable} checked={useTable}>
                 Use table
               </Checkbox>
@@ -459,7 +411,7 @@ export default class DemoTimeline extends Component {
                   columnKey={0}
                   width={100}
                   header={<DataCell style={headerStyle}>Title</DataCell>}
-                  cell={<TitleCellRenderer groups={groups} />}
+                  cell={({rowIndex}) => <DataCell>{rowIndex < groups.length ? groups[rowIndex].title : ''}</DataCell>}
                 />
                 <Column
                   key={1}
@@ -470,14 +422,18 @@ export default class DemoTimeline extends Component {
                       <Icon type="check-circle" /> <span>Custom check</span>
                     </DataCell>
                   }
-                  cell={<CheckBoxCellRenderer groups={groups} />}
+                  cell={({rowIndex}) => (
+                    <DataCell>{rowIndex < groups.length ? <Checkbox> Checkbox </Checkbox> : ''}</DataCell>
+                  )}
                 />
                 <Column
                   key={2}
                   columnKey={2}
                   width={100}
                   header={<DataCell style={headerStyle}>Description</DataCell>}
-                  cell={<DescriptionCellRenderer groups={groups}></DescriptionCellRenderer>}
+                  cell={({rowIndex}) => (
+                    <DataCell>{rowIndex < groups.length ? groups[rowIndex].description : ''}</DataCell>
+                  )}
                 />
               </Table>
             ) : (
@@ -496,8 +452,6 @@ export default class DemoTimeline extends Component {
           onRowContextClick={this.handleRowContextClick}
           onRowDoubleClick={this.handleRowDoubleClick}
           itemRenderer={useCustomRenderers ? CustomItemRenderer : ItemRenderer}
-          groupRenderer={useCustomRenderers ? CustomGroupRenderer : GroupRenderer}
-          groupTitleRenderer={useCustomRenderers ? () => <div>Group title</div> : GroupHeaderRenderer}
         />
       </div>
     );

@@ -5,9 +5,7 @@ import PropTypes from 'prop-types';
 import _ from 'lodash';
 import moment from 'moment';
 import {intToPix} from '../utils/commonUtils';
-import {GroupHeaderRenderer} from './GroupHeaderRenderer';
 import {timebarFormat as defaultTimebarFormat} from '../consts/timebarConsts';
-import {Column} from '../types';
 
 /**
  * Timebar component - displays the current time on top of the timeline.
@@ -224,36 +222,12 @@ export default class Timebar extends React.Component {
   }
 
   /**
-   * It renders the header of a column in multi columns mode. Default renderer: props.groupTitleRenderer;
-   * which may be overriden per column: column.headerRender (react element or function).
-   * @param {object} column
-   * @param {number | string} index
-   */
-  renderColumnHeader(column, index) {
-    const columnWidth = column.width ? column.width : this.props.groupOffset;
-    return (
-      <div className="rct9k-timebar-group-title" key={index} style={{width: columnWidth}}>
-        {column.headerRenderer ? (
-          React.isValidElement(column.headerRenderer) ? (
-            column.headerRenderer
-          ) : (
-            <column.headerRenderer />
-          )
-        ) : (
-          <this.props.groupTitleRenderer column={column} />
-        )}
-      </div>
-    );
-  }
-
-  /**
    * Renders the timebar
    * @returns {Object} Timebar component
    */
   render() {
     const {cursorTime} = this.props;
     const {topBarComponent, bottomBarComponent} = this.state;
-    const GroupTitleRenderer = this.props.groupTitleRenderer;
 
     // Only show the cursor on 1 of the top bar segments
     // Pick the segment that has the biggest size
@@ -302,12 +276,6 @@ Timebar.propTypes = {
    * @type { any }
    */
   cursorTime: PropTypes.any,
-
-  /**
-   * As e.g. @see Timeline.props.groupTitleRenderer
-   * @type { Function }
-   */
-  groupTitleRenderer: PropTypes.func,
 
   /**
    * Start of the displayed interval, as moment object.
@@ -367,7 +335,6 @@ Timebar.propTypes = {
 
 Timebar.defaultProps = {
   selectedRanges: [],
-  groupTitleRenderer: GroupHeaderRenderer,
   leftOffset: 0,
   timeFormats: defaultTimebarFormat,
   top_resolution: undefined,

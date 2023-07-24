@@ -7,11 +7,10 @@ import { DragToCreateParam } from '../../types';
 import { Table, Column, DataCell} from 'fixed-data-table-2';
 
 export default {
-    title: 'Features/Drag to create',
-    component: Timeline
+    title: 'Features/Drag to create'
 };
 
-export const Main: ComponentStory<typeof Timeline> = () => {
+export const Main = () => {
     class DragToCreateDemo extends React.Component {
         someTasks = [...someTasks];
         groups = [...someHumanResources, { id: 4, title: 'Andy' }];

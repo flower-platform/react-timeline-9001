@@ -1,18 +1,16 @@
-import { ComponentStory } from "@storybook/react";
 import { useEffect, useRef, useState } from "react";
 import { Segment } from "semantic-ui-react";
 import { d, someHumanResources, someTasks } from "../sampleData";
-import { customTimelineScenarios } from "./CustomTimelineScenarios";
 import { CustomTimeline } from "./CustomTimeline";
+import { customTimelineScenarios } from "./CustomTimelineScenarios";
 import { ItemRenderer } from "../..";
 import { Table, Column, DataCell} from 'fixed-data-table-2';
 
 export default {
-  title: 'Features/Custom',
-  component: CustomTimeline
+  title: 'Features/Custom'
 };
 
-export const CustomMenuButtonRenderer: ComponentStory<typeof CustomTimeline> = () => {
+export const CustomMenuButtonRenderer = () => {
 
   const divRef = useRef<any>();
   const [value, setValue] = useState(0);

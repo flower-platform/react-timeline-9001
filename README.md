@@ -133,7 +133,7 @@ See http://react-timeline-9000.s3-website-ap-southeast-2.amazonaws.com/docs/ for
 ### Items
 
 Required props:
-* key - number
+* key - number or string
 
 ### Groups
 
@@ -167,5 +167,4 @@ Required props:
 | Timeline items                        | 3     |
 | Timeline items when dragging/resizing | 4     |
 | Selection box (for multi-select)      | 5     |
-| Group column                          | 6     |
 

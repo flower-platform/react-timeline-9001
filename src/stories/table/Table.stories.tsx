@@ -1,11 +1,10 @@
 import { ComponentStory } from "@storybook/react";
-import React, { Fragment, createRef } from "react";
+import { Fragment } from "react";
 import { Checkbox, Icon } from "semantic-ui-react";
-import { GroupRenderer, ItemRenderer, Timeline } from "../..";
+import { Timeline } from "../..";
 import { d, manyHumanResources, manyTasks } from "../sampleData";
 
-import { Alert } from "antd";
-import { Column, Table, DataCell } from "fixed-data-table-2";
+import { Column, DataCell, Table } from "fixed-data-table-2";
 import { DEMO_TABLE_WIDTH, tableScenarios, tableTestIds } from "./TableScenarios";
 export default {
     title: 'Features/Table',
@@ -36,25 +35,6 @@ const headerStyle = {
 };
 
 export const ProvidingCustomTable: ComponentStory<typeof Timeline> = () => {
-    class TitleCellRenderer extends GroupRenderer {
-        render() {
-            // Additional check for any empty rows added in for filling in the empty space at the bottom of the table
-            return <DataCell>{this.props.rowIndex < manyHumanResources.length ? manyHumanResources[this.props.rowIndex].title : ""}</DataCell>;
-        }
-    }
-
-    class JobCellRenderer extends GroupRenderer {
-        render() {
-            return <DataCell>{this.props.rowIndex < manyHumanResources.length ? manyHumanResources[this.props.rowIndex].job : ""}</DataCell>;
-        }
-    }
-
-    class CheckBoxCellRenderer extends GroupRenderer {
-        render() {
-            return (this.props.rowIndex < manyHumanResources.length) ? (<DataCell><Checkbox> Checkbox </Checkbox></DataCell>) : <Fragment/>;
-        }
-    }
-
     return (
         <Fragment>
             <Timeline startDate={d('2018-09-20')} endDate={d('2018-09-21')} groups={manyHumanResources} items={manyTasks}
@@ -69,21 +49,27 @@ export const ProvidingCustomTable: ComponentStory<typeof Timeline> = () => {
                                 columnKey={0}
                                 width={100}
                                 header={<DataCell style={headerStyle}>Title</DataCell>}
-                                cell={<TitleCellRenderer />}
+                                cell={({rowIndex}) => <DataCell>
+                                                        {rowIndex < manyHumanResources.length ? manyHumanResources[rowIndex].title : ""}
+                                                    </DataCell>}
                             />
                             <Column
                                 key={1}
                                 columnKey={1}
                                 width={60}
                                 header={<DataCell style={headerStyle}><Icon type="check-circle" /> <span>Custom check</span></DataCell>}
-                                cell={<CheckBoxCellRenderer/>}
+                                cell={({rowIndex}) => <DataCell>
+                                                    {rowIndex < manyHumanResources.length ? <Checkbox/> : ""}
+                                                </DataCell>}
                             />
                             <Column
                                 key={2}
                                 columnKey={2}
                                 width={100}
                                 header={<DataCell style={headerStyle}>Job</DataCell>}
-                                cell={<JobCellRenderer></JobCellRenderer>}
+                                cell={({rowIndex}) => <DataCell>
+                                                    {rowIndex < manyHumanResources.length ? manyHumanResources[rowIndex].job : ""}
+                                                </DataCell>}
                             />
                         </Table>} 
             />
