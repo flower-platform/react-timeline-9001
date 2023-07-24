@@ -1818,11 +1818,12 @@ export default class Timeline extends React.Component {
         <Measure
           bounds
           onResize={contentRect => {
-            const width = contentRect.bounds ? contentRect.bounds.width : 0;
-            const height = contentRect.bounds ? contentRect.bounds.height : 0;
-            const config = {width, height};
-            this.setState(config);
-            this.refreshGrid(config);
+            const dimensions = {
+              width: contentRect.bounds ? contentRect.bounds.width : 0,
+              height: contentRect.bounds ? contentRect.bounds.height : 0
+            };
+            this.setState({screenHeight: dimensions.height});
+            this.refreshGrid(dimensions);
           }}>
           {({measureRef}) => {
             const leftOffset = this.calculateLeftOffset();
