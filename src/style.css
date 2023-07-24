@@ -83,7 +83,7 @@
 }
 
 .rct9k-marker-overlay {
-  z-index: 2;
+  z-index: 4;
   height: 475px;
   position: absolute;
   width: 2px;
