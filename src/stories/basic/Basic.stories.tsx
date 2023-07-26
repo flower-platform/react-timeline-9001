@@ -45,3 +45,15 @@ Main.parameters = {
     timelineScenarios.whenMouseMovesThenRedBar
   ]
 };
+
+export const IllegalData = () => {
+
+  return (<Timeline startDate={d('2018-09-20')} endDate={d('2018-09-21')} groups={[someHumanResources[0]]} items={someTasks} />);
+};
+
+IllegalData.parameters = {
+  scenarios: [
+    timelineScenarios.givenIlegalDataThenShowWarning
+  ]
+}
+

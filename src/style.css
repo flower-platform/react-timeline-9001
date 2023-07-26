@@ -296,6 +296,12 @@
   top: 1px;
 }
 
+.rct9k-warning-div {
+  position: absolute;
+  right: 30px;
+  top: 3px;
+}
+
 .rct9k-menu.ui.popup {
   padding: 0;
   margin: 0;

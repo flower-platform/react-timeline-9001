@@ -9,7 +9,7 @@ import moment from 'moment';
 import interact from 'interactjs';
 import _ from 'lodash';
 import {Column, Group, InteractOption, Item, RowLayer} from './index';
-import {Button, Label, Menu, Popup} from 'semantic-ui-react';
+import {Button, Label, Menu, Popup, Icon} from 'semantic-ui-react';
 
 import {pixToInt, intToPix} from './utils/commonUtils';
 import {
@@ -527,7 +527,8 @@ export default class Timeline extends React.Component {
       rightClickDraggingState: undefined,
       openedContextMenuCoordinates: undefined,
       openedContextMenuRow: undefined,
-      openedContextMenuTime: undefined
+      openedContextMenuTime: undefined,
+      illegalInputData: false
     };
 
     // These functions need to be bound because they are passed as parameters.
@@ -800,6 +801,7 @@ export default class Timeline extends React.Component {
     let heightToFillIn = this._grid.props.height - totalItemsHeight;
     let fillInGroups = [];
 
+    let illegalInputData = false;
     let groupId = groups.length;
     while (heightToFillIn > 0) {
       // create new empty group;
@@ -811,10 +813,17 @@ export default class Timeline extends React.Component {
       }
 
       fillInGroups.push(emptyGroup);
+      if (this.rowItemMap[groupId] && this.rowItemMap[groupId].length) {
+        const itemKeys = this.rowItemMap[groupId].map(item => item.key).join(', ');
+        console.error(
+          `The items with keys: [${itemKeys}] has row = ${groupId} but there's no group with index ${groupId}. Please check if the groups property or the items with keys [${itemKeys}] are well defined.`
+        );
+        illegalInputData = true;
+      }
       heightToFillIn -= this.props.itemHeight;
       groupId++;
     }
-    this.setState({groups: [...groups, ...fillInGroups]});
+    this.setState({groups: [...groups, ...fillInGroups], illegalInputData});
   }
 
   /**
@@ -1694,6 +1703,17 @@ export default class Timeline extends React.Component {
   /**
    * @returns { JSX.Element }
    */
+  renderWarningIcon() {
+    return (
+      <Popup position="top right" trigger={<Icon color="red" size="big" name="exclamation" />}>
+        <div style={{color: 'red'}}> Some of the input data are illegal. More info in the console.</div>
+      </Popup>
+    );
+  }
+
+  /**
+   * @returns { JSX.Element }
+   */
   renderMenuButton() {
     return (
       <Popup
@@ -1980,6 +2000,7 @@ export default class Timeline extends React.Component {
                       topOffset: timebarHeight,
                       verticalGridLines: this.state.verticalGridLines
                     })}
+                  {this.state.illegalInputData && <div className="rct9k-warning-div">{this.renderWarningIcon()}</div>}
                   <div className="rct9k-menu-div">{this.renderMenuButton()}</div>
                 </div>
               </div>
