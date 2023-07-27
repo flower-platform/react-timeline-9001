@@ -72,9 +72,8 @@ export function rowItemsRenderer(
     let outerClassnames = 'rct9k-items-outer item_draggable';
     let style = {};
     let isSelected = selectedItems.find(item => item == i.key);
-
-    if (isSelected) {
-      compClassnames += ' rct9k-items-selected';
+    if (isSelected !== undefined) {
+      outerClassnames += ' rct9k-items-outer-selected';
     }
 
     return (
