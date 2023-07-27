@@ -1,6 +1,6 @@
-import React from 'react';
-import PropTypes from 'prop-types';
 import Color from 'color';
+import PropTypes from 'prop-types';
+import React from 'react';
 import {Item} from '../index';
 
 const ITEM_RENDERER_CLS = 'rct9k-item-renderer';
@@ -199,7 +199,12 @@ export default class ItemRenderer extends React.Component {
       ...this.props.style,
       color: this.getTextColor(),
       height: this.getHeight(),
-      background: this.getBackgroundGradient()
+      background: this.getBackgroundGradient(),
+      /**
+       * This was added as a workarround for: a blue line that appeared on top of the segments on Firefox:
+       * https://redmine.xops-online.com/issues/31861?issue_count=43&issue_position=1&next_issue_id=31842
+       */
+      backgroundRepeat: 'no-repeat'
     };
     return style;
   }
