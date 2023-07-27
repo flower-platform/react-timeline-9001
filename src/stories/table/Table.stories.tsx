@@ -2,7 +2,7 @@ import { ComponentStory } from "@storybook/react";
 import { Fragment } from "react";
 import { Checkbox, Icon } from "semantic-ui-react";
 import { Timeline } from "../..";
-import { d, manyHumanResources, manyTasks } from "../sampleData";
+import { d, manyHumanResources, someTasks } from "../sampleData";
 
 import { Column, DataCell, Table } from "fixed-data-table-2";
 import { DEMO_TABLE_WIDTH, tableScenarios, tableTestIds } from "./TableScenarios";
@@ -15,7 +15,7 @@ export const GanttWithoutTable: ComponentStory<typeof Timeline> = () => {
 
     return (
         <Fragment>
-            <Timeline startDate={d('2018-09-20')} endDate={d('2018-09-21')} groups={manyHumanResources} items={manyTasks}/>
+            <Timeline startDate={d('2018-09-20')} endDate={d('2018-09-21')} groups={manyHumanResources} items={someTasks}/>
         </Fragment>
     );
 }
@@ -37,7 +37,7 @@ const headerStyle = {
 export const ProvidingCustomTable: ComponentStory<typeof Timeline> = () => {
     return (
         <Fragment>
-            <Timeline startDate={d('2018-09-20')} endDate={d('2018-09-21')} groups={manyHumanResources} items={manyTasks}
+            <Timeline startDate={d('2018-09-20')} endDate={d('2018-09-21')} groups={manyHumanResources} items={someTasks}
                 table={<Table 
                             rowHeight={50}
                             width={DEMO_TABLE_WIDTH}

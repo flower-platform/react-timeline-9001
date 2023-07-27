@@ -1,7 +1,6 @@
 import React from 'react';
 import Timeline from '../../timeline';
 import { d, someHumanResources, someTasks } from '../sampleData';
-import { ComponentStory } from '@storybook/react';
 import { dragToCreateScenarios } from './DragToCreateScenarios';
 import { DragToCreateParam } from '../../types';
 import { Table, Column, DataCell} from 'fixed-data-table-2';

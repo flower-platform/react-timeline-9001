@@ -66,5 +66,3 @@ export const manyHumanResources: Employee[] = [...someHumanResources, { id: 4, t
 { id: 25, title: 'David D. Brown', job: 'Developer'},
 { id: 26, title: 'Michael E. Smith', job: 'Developer'},
 { id: 27, title: 'David E. Brown', job: 'Developer'}];
-
-export const manyTasks: Item[] = [...someTasks, {...someTasks[0], row: 3}, {...someTasks[1], row: 3}, {...someTasks[3], row: 3}, {...someTasks[4], row: 3}, {...someTasks[7], row: 3}];

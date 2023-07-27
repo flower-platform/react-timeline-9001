@@ -1408,6 +1408,7 @@ export default class Timeline extends React.Component {
       }
     } else {
       row = e.target.getAttribute('data-row-index');
+      const leftOffset = PARENT_ELEMENT(this.props.componentId).getBoundingClientRect().left;
       let clickedTime = getTimeAtPixel(
         e.clientX - leftOffset,
         this.getStartDate(),

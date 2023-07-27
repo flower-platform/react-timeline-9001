@@ -53,8 +53,8 @@ export class TableTestsAreDemo {
     @Scenario("When scrolling in table the gantt is scrolled")
     async whenScrollInTableThenGanttIsScrolled() {
         await tad.showSpotlight({ message: "Table is scrolled => Gantt is scrolled accordingly", focusOnLastElementCaptured: false });
-        (tad.getObjectViaCheat(Table) as Table).scrollActions.scrollToY(400);
-        assert.equal(tad.screenCapturing.getByTestId(testids.ganttBody).scrollTop, 400);
+        (tad.getObjectViaCheat(Table) as Table).scrollActions.scrollToY(300);
+        assert.equal(tad.screenCapturing.getByTestId(testids.ganttBody).scrollTop, 300);
     }
 
     @Scenario("When drag the split pane the table is resized accordingly")
