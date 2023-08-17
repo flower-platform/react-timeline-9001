@@ -9,7 +9,7 @@
 
 ### Changed
 
-* Modify selection trigger: from `click` to `mouseDown`
+* [Modify selection trigger: from `click` to `mouseDown`](https://github.com/flower-platform/react-timeline-10000/pull/50)
 
 ### Fixed
 
