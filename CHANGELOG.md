@@ -14,6 +14,7 @@
 ### Fixed
 
 * Drag to create rectangle was blue instead of green when `forceDragToCreateMode = true` 
+* `selectedItems` parameter of `onSelectionChange` handler was `number[]` instead of `(number|string)[]`
 
 ## v2.2.3
 
