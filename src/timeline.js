@@ -406,14 +406,14 @@ export default class Timeline extends React.Component {
     forceDragToCreateMode: PropTypes.bool,
 
     /**
-     * Function called when dragToCreateMode == true on dragstart
+     * Function called when getDragToCreateMode == true on dragstart
      * @param { DragToCreateParam } param
      * @type { Function }
      */
     onDragToCreateStarted: PropTypes.func,
 
     /**
-     * Function called when dragToCreateMode == true on dragend
+     * Function called when getDragToCreateMode == true on dragend
      * @param { DragToCreateParam } param
      * @type { Function }
      */
@@ -423,7 +423,7 @@ export default class Timeline extends React.Component {
      * Function called everytime the segments selection changes.
      * It receives as parameter the indexes of the selected items.
      *
-     * @type {(selectedItems: number[]) => void}
+     * @type {(selectedItems: (number | string)[]) => void}
      */
     onSelectionChange: PropTypes.func,
 
@@ -1402,7 +1402,7 @@ export default class Timeline extends React.Component {
       itemKey = isNaN(Number(itemKey)) ? itemKey : Number(itemKey);
       itemCallback && itemCallback(e, itemKey);
       // window.ontouchstart added to checks is we are on mobile
-      if (e.type == 'click' || (window.ontouchstart && e.type == 'tap') || e.type == 'contextmenu') {
+      if (e.type == 'mousedown' || (window.ontouchstart && e.type == 'tap')) {
         // Calculate new selection by delegating to selection component
         this._selectionHolder.addRemoveItems([itemKey], e);
       }
@@ -1419,7 +1419,7 @@ export default class Timeline extends React.Component {
       let snappedClickedTime = timeSnap(clickedTime, this.getTimelineSnap() * 60);
       rowCallback && rowCallback(e, row, clickedTime, snappedClickedTime);
 
-      if (e.type == 'click' || (window.ontouchstart && e.type == 'tap') || e.type == 'contextmenu') {
+      if (e.type == 'mousedown' || (window.ontouchstart && e.type == 'tap')) {
         this._selectionHolder.addRemoveItems([], e);
       }
     }
@@ -1484,7 +1484,10 @@ export default class Timeline extends React.Component {
             (rowIndex % 2 == 0 ? this.props.rowOddClassName : this.props.rowEvenClassName)
           }
           onClick={e => this._handleItemRowEvent(e, Timeline.no_op, this.props.onRowClick)}
-          onMouseDown={e => (this.selecting = false)}
+          onMouseDown={e => {
+            this.selecting = false;
+            this._handleItemRowEvent(e, Timeline.no_op, Timeline.no_op);
+          }}
           onMouseMove={e => (this.selecting = true)}
           onMouseOver={e => {
             this.selecting = false;
@@ -1651,19 +1654,24 @@ export default class Timeline extends React.Component {
     // We needed it to work also on right click. But the initial implementation of drag to select from the timeline
     // is based on interact js that ignores right click drag (this type of drag is not a nativelly supported one).
     // We choosed a basic implementation using mouseDown, mouseMove and mouseUp events for implementing the right click drag to select
-
-    // Just as drag to select with left click works,
-    // Also the drag to select doesn't start on segments (item_draggable), it needds to start on the empty row
-    if (
-      e.target.classList.contains('item_draggable') ||
-      (e.target.parentElement && e.target.parentElement.classList.contains('item_draggable'))
-    ) {
+    if (e.button == 1) {
       return;
     }
 
-    if (e.button === 2) {
-      this.setState({rightClickDraggingState: e});
+    // Just as drag to select with left click works,
+    // Also the drag to select doesn't start on segments (item_draggable), it needds to start on the empty row
+
+    // In some client applications the segments are complex components and can have a complex children hierachy.
+    // That's why we needed to iterate from bottom to top the parent hierachy
+    let target = e.target;
+    while (target && !target.hasAttribute('data-row-index')) {
+      if (target.classList && target.classList.contains('item_draggable')) {
+        return;
+      }
+      target = target.parentElement;
     }
+
+    this.setState({rightClickDraggingState: e});
   }
 
   mouseUpFunc(e) {
@@ -1864,7 +1872,7 @@ export default class Timeline extends React.Component {
                   }}>
                   <SelectBox
                     ref={this.select_ref_callback}
-                    className={this.state.dragToCreateMode ? 'rct9k-selector-outer-add' : ''}
+                    className={this.getDragToCreateMode() ? 'rct9k-selector-outer-add' : ''}
                   />
                   <Timebar
                     cursorTime={this.getCursor()}

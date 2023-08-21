@@ -9,12 +9,6 @@ import { d, someHumanResources, someTasks } from '../sampleData';
 import { contextMenuScenarios, selectionScenarios } from './ContextMenuAndSelectionScenarios';
 import { Table, Column, DataCell } from 'fixed-data-table-2';
 
-export const contextMenuStoryTestIds = createTestids('ContextMenuAndSelection', {
-    customRendererRadioSmall: '',
-    customRendererRadioMedium: '',
-    customRendererRadioLarge: ''
-})
-
 export default {
     title: 'Features/Context Menu And Selection',
     includeStories: /^[A-Z]/
@@ -113,7 +107,7 @@ export const selectionStoryTestIds = createTestids('SelectionStory', {
 });
 
 export const Selection = () => {
-    const [selectedItems, setSelectedItems] = useState<number[]>([]);
+    const [selectedItems, setSelectedItems] = useState<(number|string)[]>([]);
     const [isSelectionForced, setIsSelectionForced] = useState<boolean>(false);
     return (
       <>
