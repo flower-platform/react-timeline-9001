@@ -47,6 +47,8 @@ import ItemRenderer from './components/ItemRenderer';
 import {SelectionHolder} from './utils/SelectionHolder';
 import {IGanttAction} from './types';
 import {ContextMenu} from './components/ContextMenu/ContextMenu';
+import {GanttContext} from './utils/GanttContext';
+import {SimpleGanttTable} from './components/SimpleGanttTable';
 
 const testids = createTestids('Timeline', {
   menuButton: '',
@@ -87,7 +89,12 @@ const TableWithStyle = ({table}) => {
   `;
 
   return (
-    <div>
+    /** `overflowY: hidden` was added because we set the prop `height` of the Table(fixed-data-table)
+     * to this.state.screenHeight (computed by <Measure>) that has floating pecision.
+     * But if we look in browser inspector the table's main div gets with height rounded to an integer
+     * (overflowing with some decimals the height of the parent) causing to appear both vertical and horizontal unnecessary scrollbars
+     */
+    <div style={{overflowY: 'hidden'}}>
       <style>{tableStyle}</style>
       {React.cloneElement(table)}
     </div>
@@ -572,6 +579,7 @@ export default class Timeline extends React.Component {
     this.handleScrollGantt = this.handleScrollGantt.bind(this);
     this.handleDrag = this.handleDrag.bind(this);
     this.selectionChangedHandler = this.selectionChangedHandler.bind(this);
+    this.configureTable = this.configureTable.bind(this);
 
     const canSelect = Timeline.isBitSet(Timeline.TIMELINE_MODES.SELECT, this.props.timelineMode);
     const canDrag = Timeline.isBitSet(Timeline.TIMELINE_MODES.DRAG, this.props.timelineMode);
@@ -1931,43 +1939,59 @@ export default class Timeline extends React.Component {
     );
   }
 
+  /**
+   * @param { number } height (total height of the timeline)
+   * @returns { number } height of the timeline w/o timebar
+   */
+  calculateHeight(height) {
+    if (typeof window === 'undefined' || height === undefined) {
+      return 0;
+    }
+
+    return Math.max(height - this.getTimebarHeight(), 0);
+  }
+
+  /**
+   * @returns { number } height of the timebar
+   */
+  getTimebarHeight() {
+    if (typeof window === 'undefined') {
+      return 0;
+    }
+    // when this function is called for the first time, the timebar is not yet rendered
+    let timebar = document.querySelector(`.rct9k-id-${this.props.componentId} .rct9k-timebar`);
+    if (!timebar) {
+      return 0;
+    }
+    // substract timebar height from total height
+    return timebar.getBoundingClientRect().height;
+  }
+
+  configureTable(table) {
+    return React.cloneElement(table, {
+      rowsCount: this.state.groups.length,
+      rowHeightGetter: this.tableRowHeight,
+      rowHeight: this.props.itemHeight,
+      ref: this.table_ref_callback,
+      touchScrollEnabled: true,
+      onVerticalScroll: this.handleScrollTable,
+      scrollTop: this.state.scrollTop,
+      headerHeight: this.getTimebarHeight(),
+      height: this.state.screenHeight,
+      width: this.state.tableWidth,
+      rowClassNameGetter: rowIndex =>
+        this.props.rowClassName + ' ' + (rowIndex % 2 == 0 ? this.props.rowOddClassName : this.props.rowEvenClassName)
+    });
+  }
+
   render() {
-    const {componentId} = this.props;
-    /**
-     * @returns { number } height of the timebar
-     */
-    function getTimebarHeight() {
-      if (typeof window === 'undefined') {
-        return 0;
-      }
-      // when this function is called for the first time, the timebar is not yet rendered
-      let timebar = document.querySelector(`.rct9k-id-${componentId} .rct9k-timebar`);
-      if (!timebar) {
-        return 0;
-      }
-      // substract timebar height from total height
-      return timebar.getBoundingClientRect().height;
-    }
-
-    /**
-     * @param { number } height (total height of the timeline)
-     * @returns { number } height of the timeline w/o timebar
-     */
-    function calculateHeight(height) {
-      if (typeof window === 'undefined' || height === undefined) {
-        return 0;
-      }
-
-      return Math.max(height - getTimebarHeight(), 0);
-    }
-
     {
       /* Instead of <Measure .../>, in the past <AutoSizer ... /> was used. However it would round with/height, which generated and endless
     scrollbar appear/disappear, depending on the parent, depending on the resolution. */
     }
     return (
       // Can not use empty <> instead of <Fragment> because it fails the documentation generation
-      <Fragment>
+      <>
         <TestsAreDemoCheat objectToPublish={this} />
         <SelectionHolder
           selectionChangedHandler={this.selectionChangedHandler}
@@ -1990,8 +2014,8 @@ export default class Timeline extends React.Component {
             this.refreshGrid(dimensions);
           }}>
           {({measureRef}) => {
-            const bodyHeight = calculateHeight(this.state.screenHeight);
-            const timebarHeight = getTimebarHeight();
+            const bodyHeight = this.calculateHeight(this.state.screenHeight);
+            const timebarHeight = this.getTimebarHeight();
             return (
               <div ref={measureRef} style={{display: 'flex', flexDirection: 'row', flex: 1, height: '100%'}}>
                 {this.props.table ? (
@@ -2001,24 +2025,15 @@ export default class Timeline extends React.Component {
                     defaultSize={this.props.table ? this.getInitialTableWidth() : 0}
                     onChange={this.handleDrag}
                     ref={this.splitPane_ref_callback}>
-                    <TableWithStyle
-                      table={React.cloneElement(this.props.table, {
-                        rowsCount: this.state.groups.length,
-                        rowHeightGetter: this.tableRowHeight,
-                        rowHeight: this.props.itemHeight,
-                        ref: this.table_ref_callback,
-                        touchScrollEnabled: true,
-                        onVerticalScroll: this.handleScrollTable,
-                        scrollTop: this.state.scrollTop,
-                        headerHeight: timebarHeight,
-                        height: this.state.screenHeight,
-                        width: this.state.tableWidth,
-                        rowClassNameGetter: rowIndex =>
-                          this.props.rowClassName +
-                          ' ' +
-                          (rowIndex % 2 == 0 ? this.props.rowOddClassName : this.props.rowEvenClassName)
-                      })}
-                    />
+                    <GanttContext.Provider value={{rows: this.props.groups, configureTable: this.configureTable}}>
+                      <TableWithStyle
+                        table={
+                          this.props.table.type === SimpleGanttTable
+                            ? this.props.table
+                            : this.configureTable(this.props.table)
+                        }
+                      />
+                    </GanttContext.Provider>
                     {this.renderGanttPart({bodyHeight, timebarHeight})}
                   </SplitPane>
                 ) : (
@@ -2028,7 +2043,7 @@ export default class Timeline extends React.Component {
             );
           }}
         </Measure>
-      </Fragment>
+      </>
     );
   }
 

@@ -1,8 +1,7 @@
 import { IAction, IActionParam, IActionParamForRun, IOnContextMenuShowParam } from "./components/ContextMenu/IAction"
 
 export type Group = {
-    id: number,
-    title?: string
+    id: number
 }
 
 export type InteractOption = {
