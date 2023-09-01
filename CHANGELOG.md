@@ -1,5 +1,11 @@
 # Change Log
 
+## v2.3.0
+
+### Added
+
+* [A `<Table>` is used for displaying rows](https://github.com/flower-platform/react-timeline-10000/pull/52), i.e. in the left part of the Gantt. `<Table>` comes from the [FixedDataTable lib](https://schrodinger.github.io/fixed-data-table-2/). This addition is **not backwards compatible**.
+
 ## v2.2.4
 
 ### Added
@@ -26,7 +32,7 @@ Right click selection didn't worked on custom segments with a complex children h
 
 ### Fixed
 
-* [Various small issues](https://github.com/flower-platform/react-timeline-10000/pull/47/files)
+* [Various small issues](https://github.com/flower-platform/react-timeline-10000/pull/47)
   * drag to create popup auto-closing 
   * visual improvements of the selected and hovered segments style
   * Error in console when running an action without `run` property defined 
