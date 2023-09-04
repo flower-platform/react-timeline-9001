@@ -18,7 +18,6 @@ export class SimpleGanttTable extends React.Component<SimpleGanttTableProperties
         width: 130,
         header: undefined
     }
-
     context!: React.ContextType<typeof GanttContext>;
 
     render(): React.ReactNode {
@@ -36,5 +35,4 @@ export class SimpleGanttTable extends React.Component<SimpleGanttTableProperties
             )
         );
     }
-
 }
