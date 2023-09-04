@@ -84,7 +84,7 @@ export const CustomClassNamesAndStyles = () => {
 CustomClassNamesAndStyles.parameters = {
   scenarios: [
     backgroundLayerScenarios.verticalGridClassName,
-    backgroundLayerScenarios.nowMaSrkerClassName,
+    backgroundLayerScenarios.nowMarkerClassName,
     backgroundLayerScenarios.highlightWeekendsClassName,
     backgroundLayerScenarios.classNameForMarker,
     backgroundLayerScenarios.highlightedIntervalClassName

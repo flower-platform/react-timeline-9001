@@ -1,5 +1,12 @@
 # Change Log
 
+## Unreleased
+
+### Added
+
+* [Horizontal scrollbar](https://github.com/flower-platform/react-timeline-10000/pull/53)
+* [Zoom](https://github.com/flower-platform/react-timeline-10000/pull/54)
+
 ## v2.3.0
 
 ### Added
