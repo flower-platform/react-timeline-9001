@@ -16,4 +16,4 @@ export const tableScenarios = {propertyColumns: 'PROPERTY columns',
 // And could not be exported directly from table.storie.tsx because  
 // everything exported there gets in the storybook tree as a story entry
 export const tableTestIds = createTestids("Table", {row:""});
-export const DEMO_TABLE_WIDTH = 260;
+export const DEMO_TABLE_WIDTH = 280;

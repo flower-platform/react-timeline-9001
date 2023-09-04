@@ -66,9 +66,6 @@ const testids = createTestids('Timeline', {
 export const timelineTestids = testids;
 
 const EMPTY_GROUP_KEY = 'empty-group';
-//TODO DB this was added by bogdan. From my understanding it reprezents the table vertical scrollbar width
-// If we don't take in consideration this, a horizontal scrollbar appears
-export const TABLE_OFFSET = 15;
 export const DEFAULT_ITEM_HEIGHT = 40;
 export const DEFAULT_ROW_CLASS = 'rct9k-row';
 export const DEFAULT_ROW_EVEN_CLASS = 'rct9k-row-even';
@@ -515,7 +512,7 @@ export default class Timeline extends React.Component {
   static no_op = () => {};
 
   getInitialTableWidth() {
-    return (this.props.table ? this.props.table.props.width : 0) + TABLE_OFFSET;
+    return this.props.table ? this.props.table.props.width : 0;
   }
 
   constructor(props) {

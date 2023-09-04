@@ -15,7 +15,7 @@ export interface SimpleGanttTableProperties {
 export class SimpleGanttTable extends React.Component<SimpleGanttTableProperties> {
     static contextType = GanttContext;
     static defaultProps = {
-        width: 100,
+        width: 130,
         header: undefined
     }
 
