@@ -1383,7 +1383,15 @@ export default class Timeline extends React.Component {
   }
 
   _handleItemRowEvent = (e, itemCallback, rowCallback) => {
-    e.preventDefault();
+    // First this handler used to be called only on click (no e.preventDefault() was called back then)
+    // After that, it was modified to be called also on contextMenu and doubleClick, then it was added this e.preventDefault()
+    // That's why I suspect that it targets only the contextMenu events in order to prevent the browser default context menu to open
+    // But because this is a legacy code and we don't understand why the exact scope of this preventDefault(),
+    // We removed it only for the case that we are interested in i.e. 'mouseDown'
+    if (e.type != 'mousedown') {
+      e.preventDefault();
+    }
+
     // Skip click handler if selecting with selection box
     if (this.selecting) {
       return;
