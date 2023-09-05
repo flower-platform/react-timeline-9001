@@ -507,8 +507,9 @@ export default class Timeline extends React.Component {
    */
   static no_op = () => {};
 
-  getInitialTableWidth() {
-    return (this.props.table ? this.props.table.props.width : 0) + TABLE_OFFSET;
+  getInitialTableWidth(props) {
+    props = props ? props : this.props;
+    return (props.table ? props.table.props.width : 0) + TABLE_OFFSET;
   }
 
   constructor(props) {
@@ -584,6 +585,11 @@ export default class Timeline extends React.Component {
   }
 
   componentWillReceiveProps(nextProps) {
+    const tableWidth = this.getInitialTableWidth(nextProps);
+    if (tableWidth != this.state.tableWidth) {
+      this.setState({tableWidth});
+    }
+
     this.setTimeMap(
       nextProps.items,
       convertDateToMoment(nextProps.startDate, nextProps.useMoment),
@@ -1998,7 +2004,7 @@ export default class Timeline extends React.Component {
                   <SplitPane
                     split="vertical"
                     style={{height: this.state.screenHeight}}
-                    defaultSize={this.props.table ? this.getInitialTableWidth() : 0}
+                    size={this.state.tableWidth}
                     onChange={this.handleDrag}
                     ref={this.splitPane_ref_callback}>
                     <TableWithStyle
