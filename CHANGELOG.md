@@ -1,4 +1,8 @@
-# Change Log
+# v2.3.0-SNAPSHOT1
+
+### Fixed
+
+* [External drag and drop doesn't work](https://github.com/flower-platform/react-timeline-10000/pull/60)
 
 ## v2.3.0
 
