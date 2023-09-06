@@ -1,0 +1,15 @@
+import { Meta, ArgsTable } from '@storybook/addon-docs';
+import Timeline from '../../timeline';
+import Column from '../../timeline';
+import { encodeApiDocURIForSubpath, parametersDocPage } from '../StorybookUtils';
+
+<Meta title="Features/Allow Overlapping Segments/Doc"  />
+
+## Allow overlapping segments
+
+If some items are overlapping, the gantt diagram doesn't display them overlapped. It puts them one beneath the other. 
+
+This can be changed by setting the `allowOverlappingSegments` to `true`.
+
+## `Timeline`
+  <ArgsTable of={Timeline} sort="none" include={["allowOverlappingSegments"]}/>

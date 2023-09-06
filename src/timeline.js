@@ -433,7 +433,18 @@ export default class Timeline extends React.Component {
      *
      * @type {(param: IGanttOnContextMenuShowParam) => IGanttAction[]}
      */
-    onContextMenuShow: PropTypes.func
+    onContextMenuShow: PropTypes.func,
+
+    /**
+     * This property controls if the overlapping segments are displayed overlapped
+     * or if they are displayed one beneath the other.
+     *
+     * In this last case, the row expands its height to include all its child segments
+     *
+     * @default false
+     * @type { boolean }
+     */
+    allowOverlappingSegments: PropTypes.bool
   };
 
   static defaultProps = {
@@ -452,7 +463,6 @@ export default class Timeline extends React.Component {
     onItemHover() {},
     onItemLeave() {},
     interactOptions: {},
-    itemStyle: {},
     rowClassName: DEFAULT_ROW_CLASS,
     rowEvenClassName: DEFAULT_ROW_EVEN_CLASS,
     rowOddClassName: DEFAULT_ROW_ODD_CLASS,
@@ -477,7 +487,8 @@ export default class Timeline extends React.Component {
     onDragToCreateStarted: undefined,
     onDragToCreateEnded: undefined,
     onContextMenuShow: undefined,
-    onSelectionChange() {}
+    onSelectionChange() {},
+    allowOverlappingSegments: false
   };
 
   /**
@@ -594,7 +605,8 @@ export default class Timeline extends React.Component {
       nextProps.items,
       convertDateToMoment(nextProps.startDate, nextProps.useMoment),
       convertDateToMoment(nextProps.endDate, nextProps.useMoment),
-      nextProps.useMoment
+      nextProps.useMoment,
+      nextProps.allowOverlappingSegments
     );
     this.fillInTimelineWithEmptyRows(nextProps.groups);
     // @TODO
@@ -760,11 +772,15 @@ export default class Timeline extends React.Component {
    * @param {boolean} useMoment This parameter is necessary because this method is also called when
    * the component receives new props.
    */
-  setTimeMap(items, startDate, endDate, useMoment) {
+  setTimeMap(items, startDate, endDate, useMoment, allowOverlappingSegments) {
     if (!startDate || !endDate) {
       startDate = this.getStartDate();
       endDate = this.getEndDate();
     }
+    if (allowOverlappingSegments == undefined) {
+      allowOverlappingSegments = this.props.allowOverlappingSegments;
+    }
+
     this.itemRowMap = {}; // timeline elements (key) => (rowNo).
     this.rowItemMap = {}; // (rowNo) => timeline elements
     this.rowHeightCache = {}; // (rowNo) => max number of stacked items
@@ -779,12 +795,14 @@ export default class Timeline extends React.Component {
         this.itemRowMap[item.key] = rowInt;
         this.rowItemMap[rowInt].push(item);
       });
-      this.rowHeightCache[rowInt] = getMaxOverlappingItems(
-        visibleItems,
-        this.getStartFromItem,
-        this.getEndFromItem,
-        useMoment
-      );
+      if (!allowOverlappingSegments) {
+        this.rowHeightCache[rowInt] = getMaxOverlappingItems(
+          visibleItems,
+          this.getStartFromItem,
+          this.getEndFromItem,
+          useMoment
+        );
+      }
     });
   }
 
@@ -1348,7 +1366,7 @@ export default class Timeline extends React.Component {
               this.getStartFromItem,
               this.getEndFromItem
             );
-            if (new_row_height !== this.rowHeightCache[rowNo]) {
+            if (!this.props.allowOverlappingSegments && new_row_height !== this.rowHeightCache[rowNo]) {
               this.rowHeightCache[rowNo] = new_row_height;
             }
 
@@ -1524,7 +1542,8 @@ export default class Timeline extends React.Component {
             this.props.itemRendererDefaultProps,
             this.getStartFromItem,
             this.getEndFromItem,
-            timelineTestids
+            timelineTestids,
+            this.props.allowOverlappingSegments
           )}
           {rowLayerRenderer(
             layersInRow,
