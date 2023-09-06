@@ -99,7 +99,13 @@ AlternativeRowColoring.parameters = {
     timelineScenarios.propertyRowOddClassName
   ]
 };
-
+// TODO CSR: ca autori de lib, in sensul ca avem control si siguranta pe tot
+// codul, trebuie sa nu ezitam sa modificam codul (si demo-ul) existent. Mai degraga
+// decat a adauga mereu noi straturi. E.g. aici nu-l invatam nimic pe user. Si incalcam 
+// oarecum si DRY. E un cod copy/paste al celui de mai sus.
+// Eu as baga aceste date in data setul principal.
+// Ca regula, daca putem sa exprimam acelasi continut cu N sau cu N + X cuvinte, mereu alegem
+// varianta N
 export const HorizontalScroll = () => {
 const tasks: Item[] = [
     ...someTasks, // Tasks that are outside the display interval  

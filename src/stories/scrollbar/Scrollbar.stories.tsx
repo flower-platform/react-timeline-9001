@@ -59,6 +59,21 @@ export const HorizontalScrollBar = () => {
                 <SplitPane 
                     split="vertical"
                     defaultSize={totalWidth / 2}>
+                        {/* TODO CSR: DISCUTIE: mi se pare f derutant acest demo. Sa nu uitam, ca consumator al unui storybook, tr inteles
+                            rapid si clar ceea ce face componentul.
+
+                            1/ vazand Measure, divuri, width: ma intreb: noi NU tinem cont de astea, corect? Deci pot folosi
+                            un scroll fara sa fie neaparat cuplat la un div, nu?
+                            2/ eu as pune un scroll si atat. Si in demo niste textfielduri pentru pageSize, min, etc. 
+                            
+                            TEORETIC: Fiind in storybook,
+                            el ne pune posibilitatea sa punem cu usurinta astea in partea de jos. Cred ca pana acum nu am prea folosit ac
+                            feature.
+                            PRACTIC: Ar fi interesant sa ne punem propriile text-box/label. Pentru a le folosi la TAD. Am mai folosit tehnica asta.
+                            3/ sa discutam un pic demo-ul curent. Poate ar fi interesant sa extragem un story sa aratam si asta. Desi
+                            are totusi destul de putin interes pentru un user sa inlocuiasca logica nativa de scroll cu una artificiala.
+                            Probabil ca asta e si motivul pt care nu exista "pe piata" asa ceva
+                        */}
                     <Scrollbar pageSize={divWidth1} minScrollPosition={0} maxScrollPosition={divContentWidth1}
                         onScroll={(scrollPosition) => div1.current.scrollLeft = scrollPosition}/>
                     <Scrollbar pageSize={divWidth2} minScrollPosition={0} maxScrollPosition={divContentWidth2}

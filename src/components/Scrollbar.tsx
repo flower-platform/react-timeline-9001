@@ -2,6 +2,19 @@ import React from "react";
 import Measure from 'react-measure';
 
 export interface ScrollbarProperties {
+// TODO CSR: genul asta de comentarii nu prea sunt OK. Nu fac decat sa zica cu
+// multe cuvinte ceea ce numele si tipul deja zic cu putine cuvinte. Problema e ca cititorul,
+// pe langa ca are o impresie de amatorism, se obisnuieste ca doc nu e buna. Si poate
+// avem locuri in care chiar e important ceea ce zicem.
+// Un exemplu este si ca textul este gresit/inversat. Probabil ca ti-a scapat la pre-commit
+// check din cauzele de mai sus.
+
+// cel mai bine aici ar merge: E.g. 0
+// La max: E.g. 100
+// la position: E.g. 10
+// la scrollPos: W/ the previous examples, can have values between ??? and ???.
+// Asta e chiar o info importanta. Eu nu stiu sa raspund acum.
+// la "onscroll", am putea sa reluam acest range
     /**
      * A number which represents the maximum scroll position
      */
@@ -20,6 +33,7 @@ export interface ScrollbarProperties {
     /**
      * The initial position of the scroll thumb
      */
+     // TODO CSR: de redenumit in initialScrollPosition
     scrollPosition?: number;
 
     /**
@@ -31,6 +45,8 @@ export interface ScrollbarProperties {
      * By default Semantic ui hides the increase/decrease arrow buttons of the scrollbars on Webkit based browsers. So it default to false.
      * This should be set to true if the scrollbar needs to display the arrow buttons.
      */
+// TODO CSR: Context. Din pacate am devenit tot mai dependenti de semanitc. Ceea ce nu prea e bine
+// am vrut sa experimentez un mod cumva abstractizat de a folosi semantic.
     hasArrows?: boolean;
     
     /**
@@ -49,17 +65,25 @@ export interface ScrollbarProperties {
      * 
      * This handler can be used to detect when the scrollbar is not required to be displayed
      * 
+// TODO CSR: liniile de mai jos cred ca nu ajuta cu nimic. Deci principiul: daca cu mai putine
+// linii obtinem ac lucru => stergem surplusul.
      * @param isScrollbarVisible 
      * @returns 
      */
     onVisibilityChange?: (isScrollbarVisible: boolean) => void;
 }
 
+// TODO CSR: daca avem useri de JS, ei nu vor avea acces la ac tip de date.
+// By default, enum-ul se converteste in cifre. Deci in JS va trebui sa zica 0 sau 1.
+// varianta 1: sa folosim enum ca string.
+// varianta 2: sa nu avem acest tip. Si sa avem direction: "horizontal" | "vertical"
+// la cod nou as fi ales 2. Acum, putem face 1, ca e cel mai putin de modificat
 export enum Direction {
     HORIZONTAL,
     VERTICAL
 }
 
+// TODO CSR: vad aici; parca am vazut ac lucru si in Gantt?
 export const SCROLLBAR_SIZE = 10;
 const ROUND_FACTOR = 4;
 
@@ -204,6 +228,8 @@ export class Scrollbar extends React.Component<ScrollbarProperties, { scrollbarS
     }
 }
 
+// TODO CSR: remarca minora; am fi putut pune ca functie a clasei? Poate cineva are nevoie vreodata sa suprascrie?
+// daca sunt obiectii mici/mari, lasam aici; nu-i pb
 const roundDoubleToDecimals = (value: number) => {
     if (value == 0) {
         return value;

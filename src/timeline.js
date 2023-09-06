@@ -64,6 +64,7 @@ const testids = createTestids('Timeline', {
 export const timelineTestids = testids;
 
 const EMPTY_GROUP_KEY = 'empty-group';
+// TODO CSR: banuiesc ca nu a fost inca procesata remarca din celalalt review
 // This was added by bogdan. From my understanding it reprezents the table vertical scrollbar width
 // If we don't take in consideration this, a horizontal scrollbar appears
 export const TABLE_OFFSET = 15;
@@ -564,9 +565,15 @@ export default class Timeline extends React.Component {
       openedContextMenuCoordinates: undefined,
       openedContextMenuRow: undefined,
       openedContextMenuTime: undefined,
+      // TODO CSR: DISCUTIE: startDate/endDate erau si inainte, nu? Cum erau folosite? Caci vad ca abia acum sunt puse in
+      // state. Ma intreb si ca ar fi oportuna redenumirea in "initial". O avea impact? O mai fi ac pattern si prin
+      // alte locuri? Imi trece selectia cel putin prin minte
       startDate: this.props.startDate,
       endDate: this.props.endDate,
+      // TODO CSR: DISCUTIE: are legatura si cu ce ziceam de infinite scrolling. In Gantt Flex, nu era merau afisasta?
+      // Tocmai pt ac infinite scrolling?
       hasHorizontalScrollbar: false,
+      // TODO CSR: are legatura cu remarca de scroll stanga/dreapta si pt PC
       touchPositionX: undefined
     };
 
@@ -1672,6 +1679,9 @@ export default class Timeline extends React.Component {
     var tableRowHeight = this.rowHeight({index});
     let group = _.find(this.state.groups, g => g.id == index);
     if (group.rowHeight && group.key.startsWith(EMPTY_GROUP_KEY)) {
+      // TODO CSR: DISCUTIE: nu cumva de aici provine acea "ingropare" a scroll?
+      // mi se pare ca ar trebui sa obtinem dinamic dim scrollbar. Sau macar sa il punem
+      // pe user sa o dea, in functie de ce CSS are el pe la scrollbar
       tableRowHeight = Math.round(tableRowHeight) + (this.state.hasHorizontalScrollbar ? SCROLLBAR_SIZE : 0) - 2;
     }
     return tableRowHeight;
