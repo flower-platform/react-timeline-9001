@@ -1,3 +1,8 @@
+# v2.3.0-SNAPSHOT2
+
+### Added
+* [Added `onTableResize` property](https://github.com/flower-platform/react-timeline-10000/pull/62)
+
 # v2.3.0-SNAPSHOT1
 
 ### Fixed
