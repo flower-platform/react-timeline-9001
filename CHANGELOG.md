@@ -1,3 +1,9 @@
+## Unreleased (probably 2.4.0)
+
+### Added
+
+* [Horizontal scrollbar](https://github.com/flower-platform/react-timeline-10000/pull/57)
+
 # v2.3.0-SNAPSHOT2
 
 ### Added
@@ -9,12 +15,6 @@
 
 * [External drag and drop doesn't work](https://github.com/flower-platform/react-timeline-10000/pull/60)
 * [Changing the `width` property of the table didn't updated of the UI](https://github.com/flower-platform/react-timeline-10000/pull/59)
-
-## Unreleased
-
-### Added
-
-* [Horizontal scrollbar](https://github.com/flower-platform/react-timeline-10000/pull/53)
 
 ## v2.3.0
 
