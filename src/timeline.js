@@ -433,7 +433,15 @@ export default class Timeline extends React.Component {
      *
      * @type {(param: IGanttOnContextMenuShowParam) => IGanttAction[]}
      */
-    onContextMenuShow: PropTypes.func
+    onContextMenuShow: PropTypes.func,
+
+    /**
+     * If this handler is provided, it will be called when the table is resized
+     * by dragging the split bar between the table and the gantt.
+     *
+     * @type {(tableWidth: number) => void}
+     */
+    onTableResize: PropTypes.func
   };
 
   static defaultProps = {
@@ -477,7 +485,8 @@ export default class Timeline extends React.Component {
     onDragToCreateStarted: undefined,
     onDragToCreateEnded: undefined,
     onContextMenuShow: undefined,
-    onSelectionChange() {}
+    onSelectionChange() {},
+    onTableResize: undefined
   };
 
   /**
@@ -1717,6 +1726,9 @@ export default class Timeline extends React.Component {
 
   handleDrag(width) {
     this.setState({tableWidth: width});
+    if (this.props.onTableResize) {
+      this.props.onTableResize(width);
+    }
     return true;
   }
 
