@@ -1,4 +1,14 @@
-# Change Log
+# v2.3.0-SNAPSHOT2
+
+### Added
+* [Added `onTableResize` property](https://github.com/flower-platform/react-timeline-10000/pull/62)
+
+# v2.3.0-SNAPSHOT1
+
+### Fixed
+
+* [External drag and drop doesn't work](https://github.com/flower-platform/react-timeline-10000/pull/60)
+* [Changing the `width` property of the table didn't updated of the UI](https://github.com/flower-platform/react-timeline-10000/pull/59)
 
 ## Unreleased
 
