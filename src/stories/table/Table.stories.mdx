@@ -14,5 +14,16 @@ It is mandatory to have set a <code>width</code> for this table
 
 **IMPORTANT:** The cell renderer of your custom table should take in consideration that there could be empty rows (without any data behind) added by gantt just for filling in the remaining empty space
 
-## `Timeline`
-  <ArgsTable of={Timeline} sort="none" include={["table"]}/>
+<ArgsTable of={Timeline} sort="none" include={["table"]}/>
+
+##  `onTableResize`
+
+The Gantt component is splitted between the table and the actual gantt diagram. 
+By default the table's actual width is the `Table.props.width`.
+
+This can be changed by dragging the split bar between the table and the gantt.
+
+Those subsequent size changes can be listen by setting the `onTableResize` property
+
+<ArgsTable of={Timeline} sort="none" include={["onTableResize"]}/>
+

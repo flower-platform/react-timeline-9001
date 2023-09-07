@@ -1,11 +1,12 @@
 import { ComponentStory } from "@storybook/react";
-import { Fragment } from "react";
+import { Fragment, useState } from "react";
 import { Checkbox, Icon } from "semantic-ui-react";
 import { Timeline } from "../..";
 import { d, manyHumanResources, someTasks } from "../sampleData";
 
 import { Column, DataCell, Table } from "fixed-data-table-2";
 import { DEMO_TABLE_WIDTH, tableScenarios, tableTestIds } from "./TableScenarios";
+import { Alert } from "antd";
 export default {
     title: 'Features/Table',
     component: Timeline
@@ -35,12 +36,15 @@ const headerStyle = {
 };
 
 export const ProvidingCustomTable: ComponentStory<typeof Timeline> = () => {
+    const [tableWidth, setTableWidth] = useState<number>(DEMO_TABLE_WIDTH);
     return (
         <Fragment>
+            <Alert message={<span> Table width: {tableWidth} </span>}/>
             <Timeline startDate={d('2018-09-20')} endDate={d('2018-09-21')} groups={manyHumanResources} items={someTasks}
+                onTableResize={(size) => setTableWidth(size)}
                 table={<Table 
                             rowHeight={50}
-                            width={DEMO_TABLE_WIDTH}
+                            width={tableWidth}
                             isColumnResizing={true}
                             rowAttributesGetter={index => {return { "data-testid": tableTestIds.row + "_" + index}} }
                             >
@@ -78,6 +82,6 @@ export const ProvidingCustomTable: ComponentStory<typeof Timeline> = () => {
 }
 
 ProvidingCustomTable.parameters = {
-    scenarios: [tableScenarios.propertyTable]
+    scenarios: [...Object.keys(tableScenarios).map(key => tableScenarios[key])]
 }
 

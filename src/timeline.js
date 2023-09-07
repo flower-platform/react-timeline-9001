@@ -456,7 +456,15 @@ export default class Timeline extends React.Component {
      *
      * @type {(param: IGanttOnContextMenuShowParam) => IGanttAction[]}
      */
-    onContextMenuShow: PropTypes.func
+    onContextMenuShow: PropTypes.func,
+
+    /**
+     * If this handler is provided, it will be called when the table is resized
+     * by dragging the split bar between the table and the gantt.
+     *
+     * @type {(tableWidth: number) => void}
+     */
+    onTableResize: PropTypes.func
   };
 
   static defaultProps = {
@@ -502,7 +510,8 @@ export default class Timeline extends React.Component {
     onDragToCreateStarted: undefined,
     onDragToCreateEnded: undefined,
     onContextMenuShow: undefined,
-    onSelectionChange() {}
+    onSelectionChange() {},
+    onTableResize: undefined
   };
 
   /**
@@ -532,8 +541,9 @@ export default class Timeline extends React.Component {
    */
   static no_op = () => {};
 
-  getInitialTableWidth() {
-    return (this.props.table ? this.props.table.props.width : 0) + TABLE_OFFSET;
+  getInitialTableWidth(props) {
+    props = props ? props : this.props;
+    return (props.table ? props.table.props.width : 0) + TABLE_OFFSET;
   }
 
   constructor(props) {
@@ -619,6 +629,11 @@ export default class Timeline extends React.Component {
   }
 
   componentWillReceiveProps(nextProps) {
+    const tableWidth = this.getInitialTableWidth(nextProps);
+    if (tableWidth != this.state.tableWidth) {
+      this.setState({tableWidth});
+    }
+
     if (this.props.startDate != nextProps.startDate || this.props.endDate != nextProps.endDate) {
       this.setState({startDate: this.props.startDate, endDate: this.props.endDate});
     } else {
@@ -1521,7 +1536,15 @@ export default class Timeline extends React.Component {
   }
 
   _handleItemRowEvent = (e, itemCallback, rowCallback) => {
-    e.preventDefault();
+    // First this handler used to be called only on click (no e.preventDefault() was called back then)
+    // After that, it was modified to be called also on contextMenu and doubleClick, then it was added this e.preventDefault()
+    // That's why I suspect that it targets only the contextMenu events in order to prevent the browser default context menu to open
+    // But because this is a legacy code and we don't understand why the exact scope of this preventDefault(),
+    // We removed it only for the case that we are interested in i.e. 'mouseDown'
+    if (e.type != 'mousedown') {
+      e.preventDefault();
+    }
+
     // Skip click handler if selecting with selection box
     if (this.selecting) {
       return;
@@ -1890,6 +1913,9 @@ export default class Timeline extends React.Component {
 
   handleDrag(width) {
     this.setState({tableWidth: width});
+    if (this.props.onTableResize) {
+      this.props.onTableResize(width);
+    }
     return true;
   }
 
@@ -2211,7 +2237,7 @@ export default class Timeline extends React.Component {
                   <SplitPane
                     split="vertical"
                     style={{height: this.state.screenHeight}}
-                    defaultSize={this.props.table ? this.getInitialTableWidth() : 0}
+                    size={this.state.tableWidth}
                     onChange={this.handleDrag}
                     ref={this.splitPane_ref_callback}>
                     <TableWithStyle
