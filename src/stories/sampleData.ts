@@ -16,6 +16,7 @@ export const dateAndHourOfCurrentMonth = (day, hour = 0) => d(moment().startOf('
 // sample data
 ////////////////////////////////////////////////////////
 export type Employee = Group & {
+  title?: string,
   job?: string,
   team?: string
 } 

@@ -1,10 +1,11 @@
 import { ComponentStory } from "@storybook/react";
-import { Fragment, useState } from "react";
+import { useState } from "react";
 import { Checkbox, Icon } from "semantic-ui-react";
 import { Timeline } from "../..";
 import { d, manyHumanResources, someTasks } from "../sampleData";
 
 import { Column, DataCell, Table } from "fixed-data-table-2";
+import { GanttDataCell } from "../../components/GanttDataCell";
 import { DEMO_TABLE_WIDTH, tableScenarios, tableTestIds } from "./TableScenarios";
 import { Alert } from "antd";
 export default {
@@ -15,9 +16,9 @@ export default {
 export const GanttWithoutTable: ComponentStory<typeof Timeline> = () => {
 
     return (
-        <Fragment>
+        <>
             <Timeline startDate={d('2018-09-20')} endDate={d('2018-09-21')} groups={manyHumanResources} items={someTasks}/>
-        </Fragment>
+        </>
     );
 }
 
@@ -38,7 +39,7 @@ const headerStyle = {
 export const ProvidingCustomTable: ComponentStory<typeof Timeline> = () => {
     const [tableWidth, setTableWidth] = useState<number>(DEMO_TABLE_WIDTH);
     return (
-        <Fragment>
+        <>
             <Alert message={<span> Table width: {tableWidth} </span>}/>
             <Timeline startDate={d('2018-09-20')} endDate={d('2018-09-21')} groups={manyHumanResources} items={someTasks}
                 onTableResize={(size) => {setTableWidth(size); console.log("!!!!! " + size)}}
@@ -53,31 +54,26 @@ export const ProvidingCustomTable: ComponentStory<typeof Timeline> = () => {
                                 columnKey={0}
                                 width={100}
                                 header={<DataCell style={headerStyle}>Title</DataCell>}
-                                cell={({rowIndex}) => <DataCell>
-                                                        {rowIndex < manyHumanResources.length ? manyHumanResources[rowIndex].title : ""}
-                                                    </DataCell>}
+                                cell={({rowIndex}) => <GanttDataCell rowIndex={rowIndex} content={() => manyHumanResources[rowIndex].title}/>}
                             />
                             <Column
                                 key={1}
                                 columnKey={1}
                                 width={60}
                                 header={<DataCell style={headerStyle}><Icon type="check-circle" /> <span>Custom check</span></DataCell>}
-                                cell={({rowIndex}) => <DataCell>
-                                                    {rowIndex < manyHumanResources.length ? <Checkbox/> : ""}
-                                                </DataCell>}
+                                cell={({rowIndex}) => <GanttDataCell rowIndex={rowIndex} content={() => <Checkbox/>}/>}
                             />
                             <Column
                                 key={2}
                                 columnKey={2}
+                                flexGrow={1}
                                 width={100}
                                 header={<DataCell style={headerStyle}>Job</DataCell>}
-                                cell={({rowIndex}) => <DataCell>
-                                                    {rowIndex < manyHumanResources.length ? manyHumanResources[rowIndex].job : ""}
-                                                </DataCell>}
+                                cell={({rowIndex}) => <GanttDataCell rowIndex={rowIndex} content={() => manyHumanResources[rowIndex].job}/>}
                             />
                         </Table>} 
             />
-        </Fragment>
+        </>
     );
 }
 

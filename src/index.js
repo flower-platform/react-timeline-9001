@@ -19,6 +19,8 @@ export {Marker} from './components/Marker';
 export {default as Selectbox} from './components/selector';
 export {BackgroundLayer} from './components/BackgroundLayer';
 export {HighlightedInterval} from './components/HighlightedInterval';
+export {SimpleGanttTable} from './components/SimpleGanttTable';
+export {GanttDataCell} from './components/GanttDataCell';
 
 // consts
 export {timebarFormat} from './consts/timebarConsts';

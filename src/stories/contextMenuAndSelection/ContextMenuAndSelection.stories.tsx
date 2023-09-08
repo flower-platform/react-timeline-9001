@@ -3,11 +3,11 @@ import { Alert } from 'antd';
 import moment from 'moment';
 import { useState } from 'react';
 import { Button, Icon, Menu } from 'semantic-ui-react';
+import { SimpleGanttTable } from '../../components/SimpleGanttTable';
 import Timeline from '../../timeline';
 import { IGanttAction, IGanttOnContextMenuShowParam, Item } from '../../types';
 import { d, someHumanResources, someTasks } from '../sampleData';
 import { contextMenuScenarios, selectionScenarios } from './ContextMenuAndSelectionScenarios';
-import { Table, Column, DataCell } from 'fixed-data-table-2';
 
 export default {
     title: 'Features/Context Menu And Selection',
@@ -84,14 +84,8 @@ export const ContextMenu = () => {
 
                             return actions;
                         }} 
-                        table={<Table width={100} >
-                                    <Column
-                                        columnKey="title"
-                                        width={100}
-                                        header={<DataCell>Title</DataCell>}
-                                        cell={({rowIndex}) => <DataCell>{rowIndex < someHumanResources.length ? someHumanResources[rowIndex].title : ""}</DataCell>}/>
-                                </Table>}
-                        />
+                        table={<SimpleGanttTable field="title" header="Title"/>}
+                    />
                 </div>
             </>);
 };
@@ -124,13 +118,8 @@ export const Selection = () => {
         <div style={{ display: 'flex', height: '400px' }}>
           <Timeline startDate={d('2018-09-20')} endDate={d('2018-09-21')} groups={someHumanResources} items={someTasks} 
                     selectedItems={isSelectionForced ? [0, 1] : undefined} onSelectionChange={selectedItems => setSelectedItems(selectedItems)}
-                    table={<Table width={100} >
-                                    <Column
-                                        columnKey="title"
-                                        width={100}
-                                        header={<DataCell>Title</DataCell>}
-                                        cell={({rowIndex}) => <DataCell>{rowIndex < someHumanResources.length ? someHumanResources[rowIndex].title : ""}</DataCell>}/>
-                                </Table>}/>
+                    table={<SimpleGanttTable field="title" header="Title"/>}
+            />
         </div>
       </>
     );

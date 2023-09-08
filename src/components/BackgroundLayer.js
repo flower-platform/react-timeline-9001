@@ -252,7 +252,7 @@ export class BackgroundLayer extends React.Component {
 
   renderHighlightedWeekends() {
     return (
-      <Fragment>
+      <>
         {this.props.highlightWeekends &&
           this.state.weekends.map((weekend, index) => {
             return (
@@ -269,13 +269,13 @@ export class BackgroundLayer extends React.Component {
               />
             );
           })}
-      </Fragment>
+      </>
     );
   }
 
   renderCustomComponents(components) {
     return (
-      <Fragment>
+      <>
         {components.map((component, index) => {
           return React.cloneElement(component, {
             key: index,
@@ -285,14 +285,14 @@ export class BackgroundLayer extends React.Component {
             calculateHorizontalPosition: this.calculateHorizontalPosition
           });
         })}
-      </Fragment>
+      </>
     );
   }
 
   renderVerticalGrid() {
     const {verticalGrid, topOffset, height, leftOffset, width, verticalGridLines, verticalGridClassName} = this.props;
     return (
-      <Fragment>
+      <>
         {verticalGrid && verticalGridLines && (
           <div
             className="rct9k-background-layer-vertical-grid"
@@ -308,7 +308,7 @@ export class BackgroundLayer extends React.Component {
             })}
           </div>
         )}
-      </Fragment>
+      </>
     );
   }
 
@@ -318,7 +318,7 @@ export class BackgroundLayer extends React.Component {
     const overlappsDisplayedInterval =
       this.props.startDateTimeline.isSameOrBefore(currentDate) && this.props.endDateTimeline.isSameOrAfter(currentDate);
     return (
-      <Fragment>
+      <>
         {nowMarker && overlappsDisplayedInterval && (
           <Marker
             date={currentDate}
@@ -330,19 +330,19 @@ export class BackgroundLayer extends React.Component {
             style={this.props.nowMarkerStyle}
           />
         )}
-      </Fragment>
+      </>
     );
   }
 
   render() {
     return (
-      <Fragment>
+      <>
         {this.renderHighlightedWeekends()}
         {this.renderCustomComponents(this.props.highlightedIntervals)}
         {this.renderNowMarker()}
         {this.renderCustomComponents(this.props.markers)}
         {this.renderVerticalGrid()}
-      </Fragment>
+      </>
     );
   }
 }
