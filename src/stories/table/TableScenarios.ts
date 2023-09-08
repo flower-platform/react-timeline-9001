@@ -1,14 +1,8 @@
 import { createTestids } from "@famiprog-foundation/tests-are-demo";
 
-export const tableScenarios = {propertyColumns: 'PROPERTY columns',
-  propertyColumnsWidth: 'PROPERTY columns.width',
-  propertyColumnsHeaderLabel: 'PROPERTY columns.headerLabel',
-  propertyColumnsLabelProperty: 'PROPERTY columns.labelProperty',
-  propertyColumnsHeaderRenderer: 'PROPERTY columns.headerRenderer',
-  propertyColumnsCellRenderer: 'PROPERTY columns.cellRenderer',
+export const tableScenarios = {
   propertyTable: 'PROPERTY table',
-  propertyGroupRenderer: 'PROPERTY groupRenderer',
-  propertyGroupTitleRenderer: 'PROPERTY groupTitleRenderer'
+  propertyOnTableResize:'PROOPERTY onTableResize'
 };
 
 // These are needed in TableTestsAreDemo

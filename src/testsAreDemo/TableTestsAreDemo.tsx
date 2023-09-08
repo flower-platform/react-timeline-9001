@@ -3,7 +3,7 @@ import { assert } from "chai";
 import { Table } from "fixed-data-table-2";
 import { ProvidingCustomTable } from "../stories/table/Table.stories";
 import { DEMO_TABLE_WIDTH, tableTestIds } from "../stories/table/TableScenarios";
-import { TABLE_OFFSET, timelineTestids as testids } from "../timeline";
+import { timelineTestids as testids } from "../timeline";
 
 export class TableTestsAreDemo {
     async before() {
@@ -61,6 +61,6 @@ export class TableTestsAreDemo {
     async whenDragTheSplitPaneTheTableIsResizedAccordingly() {
         tad.cc("Split pane resizer is dragged");
         await tad.drag(tad.screenCapturing.getByTestId(testids.splitPaneResizer), { delta: { x: 150, y: 0 }});
-        assert.equal((tad.getObjectViaCheat(Table) as Table).props.width, DEMO_TABLE_WIDTH + TABLE_OFFSET + 150);
+        assert.equal((tad.getObjectViaCheat(Table) as Table).props.width, DEMO_TABLE_WIDTH + 150);
     }
 }

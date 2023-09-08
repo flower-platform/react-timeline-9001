@@ -1,4 +1,26 @@
-# Change Log
+## Unreleased (probably 2.4.0)
+
+### Added
+
+* [Horizontal scrollbar](https://github.com/flower-platform/react-timeline-10000/pull/57)
+
+# v2.3.0-SNAPSHOT2
+
+### Added
+* [Added `onTableResize` property](https://github.com/flower-platform/react-timeline-10000/pull/62)
+
+# v2.3.0-SNAPSHOT1
+
+### Fixed
+
+* [External drag and drop doesn't work](https://github.com/flower-platform/react-timeline-10000/pull/60)
+* [Changing the `width` property of the table didn't updated of the UI](https://github.com/flower-platform/react-timeline-10000/pull/59)
+
+## v2.3.0
+
+### Added
+
+* [A `<Table>` is used for displaying rows](https://github.com/flower-platform/react-timeline-10000/pull/52), i.e. in the left part of the Gantt. `<Table>` comes from the [FixedDataTable lib](https://schrodinger.github.io/fixed-data-table-2/). This addition is **not backwards compatible**.
 
 ## v2.2.4
 
@@ -14,7 +36,7 @@
 ### Fixed
 
 * Drag to create rectangle was blue instead of green when `forceDragToCreateMode = true` 
-* [`selectedItems` parameter of `onSelectionChange` handler was `number[]` instead of `(number|string)[]`](https://github.com/flower-platform/react-timeline-10000/compare/master-flower-platform...flower-platform:react-timeline-10000:dana-RM31940-selectedItem-type-number-instead-of-number-or-string?expand=1)
+* [Parameter `selectedItems` of `onSelectionChange` handler was `number[]` instead of `(number|string)[]`](https://github.com/flower-platform/react-timeline-10000/pull/51)
 
 ## v2.2.3
 
@@ -26,7 +48,7 @@ Right click selection didn't worked on custom segments with a complex children h
 
 ### Fixed
 
-* [Various small issues](https://github.com/flower-platform/react-timeline-10000/pull/47/files)
+* [Various small issues](https://github.com/flower-platform/react-timeline-10000/pull/47)
   * drag to create popup auto-closing 
   * visual improvements of the selected and hovered segments style
   * Error in console when running an action without `run` property defined 
