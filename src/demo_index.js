@@ -11,6 +11,7 @@ import {DragToCreateTestsAreDemo} from './testsAreDemo/DragToCreateTestsAreDemo'
 import {TableTestsAreDemo} from './testsAreDemo/TableTestsAreDemo';
 import {SelectedItemsTestsAreDemo} from './testsAreDemo/SelectedItemsTestsAreDemo';
 import {ContextMenuTestsAreDemo} from './testsAreDemo/ContextMenuTestsAreDemo';
+import {ZoomTestsAreDemo} from './testsAreDemo/ZoomTestsAreDemo';
 
 ReactDOM.render(
   <TestsAreDemoAppWrapper
@@ -18,11 +19,12 @@ ReactDOM.render(
     app={<DemoTimeline />}
     importTestsCallback={() => {
       tad.addTests(
-        DragToCreateTestsAreDemo,
-        ExpTestsAreDemo,
-        SelectedItemsTestsAreDemo,
-        ContextMenuTestsAreDemo,
-        TableTestsAreDemo
+        // DragToCreateTestsAreDemo,
+        // ExpTestsAreDemo,
+        // SelectedItemsTestsAreDemo,
+        // ContextMenuTestsAreDemo,
+        // TableTestsAreDemo,
+        ZoomTestsAreDemo
       );
     }}
   />,
