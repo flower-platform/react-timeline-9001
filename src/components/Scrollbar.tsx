@@ -2,97 +2,66 @@ import React from "react";
 import Measure from 'react-measure';
 
 export interface ScrollbarProperties {
-// TODO CSR: genul asta de comentarii nu prea sunt OK. Nu fac decat sa zica cu
-// multe cuvinte ceea ce numele si tipul deja zic cu putine cuvinte. Problema e ca cititorul,
-// pe langa ca are o impresie de amatorism, se obisnuieste ca doc nu e buna. Si poate
-// avem locuri in care chiar e important ceea ce zicem.
-// Un exemplu este si ca textul este gresit/inversat. Probabil ca ti-a scapat la pre-commit
-// check din cauzele de mai sus.
-
-// cel mai bine aici ar merge: E.g. 0
-// La max: E.g. 100
-// la position: E.g. 10
-// la scrollPos: W/ the previous examples, can have values between ??? and ???.
-// Asta e chiar o info importanta. Eu nu stiu sa raspund acum.
-// la "onscroll", am putea sa reluam acest range
     /**
-     * A number which represents the maximum scroll position
+     * E.g. 0
      */
     minScrollPosition: number;
 
     /**
-     * A number which represents the minimum scroll position
+     * E.g. 100
      */
     maxScrollPosition: number;
 
     /**
-     * The number of lines equivalent to one page.
+     * E.g. 10
      */
     pageSize: number;
 
     /**
-     * The initial position of the scroll thumb
+     * E.g. W/ the previous examples, can have values between 0 and 90
      */
-     // TODO CSR: de redenumit in initialScrollPosition
-    scrollPosition?: number;
+    initialScrollPosition?: number;
 
     /**
      * Can be both `Direction.HORIZONTAL`(the default value) or `Direction.VERTICAL`
      */
     direction?: Direction;
-
-    /**
-     * By default Semantic ui hides the increase/decrease arrow buttons of the scrollbars on Webkit based browsers. So it default to false.
-     * This should be set to true if the scrollbar needs to display the arrow buttons.
-     */
-// TODO CSR: Context. Din pacate am devenit tot mai dependenti de semanitc. Ceea ce nu prea e bine
-// am vrut sa experimentez un mod cumva abstractizat de a folosi semantic.
-    hasArrows?: boolean;
     
     /**
-     * This handler is called when the scrollbar is scrolled.
-     * It receives as parameter the current scrollPosition
      * This handler can be used for example to synchronize the scrollbar position with a virtual scroll of another component
      *
-     *  @param scrollPosition 
-     * @returns 
+     * E.g. W/ the previous examples, the scrollPosition can be between 0 and 90
      */
     onScroll?: (scrollPosition: number) => void;
 
-    /**
-     * If the configuration of the scrollbar doesn't require scrolling (i.e. the min-max interval is smaller than the pageSize)
-     * the Scrollbar component doesn't display nothing. 
-     * 
-     * This handler can be used to detect when the scrollbar is not required to be displayed
-     * 
-// TODO CSR: liniile de mai jos cred ca nu ajuta cu nimic. Deci principiul: daca cu mai putine
-// linii obtinem ac lucru => stergem surplusul.
-     * @param isScrollbarVisible 
-     * @returns 
-     */
-    onVisibilityChange?: (isScrollbarVisible: boolean) => void;
+   /* 
+    * The scrollbar component already measures its content. 
+    * So the parent component should use this handler
+    * if it needs to detect scrollbar size  changes (e.g. when the component becomes invisible 
+    * because the current configuration needs no scrollbar)
+    */
+    onResize?: (scrollbarContentRect: boolean) => void;
 }
 
-// TODO CSR: daca avem useri de JS, ei nu vor avea acces la ac tip de date.
-// By default, enum-ul se converteste in cifre. Deci in JS va trebui sa zica 0 sau 1.
-// varianta 1: sa folosim enum ca string.
-// varianta 2: sa nu avem acest tip. Si sa avem direction: "horizontal" | "vertical"
-// la cod nou as fi ales 2. Acum, putem face 1, ca e cel mai putin de modificat
 export enum Direction {
-    HORIZONTAL,
-    VERTICAL
+    HORIZONTAL = "horizontal",
+    VERTICAL = "vertical"
 }
 
-// TODO CSR: vad aici; parca am vazut ac lucru si in Gantt?
-export const SCROLLBAR_SIZE = 10;
 const ROUND_FACTOR = 4;
 
+/**
+ * If the configuration of the scrollbar doesn't require scrolling 
+ * (i.e. the min-max interval is smaller than the pageSize)
+ * the Scrollbar component doesn't display nothing. 
+ * 
+ * @author Daniela Buzatu
+ */
 export class Scrollbar extends React.Component<ScrollbarProperties, { scrollbarSize: number }> {
    
     static defaultProps = {
         scrollPosition: 0,
-        direction: Direction.HORIZONTAL,
-        hasArrows: false
+        direction: Direction.HORIZONTAL
     }
 
     _outterDiv: HTMLDivElement;
@@ -125,21 +94,11 @@ export class Scrollbar extends React.Component<ScrollbarProperties, { scrollbarS
         this.setScrollPositionInPx((newScrollPosition - this.props.minScrollPosition) * pixels_per_unit);
     }
 
-    componentDidMount(): void {
-        if (this.props.onVisibilityChange) {
-            this.props.onVisibilityChange(this.isScrollbarNeeded(this.props));
-        } 
-    }
-
     componentWillReceiveProps(nextProps: Readonly<ScrollbarProperties>): void {
-        if (nextProps.onVisibilityChange && this.isScrollbarNeeded(nextProps) != this.isScrollbarNeeded(this.props)) {
-            nextProps.onVisibilityChange(this.isScrollbarNeeded(nextProps));
-        } 
-
         if (nextProps.minScrollPosition != this.props.minScrollPosition || 
             nextProps.maxScrollPosition != this.props.maxScrollPosition ||
             nextProps.pageSize != this.props.pageSize ||
-            nextProps.scrollPosition != this.props.scrollPosition) { 
+            nextProps.initialScrollPosition != this.props.initialScrollPosition) { 
             this.setScrollPosition(nextProps);
         }
     }
@@ -152,7 +111,7 @@ export class Scrollbar extends React.Component<ScrollbarProperties, { scrollbarS
 
     setScrollPosition(props: ScrollbarProperties) {
         const pixels_per_unit = this.state.scrollbarSize / props.pageSize;
-       this.setScrollPositionInPx((props.scrollPosition - props.minScrollPosition) * pixels_per_unit);
+       this.setScrollPositionInPx((props.initialScrollPosition - props.minScrollPosition) * pixels_per_unit);
     }
 
     setScrollPositionInPx(scrollPositionInPixels) {
@@ -164,7 +123,7 @@ export class Scrollbar extends React.Component<ScrollbarProperties, { scrollbarS
         // a scrollbar that is "double binded" to a state variable in the parent component (e.g. in gantt)
         // It is caused by a small precision lost when converting from pixels to client unit and then back again
         const oldScrollPositionInPixels = this.props.direction == Direction.HORIZONTAL ? this._outterDiv.scrollLeft : this._outterDiv.scrollTop;
-        if (roundDoubleToDecimals(scrollPositionInPixels) == roundDoubleToDecimals(oldScrollPositionInPixels)) {
+        if (this.roundDoubleToDecimals(scrollPositionInPixels) == this.roundDoubleToDecimals(oldScrollPositionInPixels)) {
             return;
         }
         
@@ -191,8 +150,15 @@ export class Scrollbar extends React.Component<ScrollbarProperties, { scrollbarS
     }
 
     getOutterDivClassName() {
-        let className = (this.props.direction == Direction.HORIZONTAL ? "rct9k-horizontal-scrollbar-outter" : "rct9k-vertical-scrollbar-outter");
-        return className + (this.props.hasArrows ? " rct9k-scrollbar-with-arrows" : "");
+        return this.props.direction == Direction.HORIZONTAL ? "rct9k-horizontal-scrollbar-outter" : "rct9k-vertical-scrollbar-outter";
+    }
+
+    roundDoubleToDecimals = (value: number) => {
+        if (value == 0) {
+            return value;
+        }
+        let roundFactor = Math.pow(10, ROUND_FACTOR);
+        return Math.round(value * roundFactor) / roundFactor;
     }
 
     render(): React.ReactNode {
@@ -203,13 +169,13 @@ export class Scrollbar extends React.Component<ScrollbarProperties, { scrollbarS
                 if (newSize != this.state.scrollbarSize) {
                     this.setState({ scrollbarSize: newSize });
                 }
+                this.props.onResize && this.props.onResize(contentRect);
             }}>
             {({ measureRef }) => {
                 return (
                     this.isScrollbarNeeded(this.props) ?
                     <div
                         className={this.getOutterDivClassName()}
-                        style={this.props.direction == Direction.HORIZONTAL ? {height: SCROLLBAR_SIZE} : {width: SCROLLBAR_SIZE}}
                         ref={(node) => {
                             measureRef(node);
                             this._outterDiv = node;
@@ -226,14 +192,4 @@ export class Scrollbar extends React.Component<ScrollbarProperties, { scrollbarS
             }}
         </Measure>
     }
-}
-
-// TODO CSR: remarca minora; am fi putut pune ca functie a clasei? Poate cineva are nevoie vreodata sa suprascrie?
-// daca sunt obiectii mici/mari, lasam aici; nu-i pb
-const roundDoubleToDecimals = (value: number) => {
-    if (value == 0) {
-        return value;
-    }
-    let roundFactor = Math.pow(10, ROUND_FACTOR);
-    return Math.round(value * roundFactor) / roundFactor;
 }

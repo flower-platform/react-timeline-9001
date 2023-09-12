@@ -39,7 +39,14 @@ export const someTasks: Item[] = [
   {key: 7, row: 2, title: 'Task MD4', start: d('2018-09-20 18:00'), end: d('2018-09-20 20:00')},
   {key: 8, row: 2, title: 'Task MD5', start: d('2018-09-20 20:00'), end: d('2018-09-20 21:00')},
   {key: 9, row: 2, title: 'Task MD2', start: d('2018-09-20 5:00'), end: d('2018-09-20 7:00')},
-  {key: 10, row: 2, title: 'Task MD3', start: d('2018-09-20 13:00'), end: d('2018-09-20 14:00')}
+  {key: 10, row: 2, title: 'Task MD3', start: d('2018-09-20 13:00'), end: d('2018-09-20 14:00')},
+  // Tasks that are outside the display interval 
+  { key: 11, row: 4, title: 'Task GW1', start: d('2018-09-19 7:00'), end: d('2018-09-19 8:00') },
+  { key: 12, row: 4, title: 'Task GW2', start: d('2018-09-19 17:00'), end: d('2018-09-19 19:00') },
+  { key: 14, row: 1, title: 'Task GW3', start: d('2018-09-21 12:00'), end: d('2018-09-21 14:00') },
+  { key: 15, row: 1, title: 'Task GW4', start: d('2018-09-21 15:00'), end: d('2018-09-21 17:00') },
+  { key: 16, row: 1, title: 'Task GW5', start: d('2018-09-19 12:00'), end: d('2018-09-19 14:00') },
+  { key: 17, row: 1, title: 'Task GW6', start: d('2018-09-19 9:00'), end: d('2018-09-19 12:00') }
 ];
 
 export const manyHumanResources: Employee[] = [...someHumanResources, { id: 4, title: 'George Walsh', job: 'Developer' }, 

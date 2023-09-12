@@ -46,7 +46,7 @@ import {SelectionHolder} from './utils/SelectionHolder';
 import {IGanttAction} from './types';
 import {ContextMenu} from './components/ContextMenu/ContextMenu';
 import moment from 'moment';
-import {SCROLLBAR_SIZE, Scrollbar} from './components/Scrollbar';
+import {Scrollbar} from './components/Scrollbar';
 
 const testids = createTestids('Timeline', {
   menuButton: '',
@@ -64,9 +64,6 @@ const testids = createTestids('Timeline', {
 export const timelineTestids = testids;
 
 const EMPTY_GROUP_KEY = 'empty-group';
-// TODO CSR: banuiesc ca nu a fost inca procesata remarca din celalalt review
-// This was added by bogdan. From my understanding it reprezents the table vertical scrollbar width
-// If we don't take in consideration this, a horizontal scrollbar appears
 export const TABLE_OFFSET = 15;
 export const DEFAULT_ITEM_HEIGHT = 40;
 export const DEFAULT_ROW_CLASS = 'rct9k-row';
@@ -565,15 +562,9 @@ export default class Timeline extends React.Component {
       openedContextMenuCoordinates: undefined,
       openedContextMenuRow: undefined,
       openedContextMenuTime: undefined,
-      // TODO CSR: DISCUTIE: startDate/endDate erau si inainte, nu? Cum erau folosite? Caci vad ca abia acum sunt puse in
-      // state. Ma intreb si ca ar fi oportuna redenumirea in "initial". O avea impact? O mai fi ac pattern si prin
-      // alte locuri? Imi trece selectia cel putin prin minte
       startDate: this.props.startDate,
       endDate: this.props.endDate,
-      // TODO CSR: DISCUTIE: are legatura si cu ce ziceam de infinite scrolling. In Gantt Flex, nu era merau afisasta?
-      // Tocmai pt ac infinite scrolling?
-      hasHorizontalScrollbar: false,
-      // TODO CSR: are legatura cu remarca de scroll stanga/dreapta si pt PC
+      horizontalScrollbarHeight: 0,
       touchPositionX: undefined
     };
 
@@ -1679,10 +1670,7 @@ export default class Timeline extends React.Component {
     var tableRowHeight = this.rowHeight({index});
     let group = _.find(this.state.groups, g => g.id == index);
     if (group.rowHeight && group.key.startsWith(EMPTY_GROUP_KEY)) {
-      // TODO CSR: DISCUTIE: nu cumva de aici provine acea "ingropare" a scroll?
-      // mi se pare ca ar trebui sa obtinem dinamic dim scrollbar. Sau macar sa il punem
-      // pe user sa o dea, in functie de ce CSS are el pe la scrollbar
-      tableRowHeight = Math.round(tableRowHeight) + (this.state.hasHorizontalScrollbar ? SCROLLBAR_SIZE : 0) - 2;
+      tableRowHeight = Math.round(tableRowHeight) + this.state.horizontalScrollbarHeight - 2;
     }
     return tableRowHeight;
   }
@@ -2075,7 +2063,7 @@ export default class Timeline extends React.Component {
                   {markers.map(m => (
                     <Marker
                       key={m.key}
-                      height={this.state.screenHeight - (this.state.hasHorizontalScrollbar ? SCROLLBAR_SIZE : 0)}
+                      height={this.state.screenHeight - this.state.horizontalScrollbarHeight}
                       top={0}
                       date={0}
                       shouldUpdate={true}
@@ -2088,7 +2076,7 @@ export default class Timeline extends React.Component {
                   <TimelineBody
                     width={this.state.gridWidth}
                     columnWidth={() => this.state.gridWidth}
-                    height={bodyHeight - (this.state.hasHorizontalScrollbar ? SCROLLBAR_SIZE : 0)}
+                    height={bodyHeight - this.state.horizontalScrollbarHeight}
                     rowHeight={this.rowHeight}
                     rowCount={this.state.groups.length}
                     columnCount={1}
@@ -2099,18 +2087,18 @@ export default class Timeline extends React.Component {
                     onScroll={this.handleScrollGantt}
                   />
                   <Scrollbar
+                    ref={node => (this._scrollbar = node)}
                     minScrollPosition={this.getMinDate().valueOf()}
                     maxScrollPosition={this.getMaxDate().valueOf()}
-                    scrollPosition={this.getStartDate().valueOf()}
+                    initialScrollPosition={this.getStartDate().valueOf()}
                     pageSize={this.getEndDate().valueOf() - this.getStartDate().valueOf()}
-                    hasArrows={true}
                     onScroll={scrollPosition => {
                       this.onHorizontalScroll(scrollPosition);
                     }}
-                    onVisibilityChange={isScrollbarVisible =>
-                      this.setState({hasHorizontalScrollbar: isScrollbarVisible})
+                    onResize={contentRect =>
+                      this.setState({horizontalScrollbarHeight: contentRect.bounds ? contentRect.bounds.height : 0})
                     }
-                    ref={node => (this._scrollbar = node)}></Scrollbar>
+                  />
                   {this.renderContextMenu()}
                   {backgroundLayer &&
                     React.cloneElement(backgroundLayer, {
@@ -2118,7 +2106,7 @@ export default class Timeline extends React.Component {
                       endDateTimeline: this.getEndDate(),
                       width: this.state.gridWidth,
                       leftOffset: 0,
-                      height: bodyHeight - (this.state.hasHorizontalScrollbar ? SCROLLBAR_SIZE : 0),
+                      height: bodyHeight - this.state.horizontalScrollbarHeight,
                       topOffset: timebarHeight,
                       verticalGridLines: this.state.verticalGridLines
                     })}

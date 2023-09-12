@@ -3,12 +3,69 @@ import { Direction, Scrollbar } from "../../components/Scrollbar";
 import { useRef, useState } from "react";
 import { Alert } from "antd";
 import Measure from 'react-measure';
+import { createTestids } from "@famiprog-foundation/tests-are-demo";
+import { useArgs } from '@storybook/client-api';
+
 
 export default {
-    title: 'Components/Scrollbar'
+    title: 'Components/Scrollbar',
+    component: Scrollbar,
+    includeStories: /^[A-Z]/,
+    parameters: {
+        controls: {
+          disable: false
+        }
+    },
+    args: {
+        pageSize: 10,
+        minScrollPosition: 0,
+        maxScrollPosition: 100,
+        initialScrollPosition: 0,
+        scrollPosition: 0
+    },
+    argTypes: {
+        onScroll: {
+            table: {
+                disable: true,
+              }
+        },
+        onVisibilityChange: {
+            table: {
+                disable: true,
+              }
+        }
+    }
 };
 
-export const HorizontalScrollBar = () => {
+export const scrollbarTestIds = createTestids('ScrollbarStory', {
+    scrollbar: ''
+});
+
+export const HorizontalScrollBar = (args) => {
+    const [{}, updateArgs] = useArgs();
+    return(
+        <div style={{marginTop: 30, display: "flex"}}>
+            <Scrollbar onScroll={(scrollPosition) => updateArgs({scrollPosition: scrollPosition})} {...args}/>
+        </div>
+    );
+}
+HorizontalScrollBar.args = {
+    direction: Direction.HORIZONTAL
+}
+
+export const VerticalScrollBar = (args) => {
+    const [{}, updateArgs] = useArgs();
+    return (
+        <div style={{marginLeft: 30, display: "flex", height:"100%"}}>
+            <Scrollbar onScroll={(scrollPosition) => updateArgs({scrollPosition: scrollPosition})} {...args}/>
+        </div>
+    );
+}
+VerticalScrollBar.args = {
+    direction: Direction.VERTICAL
+}
+
+export const HorizontalScrollBarScrollingADiv = () => {
     const divContentWidth1 = 700;
     const divContentWidth2 = 700;
     const totalWidth = 800;
@@ -59,32 +116,23 @@ export const HorizontalScrollBar = () => {
                 <SplitPane 
                     split="vertical"
                     defaultSize={totalWidth / 2}>
-                        {/* TODO CSR: DISCUTIE: mi se pare f derutant acest demo. Sa nu uitam, ca consumator al unui storybook, tr inteles
-                            rapid si clar ceea ce face componentul.
-
-                            1/ vazand Measure, divuri, width: ma intreb: noi NU tinem cont de astea, corect? Deci pot folosi
-                            un scroll fara sa fie neaparat cuplat la un div, nu?
-                            2/ eu as pune un scroll si atat. Si in demo niste textfielduri pentru pageSize, min, etc. 
-                            
-                            TEORETIC: Fiind in storybook,
-                            el ne pune posibilitatea sa punem cu usurinta astea in partea de jos. Cred ca pana acum nu am prea folosit ac
-                            feature.
-                            PRACTIC: Ar fi interesant sa ne punem propriile text-box/label. Pentru a le folosi la TAD. Am mai folosit tehnica asta.
-                            3/ sa discutam un pic demo-ul curent. Poate ar fi interesant sa extragem un story sa aratam si asta. Desi
-                            are totusi destul de putin interes pentru un user sa inlocuiasca logica nativa de scroll cu una artificiala.
-                            Probabil ca asta e si motivul pt care nu exista "pe piata" asa ceva
-                        */}
                     <Scrollbar pageSize={divWidth1} minScrollPosition={0} maxScrollPosition={divContentWidth1}
                         onScroll={(scrollPosition) => div1.current.scrollLeft = scrollPosition}/>
                     <Scrollbar pageSize={divWidth2} minScrollPosition={0} maxScrollPosition={divContentWidth2}
-                        onScroll={(scrollPosition) => div2.current.scrollLeft = scrollPosition} hasArrows={true}/>
+                        onScroll={(scrollPosition) => div2.current.scrollLeft = scrollPosition}/>
                 </SplitPane>
             </div>
         </>
     );
 }
 
-export const VerticalScrollBar = () => {
+HorizontalScrollBarScrollingADiv.parameters = {
+    controls: {
+      disable: true
+    }
+};
+
+export const VerticalScrollBarScrollingADiv = () => {
     const divContentHeight1 = 500;
     const divContentHeight2 = 500;
     const totalHeight = 500;
@@ -139,10 +187,16 @@ export const VerticalScrollBar = () => {
                         <Scrollbar direction={Direction.VERTICAL} pageSize={divHeight1} minScrollPosition={0} maxScrollPosition={divContentHeight1}
                             onScroll={(scrollPosition) => div1.current.scrollTop = scrollPosition}/>
                         <Scrollbar direction={Direction.VERTICAL} pageSize={divHeight2} minScrollPosition={0} maxScrollPosition={divContentHeight2}
-                            onScroll={(scrollPosition) => div2.current.scrollTop = scrollPosition} hasArrows={true}/>
+                            onScroll={(scrollPosition) => div2.current.scrollTop = scrollPosition}/>
                     </SplitPane>
                 </div>
             </div>
         </>
     );
 }
+
+VerticalScrollBarScrollingADiv.parameters = {
+    controls: {
+      disable: true
+    }
+};
