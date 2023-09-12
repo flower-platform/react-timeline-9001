@@ -4,8 +4,6 @@
 
 * [Horizontal scrollbar](https://github.com/flower-platform/react-timeline-10000/pull/57)
 
-### Fixed
-
 # v2.3.0-SNAPSHOT2
 
 ### Added
