@@ -11,6 +11,13 @@
   position: relative;
 }
 
+/**
+* We need this {pointerEvents: "none"} because the background layer is in front of the TimelineBody
+*/
+.rct9k-background-layer {
+  pointer-events: none;
+}
+
 .rct9k-background-layer-vertical-grid {
   position: absolute;
   overflow: hidden;
@@ -180,6 +187,7 @@
 }
 
 .rct9k-grid {
+  border-left: 1px solid #ccc;
   border-bottom: 1px solid #ccc;
 
   /* This was added because we needed to have the highlighted intervals and markers behind the segments, 

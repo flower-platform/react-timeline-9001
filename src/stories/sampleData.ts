@@ -39,7 +39,8 @@ export const someTasks: Item[] = [
   {key: 7, row: 2, title: 'Task MD4', start: d('2018-09-20 18:00'), end: d('2018-09-20 20:00')},
   {key: 8, row: 2, title: 'Task MD5', start: d('2018-09-20 20:00'), end: d('2018-09-20 21:00')},
   {key: 9, row: 2, title: 'Task MD2', start: d('2018-09-20 5:00'), end: d('2018-09-20 7:00')},
-  {key: 10, row: 2, title: 'Task MD3', start: d('2018-09-20 13:00'), end: d('2018-09-20 14:00')}
+  {key: 10, row: 2, title: 'Task MD3', start: d('2018-09-20 13:00'), end: d('2018-09-20 14:00')},
+  {key: 11, row: 2, title: 'Task MD3', start: d('2018-09-20 22:00'), end: d('2018-09-20 24:00')}
 ];
 
 export const manyHumanResources: Employee[] = [...someHumanResources, { id: 4, title: 'George Walsh', job: 'Developer' }, 

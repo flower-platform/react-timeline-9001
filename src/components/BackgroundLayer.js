@@ -209,15 +209,20 @@ export class BackgroundLayer extends React.Component {
     }
 
     let offset = startAsMoment.diff(this.props.startDateTimeline, 'milliseconds');
-    let duration = endAsMoment.diff(startAsMoment, 'milliseconds');
+    let duration = (endAsMoment <= this.props.endDateTimeline ? endAsMoment : this.props.endDateTimeline).diff(
+      startAsMoment,
+      'milliseconds'
+    );
     const left = this.props.leftOffset + offset * pixelsPerMillis;
     let width = Math.round(duration * pixelsPerMillis);
     return {left, width};
   }
 
   /**
-   * Calculates the weekend intervals for the timeline displayed interval (`startDateTimeline` - `endDateTimeline`).
-   */
+   * Calculates the weekend i+
+   ntervals for the timeline displayed interval (`startDateTimeline` - `endDateTimeline`).
+   ';p
+  o0]*/
   calculateHighlightedWeekends() {
     let weekends = [];
     if (!this.props.highlightWeekends) {
@@ -336,13 +341,13 @@ export class BackgroundLayer extends React.Component {
 
   render() {
     return (
-      <Fragment>
+      <div className="rct9k-background-layer">
         {this.renderHighlightedWeekends()}
         {this.renderCustomComponents(this.props.highlightedIntervals)}
         {this.renderNowMarker()}
         {this.renderCustomComponents(this.props.markers)}
         {this.renderVerticalGrid()}
-      </Fragment>
+      </div>
     );
   }
 }
