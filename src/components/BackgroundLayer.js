@@ -219,10 +219,8 @@ export class BackgroundLayer extends React.Component {
   }
 
   /**
-   * Calculates the weekend i+
-   ntervals for the timeline displayed interval (`startDateTimeline` - `endDateTimeline`).
-   ';p
-  o0]*/
+   * Calculates the weekend intervals for the timeline displayed interval (`startDateTimeline` - `endDateTimeline`).
+   */
   calculateHighlightedWeekends() {
     let weekends = [];
     if (!this.props.highlightWeekends) {
