@@ -2231,7 +2231,10 @@ export default class Timeline extends React.Component {
             const bodyHeight = calculateHeight(this.state.screenHeight);
             const timebarHeight = getTimebarHeight();
             return (
-              <div ref={measureRef} style={{display: 'flex', flexDirection: 'row', flex: 1, height: '100%'}}>
+              <div
+                ref={measureRef}
+                className="flex-grow"
+                style={{display: 'flex', flexDirection: 'row', height: '100%'}}>
                 {this.props.table ? (
                   <SplitPane
                     split="vertical"
