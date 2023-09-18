@@ -3,7 +3,7 @@ import Timeline from '../../timeline';
 import { BackgroundLayer } from '../../components/BackgroundLayer';
 import { HighlightedInterval } from '../../components/HighlightedInterval';
 import { Marker } from '../../components/Marker';
-import { someHumanResources, startOfCurrentMonth, endOfCurrentMonth, dateAndHourOfCurrentMonth } from '../sampleData';
+import { someHumanResources, startOfCurrentMonth, endOfCurrentMonth, dateAndHourOfCurrentMonth, manyHumanResources } from '../sampleData';
 import { backgroundLayerScenarios } from './BackgroundLayerScenarios';
 import { Item } from '../../types';
 import { Table, Column, DataCell} from 'fixed-data-table-2';
@@ -20,13 +20,13 @@ const tasks: Item[] = [
 export const Main = () => {
   return (
     <Timeline startDate={startOfCurrentMonth()}
-      endDate={endOfCurrentMonth()} groups={someHumanResources} items={tasks}
+      endDate={endOfCurrentMonth()} groups={manyHumanResources} items={tasks}
       table={<Table width={100} >
                 <Column
                     columnKey="title"
                     width={100}
                     header={<DataCell>Title</DataCell>}
-                    cell={({rowIndex}) => <DataCell>{rowIndex < someHumanResources.length ? someHumanResources[rowIndex].title : ""}</DataCell>}/>
+                    cell={({rowIndex}) => <DataCell>{rowIndex < manyHumanResources.length ? manyHumanResources[rowIndex].title : ""}</DataCell>}/>
             </Table>}
       backgroundLayer={
         <BackgroundLayer verticalGrid nowMarker highlightWeekends
@@ -56,13 +56,13 @@ Main.parameters = {
 export const CustomClassNamesAndStyles = () => {
   return (
     <Timeline startDate={startOfCurrentMonth()}
-      endDate={endOfCurrentMonth()} groups={someHumanResources} items={tasks}
+      endDate={endOfCurrentMonth()} groups={manyHumanResources} items={tasks}
       table={<Table width={100} >
                 <Column
                     columnKey="title"
                     width={100}
                     header={<DataCell>Title</DataCell>}
-                    cell={({rowIndex}) => <DataCell>{rowIndex < someHumanResources.length ? someHumanResources[rowIndex].title : ""}</DataCell>}/>
+                    cell={({rowIndex}) => <DataCell>{rowIndex < manyHumanResources.length ? manyHumanResources[rowIndex].title : ""}</DataCell>}/>
             </Table>}
       backgroundLayer={
         <BackgroundLayer verticalGrid verticalGridClassName='story-custom-vertical-grid-class' verticalGridStyle={{opacity: 0.5}}
@@ -84,7 +84,7 @@ export const CustomClassNamesAndStyles = () => {
 CustomClassNamesAndStyles.parameters = {
   scenarios: [
     backgroundLayerScenarios.verticalGridClassName,
-    backgroundLayerScenarios.nowMaSrkerClassName,
+    backgroundLayerScenarios.nowMarkerClassName,
     backgroundLayerScenarios.highlightWeekendsClassName,
     backgroundLayerScenarios.classNameForMarker,
     backgroundLayerScenarios.highlightedIntervalClassName

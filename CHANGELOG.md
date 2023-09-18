@@ -1,20 +1,22 @@
-## Unreleased (probably 2.4.0)
+## v2.4.0
 
 ### Added
 
 * [Horizontal scrollbar](https://github.com/flower-platform/react-timeline-10000/pull/57)
 
-# v2.3.0-SNAPSHOT2
-
-### Added
 * [Added `onTableResize` property](https://github.com/flower-platform/react-timeline-10000/pull/62)
-
-# v2.3.0-SNAPSHOT1
 
 ### Fixed
 
 * [External drag and drop doesn't work](https://github.com/flower-platform/react-timeline-10000/pull/60)
 * [Changing the `width` property of the table didn't updated of the UI](https://github.com/flower-platform/react-timeline-10000/pull/59)
+* [Various small isues](https://github.com/flower-platform/react-timeline-10000/pull/63)
+  * Problem with the scroll after reseting the `groups`
+  * `SplitPanel` has `absolute` position instead of `relative`position 
+  * Exception when dragging above the timeline
+  * Exception when reseting the `groups` of a gantt that was scrolled
+  * Gantt surface was not receiving events because of the `backgroundLayers`
+  * Background layers were overlapping the vertical scrollbar
 
 ## v2.3.0
 
