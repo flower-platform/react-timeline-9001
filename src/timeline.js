@@ -8,7 +8,7 @@ import Measure from 'react-measure';
 import interact from 'interactjs';
 import _ from 'lodash';
 import {Button, Popup} from 'semantic-ui-react';
-import {Group, InteractOption, Item, RowLayer, getDurationFromPixels} from './index';
+import {Group, InteractOption, Item, RowLayer} from './index';
 
 import {TestsAreDemoCheat, createTestids} from '@famiprog-foundation/tests-are-demo';
 import {Marker} from './components/Marker';
@@ -30,6 +30,7 @@ import {
 import {
   convertDateToMoment,
   convertMomentToDateType,
+  getDurationFromPixels,
   getPixelAtTime,
   getSnapPixelFromDelta,
   getTimeAtPixel,
@@ -85,7 +86,7 @@ const TableWithStyle = ({table}) => {
   `;
 
   return (
-    <div>
+    <div style={{overflowY: 'hidden'}}>
       <style>{tableStyle}</style>
       {React.cloneElement(table)}
     </div>
@@ -623,6 +624,26 @@ export default class Timeline extends React.Component {
 
   componentWillReceiveProps(nextProps) {
     const tableWidth = this.getInitialTableWidth(nextProps);
+
+    if (!_.isEqual(nextProps.groups, this.props.groups)) {
+      // If the table had the groups scrolled before it will internally try to keep the scroll position when the rows are reseted.
+      // But because it aproximates the height of the rows this scrollPosition will be inexact and a desynchronization with the gantt will happen
+      // That's why we choose to reset the scroll to 0.
+      // We need to wait a bit because else our reset will be overriten by the above described internal mechanism
+      if (this.state.scrollTop != 0) {
+        setTimeout(() => {
+          this.setState({scrollTop: 0});
+        }, 10);
+      } else {
+        // This is needed because the scrollTop is only an initial value for the table so it doesn't change when scrolling the table, only when scrolling the gantt.
+        // So reseting it to 0 will not trigger a table rerender in case was already 0.
+        this.setState({scrollTop: 1});
+        setTimeout(() => {
+          this.setState({scrollTop: 0});
+        }, 10);
+      }
+    }
+
     if (tableWidth != this.state.tableWidth) {
       this.setState({tableWidth});
     }
@@ -1470,7 +1491,7 @@ export default class Timeline extends React.Component {
       this._selectRectangleInteractable
         .draggable({
           enabled: true,
-          ignoreFrom: '.item_draggable, .rct9k-group'
+          ignoreFrom: '.item_draggable, .rct9k-group, .rct9k-timebar'
         })
         .styleCursor(false)
         .on('dragstart', e => {
@@ -1667,6 +1688,11 @@ export default class Timeline extends React.Component {
    * If we have passed the same row height for table as for gantt a vertical scroll bar appeared (only for scrolling 2 or 3 px overflow)
    */
   tableRowHeight(index) {
+    // This happens when the table having many items(groups) that has been scrolled is reseted to another smaller array.
+    // Fixed data table triggers a last render of the old items, so it requests the height of the old rows, but those items doesn't exists anymore
+    if (index >= this.state.groups.length) {
+      return 0;
+    }
     var tableRowHeight = this.rowHeight({index});
     let group = _.find(this.state.groups, g => g.id == index);
     if (group.rowHeight && group.key.startsWith(EMPTY_GROUP_KEY)) {
@@ -1769,10 +1795,9 @@ export default class Timeline extends React.Component {
     // We needed it to work also on right click. But the initial implementation of drag to select from the timeline
     // is based on interact js that ignores right click drag (this type of drag is not a nativelly supported one).
     // We choosed a basic implementation using mouseDown, mouseMove and mouseUp events for implementing the right click drag to select
-    if (e.button == 1) {
+    if (e.button == 0) {
       return;
     }
-
     // Just as drag to select with left click works,
     // Also the drag to select doesn't start on segments (item_draggable), it needds to start on the empty row
 
@@ -1780,7 +1805,10 @@ export default class Timeline extends React.Component {
     // That's why we needed to iterate from bottom to top the parent hierachy
     let target = e.target;
     while (target && !target.hasAttribute('data-row-index')) {
-      if (target.classList && target.classList.contains('item_draggable')) {
+      if (
+        (target.classList && target.classList.contains('item_draggable')) ||
+        target.classList.contains('rct9k-timebar')
+      ) {
         return;
       }
       target = target.parentElement;
@@ -2019,6 +2047,10 @@ export default class Timeline extends React.Component {
       });
     }
 
+    const ganttVerticalScrollbarWidth =
+      this._gridDomNode && this._gridDomNode.firstChild
+        ? this._gridDomNode.getBoundingClientRect().width - this._gridDomNode.firstChild.getBoundingClientRect().width
+        : 0;
     return (
       <div style={{flex: 1, overflow: 'hidden'}}>
         <Measure
@@ -2103,8 +2135,21 @@ export default class Timeline extends React.Component {
                   {backgroundLayer &&
                     React.cloneElement(backgroundLayer, {
                       startDateTimeline: this.getStartDate(),
-                      endDateTimeline: this.getEndDate(),
-                      width: this.state.gridWidth,
+                      // Because the background layers are in front of the gantt TimelineBody
+                      // (because they need to display in front of the colored background of the rows)
+                      // they cover up the vertical scrollbar. So that's why we need to make then stop before the vertical scrollbar
+                      endDateTimeline: this.getEndDate()
+                        .clone()
+                        .add(
+                          -getDurationFromPixels(
+                            ganttVerticalScrollbarWidth,
+                            this.getStartDate(),
+                            this.getEndDate(),
+                            this.state.gridWidth
+                          ),
+                          'milliseconds'
+                        ),
+                      width: this.state.gridWidth - ganttVerticalScrollbarWidth,
                       leftOffset: 0,
                       height: bodyHeight - this.state.horizontalScrollbarHeight,
                       topOffset: timebarHeight,
@@ -2150,6 +2195,8 @@ export default class Timeline extends React.Component {
       return Math.max(height - getTimebarHeight(), 0);
     }
 
+    const lastRow = this.state.groups[this.state.groups.length - 1];
+    const hasEmptyRows = lastRow && lastRow.key && lastRow.key.startsWith(EMPTY_GROUP_KEY);
     {
       /* Instead of <Measure .../>, in the past <AutoSizer ... /> was used. However it would round with/height, which generated and endless
     scrollbar appear/disappear, depending on the parent, depending on the resolution. */
@@ -2182,11 +2229,14 @@ export default class Timeline extends React.Component {
             const bodyHeight = calculateHeight(this.state.screenHeight);
             const timebarHeight = getTimebarHeight();
             return (
-              <div ref={measureRef} style={{display: 'flex', flexDirection: 'row', flex: 1, height: '100%'}}>
+              <div
+                ref={measureRef}
+                className="flex-grow"
+                style={{display: 'flex', flexDirection: 'row', height: '100%'}}>
                 {this.props.table ? (
                   <SplitPane
                     split="vertical"
-                    style={{height: this.state.screenHeight}}
+                    style={{height: this.state.screenHeight, position: 'relative'}}
                     size={this.state.tableWidth}
                     onChange={this.handleDrag}
                     ref={this.splitPane_ref_callback}>
@@ -2205,7 +2255,10 @@ export default class Timeline extends React.Component {
                         rowClassNameGetter: rowIndex =>
                           this.props.rowClassName +
                           ' ' +
-                          (rowIndex % 2 == 0 ? this.props.rowOddClassName : this.props.rowEvenClassName)
+                          (rowIndex % 2 == 0 ? this.props.rowOddClassName : this.props.rowEvenClassName),
+                        // Because the content of the empty rows are now significant
+                        // avoid showing vertical scrollbar in case horizontal scrollbar is needed when shrinking the table
+                        showScrollbarY: !hasEmptyRows
                       })}
                     />
                     {this.renderGanttPart({bodyHeight, timebarHeight})}
