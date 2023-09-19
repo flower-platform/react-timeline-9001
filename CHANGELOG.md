@@ -1,3 +1,9 @@
+## v2.4.1
+
+### Fixed
+
+* [Reseting start/end date didn't work]()
+
 ## v2.4.0
 
 ### Added

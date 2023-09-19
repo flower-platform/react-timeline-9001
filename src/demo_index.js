@@ -11,6 +11,7 @@ import {DragToCreateTestsAreDemo} from './testsAreDemo/DragToCreateTestsAreDemo'
 import {TableTestsAreDemo} from './testsAreDemo/TableTestsAreDemo';
 import {SelectedItemsTestsAreDemo} from './testsAreDemo/SelectedItemsTestsAreDemo';
 import {ContextMenuTestsAreDemo} from './testsAreDemo/ContextMenuTestsAreDemo';
+import {DynamicConfigurationTestsAreDemo} from './testsAreDemo/DynamicConfigurationTestsAreDemo';
 
 ReactDOM.render(
   <TestsAreDemoAppWrapper
@@ -22,7 +23,8 @@ ReactDOM.render(
         ExpTestsAreDemo,
         SelectedItemsTestsAreDemo,
         ContextMenuTestsAreDemo,
-        TableTestsAreDemo
+        TableTestsAreDemo,
+        DynamicConfigurationTestsAreDemo
       );
     }}
   />,
