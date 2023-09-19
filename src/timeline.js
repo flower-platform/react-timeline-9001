@@ -651,7 +651,7 @@ export default class Timeline extends React.Component {
     }
 
     if (this.props.startDate != nextProps.startDate || this.props.endDate != nextProps.endDate) {
-      this.setState({startDate: this.props.startDate, endDate: this.props.endDate});
+      this.setState({startDate: nextProps.startDate, endDate: nextProps.endDate});
     } else {
       this.setTimeMap(
         nextProps.items,

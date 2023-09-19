@@ -1,3 +1,9 @@
+## v2.4.1
+
+### Fixed
+
+* [Reseting start/end date didn't work](https://github.com/flower-platform/react-timeline-10000/pull/65)
+
 ## v2.4.0
 
 ### Added

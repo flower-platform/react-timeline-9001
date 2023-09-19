@@ -13,7 +13,6 @@ export class SelectedItemsTestsAreDemo {
         render(<Selection />);
     }
 
-    @Only()
     @Scenario("WHEN click on a segment, THEN only that segment is selected")
     @ScenarioOptions({linkWithNextScenario: true}) 
     async whenClickOnASegment() {
