@@ -6,14 +6,13 @@ import Timeline, { PARENT_ELEMENT, timelineTestids as testids } from "../timelin
 import { getPixelAtTime, getTimeAtPixel } from "../utils/timeUtils";
 import { rightClick } from "../utils/testUtils";
 
-const CLICK_X =30;
+const CLICK_X = 30;
 export class ContextMenuTestsAreDemo {
 
     async before() {
         render(<ContextMenu />);
     }
 
-    @Only()
     @Scenario("WHEN I right click on a row, THEN a context menu with one action opens")
     @ScenarioOptions({ linkWithNextScenario: true })
     async whenRightClickOnARow() {
