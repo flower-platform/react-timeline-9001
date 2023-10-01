@@ -47,6 +47,7 @@
     "@storybook/addon-essentials": "^6.3.11",
     "@storybook/addon-links": "^6.3.11",
     "@storybook/addon-storysource": "^6.5.12",
+    "@storybook/api": "^6.3.11",
     "@storybook/react": "^6.3.11",
     "@vitejs/plugin-react": "^4.0.3",
     "antd": "^3.6.5",

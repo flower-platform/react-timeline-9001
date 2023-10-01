@@ -3,12 +3,69 @@ import { Direction, Scrollbar } from "../../components/Scrollbar";
 import { useRef, useState } from "react";
 import { Alert } from "antd";
 import Measure from 'react-measure';
+import { createTestids } from "@famiprog-foundation/tests-are-demo";
+import { useArgs } from '@storybook/client-api';
+
 
 export default {
-    title: 'Components/Scrollbar'
+    title: 'Components/Scrollbar',
+    component: Scrollbar,
+    includeStories: /^[A-Z]/,
+    parameters: {
+        controls: {
+          disable: false
+        }
+    },
+    args: {
+        pageSize: 10,
+        minScrollPosition: 0,
+        maxScrollPosition: 100,
+        initialScrollPosition: 0,
+        scrollPosition: 0
+    },
+    argTypes: {
+        onScroll: {
+            table: {
+                disable: true,
+              }
+        },
+        onVisibilityChange: {
+            table: {
+                disable: true,
+              }
+        }
+    }
 };
 
-export const HorizontalScrollBar = () => {
+export const scrollbarTestIds = createTestids('ScrollbarStory', {
+    scrollbar: ''
+});
+
+export const HorizontalScrollBar = (args) => {
+    const [{}, updateArgs] = useArgs();
+    return(
+        <div style={{marginTop: 30, display: "flex"}}>
+            <Scrollbar onScroll={(scrollPosition) => updateArgs({scrollPosition: scrollPosition})} {...args}/>
+        </div>
+    );
+}
+HorizontalScrollBar.args = {
+    direction: Direction.HORIZONTAL
+}
+
+export const VerticalScrollBar = (args) => {
+    const [{}, updateArgs] = useArgs();
+    return (
+        <div style={{marginLeft: 30, display: "flex", height:"100%"}}>
+            <Scrollbar onScroll={(scrollPosition) => updateArgs({scrollPosition: scrollPosition})} {...args}/>
+        </div>
+    );
+}
+VerticalScrollBar.args = {
+    direction: Direction.VERTICAL
+}
+
+export const HorizontalScrollBarScrollingADiv = () => {
     const divContentWidth1 = 700;
     const divContentWidth2 = 700;
     const totalWidth = 800;
@@ -62,14 +119,20 @@ export const HorizontalScrollBar = () => {
                     <Scrollbar pageSize={divWidth1} minScrollPosition={0} maxScrollPosition={divContentWidth1}
                         onScroll={(scrollPosition) => div1.current.scrollLeft = scrollPosition}/>
                     <Scrollbar pageSize={divWidth2} minScrollPosition={0} maxScrollPosition={divContentWidth2}
-                        onScroll={(scrollPosition) => div2.current.scrollLeft = scrollPosition} hasArrows={true}/>
+                        onScroll={(scrollPosition) => div2.current.scrollLeft = scrollPosition}/>
                 </SplitPane>
             </div>
         </>
     );
 }
 
-export const VerticalScrollBar = () => {
+HorizontalScrollBarScrollingADiv.parameters = {
+    controls: {
+      disable: true
+    }
+};
+
+export const VerticalScrollBarScrollingADiv = () => {
     const divContentHeight1 = 500;
     const divContentHeight2 = 500;
     const totalHeight = 500;
@@ -124,10 +187,16 @@ export const VerticalScrollBar = () => {
                         <Scrollbar direction={Direction.VERTICAL} pageSize={divHeight1} minScrollPosition={0} maxScrollPosition={divContentHeight1}
                             onScroll={(scrollPosition) => div1.current.scrollTop = scrollPosition}/>
                         <Scrollbar direction={Direction.VERTICAL} pageSize={divHeight2} minScrollPosition={0} maxScrollPosition={divContentHeight2}
-                            onScroll={(scrollPosition) => div2.current.scrollTop = scrollPosition} hasArrows={true}/>
+                            onScroll={(scrollPosition) => div2.current.scrollTop = scrollPosition}/>
                     </SplitPane>
                 </div>
             </div>
         </>
     );
 }
+
+VerticalScrollBarScrollingADiv.parameters = {
+    controls: {
+      disable: true
+    }
+};
