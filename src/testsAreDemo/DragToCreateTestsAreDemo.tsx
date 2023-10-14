@@ -172,7 +172,11 @@ export class DragToCreateTestsAreDemo {
 
         // WHEN forceDragToCreate = false 
         await tad.cc("WHEN I set forceDragToCreate = false AND I drag and drop");
-        tad.userEventWaitable.click(tad.screenCapturing.getByTestId(testIds.forceDragToCreateModeFalseRadio));
+        // TODO era uitat await; dar crapa in modul "fast";
+        // insa de evitat interactiuni de UI inutile. A simula o actiune omeneasca (e.g. apasare pe buton)
+        // este un efort pentru noi. Ne e mult mai simplu sa apelam o functie care sa faca treaba, decat sa simulam
+        // actiunea. In cazul asta deci, cred ca era mai bine sa setam acel mod programatic
+        await tad.userEventWaitable.click(tad.screenCapturing.getByTestId(testIds.forceDragToCreateModeFalseRadio));
 
         // THEN segments are not created at drag
         await startDragKeepInProgress(2, 100);

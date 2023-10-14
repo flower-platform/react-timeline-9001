@@ -13,7 +13,6 @@ export class ContextMenuTestsAreDemo {
         render(<ContextMenu />);
     }
 
-    @Only()
     @Scenario("WHEN I right click on a row, THEN a context menu with one action opens")
     @ScenarioOptions({ linkWithNextScenario: true })
     async whenRightClickOnARow() {

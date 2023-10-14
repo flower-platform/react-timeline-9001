@@ -44,7 +44,10 @@ export const ContextMenu = () => {
                                             const selectedTask = tasks.find((task) => task.key == param.selection[0]);
                                             // This timeout for the menu to actual close before the prompt is shown
                                             setTimeout(() => {
-                                                let newTitle = prompt("Task new title:", selectedTask.title);
+                                                // TODO CS: se pare ca nu e o idee buna sa folosim prompt, fiindca blocheaza testul
+                                                // si nu putem simula scrierea.
+                                                // let newTitle = prompt("Task new title:", selectedTask.title);
+                                                let newTitle;
                                                 newTitle && setTasks(tasks.map((task) => task == selectedTask ? { ...task, title: newTitle } : task));
                                             }, 10);
                                         }, 10);

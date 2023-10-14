@@ -19,7 +19,7 @@ export class SelectedItemsTestsAreDemo {
         // WHEN left click, THEN element is selected
         await tad.userEventWaitable.click(tad.screenCapturing.getByTestId(testids.item + "_2"));
         await this.assertOnlyExpectedSegmentsAreSelected([2]);
-        
+
         //=======HIDDEN TESTS (Not interesting for the user)==========
         tad.demoForEndUserHide();
 
@@ -270,7 +270,7 @@ export class SelectedItemsTestsAreDemo {
         tad.getObjectViaCheat(Timeline).dragStart(startingRow, 5);
         await tad.getObjectViaCheat(Timeline).dragMove(10, 10, 5);
         tad.getObjectViaCheat(Timeline).dragEnd();
-        tad.showSpotlight({ message: "No segment is selected", focusOnLastElementCaptured: false });
+        await tad.showSpotlight({ message: "No segment is selected", focusOnLastElementCaptured: false });
         await this.assertOnlyExpectedSegmentsAreSelected([]);
         
         //=======HIDDEN TESTS (Not interesting for the user)==========
@@ -325,10 +325,12 @@ export class SelectedItemsTestsAreDemo {
             const segment = tad.screenCapturing.getByTestId(testids.item + "_" + i);
             if (expectedSelectedSegments.indexOf(i) >= 0) {
                 tad.cc("Segment " + i + " is selected (has resize anchors, brighter color and shadow effect)");
-                await tad.assertWaitable.include(Array.from(segment.classList), "rct9k-items-outer-selected");
+                // await tad.assertWaitable.include(Array.from(segment.classList), "rct9k-items-outer-selected");
+                assert.include(Array.from(segment.classList), "rct9k-items-outer-selected");
             } else {
                 tad.demoForEndUserHide();
-                await tad.assertWaitable.notInclude(Array.from(segment.classList), "rct9k-items-outer-selected");
+                // await tad.assertWaitable.notInclude(Array.from(segment.classList), "rct9k-items-outer-selected");
+                assert.notInclude(Array.from(segment.classList), "rct9k-items-outer-selected");
                 !demoForEndUserHide && tad.demoForEndUserShow();
             }
         }
