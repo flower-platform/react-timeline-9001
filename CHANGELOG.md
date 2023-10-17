@@ -1,7 +1,9 @@
 ## Unreleased
 
+## v2.5.0
+
 * [Separated lib and demo-app](https://github.com/flower-platform/react-timeline-10000/commit/b5936969f7ffe67a52139c04b2275849e9c5b078)
-* [Upgraded to TAD v0.11.0](???), generated screenshots, .md reports, and first .md docs 
+* [Upgraded to TAD v0.11.0](https://github.com/flower-platform/react-timeline-10000/commit/a87a58b74898e3a5017b8e4d5028e9e5a4c0f325), generated screenshots, .md reports, and first .md docs 
 
 ## v2.4.1
 
