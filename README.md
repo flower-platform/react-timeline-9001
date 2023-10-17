@@ -1,5 +1,29 @@
 # React Timeline 10000 (forked by the Flower Platform team)
 
+Previously, there was a single project containing the lib + demo app. Now, the demo, scenarios, tests are demo: exist in `demo-app` subproject. This way, `demo-app` can depend on `foundation`, which itself depends on this lib. Thanks to the separation, we don't have a dependency cycle.
+
+TEMP: inca mai sunt pe branch-uri fisiere stories sau TAD care au modificari. La merge vor exista conflicte. Recomand pentru rezolvare: 1/ ne uitam in diff-ul GitHub si 2/ aplicam manual. Totusi, daca e nevoie de search/replace, am folosit urmatoarele:
+
+```	
+../../components
+../../../../src/components
+
+../../timeline
+../../../../src/timeline
+
+../../types
+../../../../src/types
+
+import { Timeline } from '../..';
+import { Timeline } from "../..";
+import Timeline from '../../../../src/timeline'
+
+import { ItemRenderer } from "../..";
+import { ItemRenderer } from "../../../..";
+```
+
+---
+
 ## Intro
 
 This fork is developed and maintained by the "Flower Platform" team (which FYI has authored in the past [Gantt4Flex](http://gantt4flex.crispico.com/), a popular (at that time) commercial Gantt diagramming component during the [Adobe Flex](http://flex.apache.org/) era). The motivation of our contributions is driven by the fact that we use "react-timeline-9000" in some of our industrial projects. The intention is to develop new features that we can use ASAP in our software. ALL our contributions are meant to be integrated in the upstream repo, so they are developed having this constraint in mind. The upstream repo is the **official** one (for releases, clone, adding issues, etc.). And this is to be considered as an internal repo for us = the Flower Platform team.

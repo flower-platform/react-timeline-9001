@@ -1,0 +1,43 @@
+{
+  "name": "demo-app",
+  "private": true,
+  "version": "0.0.0",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+    "preview": "vite preview",
+    "docs": "typedoc && mv docs/index.html docs/index-docs.html",
+    "storybook": "start-storybook -p 6006",
+    "storybook-build": "yarn docs && build-storybook",
+    "storybook-move": "rm -r ../../flower-platform.github.io/foundation-react-gantt; mv storybook-static ../../flower-platform.github.io/foundation-react-gantt",
+    "storybook-build-move": "yarn storybook-build && yarn storybook-move",
+    "tad-puppeteer-3000": "tad-puppeteer \"http://localhost:3000/?TestsAreDemo&puppeteer\"",
+    "tad-puppeteer-3000-screenshots": "tad-puppeteer \"http://localhost:3000/?TestsAreDemo&puppeteer&forceStepByStep\"",
+    "tad-gen-doc": "tad-gen-doc"
+  },
+  "// COMMENT regarding dependencies": "For this app, the parent app is practically not a lib. It has a/ source files and b/ `node_modules` w/ deps. So we don't define a dep towards the parent project. And the parent proj also has `node_modules` w/ deps needed by the files in src. And node will look there as well. Node 'climbs' dirs to look for `node_modules`/deps.",
+  "devDependencies": {
+    "@storybook/addon-actions": "^6.3.11",
+    "@storybook/addon-essentials": "^6.3.11",
+    "@storybook/addon-links": "^6.3.11",
+    "@storybook/addon-storysource": "^6.5.12",
+    "@storybook/react": "^6.3.11",
+    "@vitejs/plugin-react": "^4.0.3",
+    "vite": "^4.4.7",
+    "vite-plugin-node-polyfills": "^0.9.0"
+  },
+  "dependencies": {
+    "@famiprog-foundation/tests-are-demo": "^0.11.0-beta1",
+    "antd": "^3.6.5",
+    "typedoc": "^0.24.8"
+  },
+  "peerDependencies": {
+    "react": "^16.4.1 || ^17.0.0",
+    "react-dom": "^16.4.1 || ^17.0.0"
+  },
+  "resolutions": {
+    "// @types/react": "Needed, because a lot of packages import this w/ *. And yarn resolves + hoists this as the latest available version.",
+    "@types/react": "^17.0.0"
+  }
+}

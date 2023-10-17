@@ -1,3 +1,7 @@
+## vNEXT
+
+* [Separated lib and demo-app](???)
+
 ## v2.4.1
 
 ### Fixed
@@ -9,7 +13,6 @@
 ### Added
 
 * [Horizontal scrollbar](https://github.com/flower-platform/react-timeline-10000/pull/57)
-
 * [Added `onTableResize` property](https://github.com/flower-platform/react-timeline-10000/pull/62)
 
 ### Fixed
