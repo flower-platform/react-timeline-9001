@@ -12,9 +12,9 @@
     "storybook-build": "yarn docs && build-storybook",
     "storybook-move": "rm -r ../../flower-platform.github.io/foundation-react-gantt; mv storybook-static ../../flower-platform.github.io/foundation-react-gantt",
     "storybook-build-move": "yarn storybook-build && yarn storybook-move",
-    "tad-puppeteer-3000": "tad-puppeteer \"http://localhost:3000/?TestsAreDemo&puppeteer\"",
-    "tad-puppeteer-3000-screenshots": "tad-puppeteer \"http://localhost:3000/?TestsAreDemo&puppeteer&forceStepByStep\"",
-    "tad-gen-doc": "tad-gen-doc"
+    "tad-puppeteer-3000": "node ../node_modules/@famiprog-foundation/tests-are-demo/src/node/tad-puppeteer.mjs \"http://localhost:3000/?TestsAreDemo&puppeteer\"",
+    "tad-puppeteer-3000-screenshots": "node ../node_modules/@famiprog-foundation/tests-are-demo/src/node/tad-puppeteer.mjs \"http://localhost:3000/?TestsAreDemo&puppeteer&forceStepByStep\"",
+    "tad-gen-doc": "node ../node_modules/@famiprog-foundation/tests-are-demo/src/node/tad-gen-doc.mjs"
   },
   "// COMMENT regarding dependencies": "For this app, the parent app is practically not a lib. It has a/ source files and b/ `node_modules` w/ deps. So we don't define a dep towards the parent project. And the parent proj also has `node_modules` w/ deps needed by the files in src. And node will look there as well. Node 'climbs' dirs to look for `node_modules`/deps.",
   "devDependencies": {
@@ -28,7 +28,6 @@
     "vite-plugin-node-polyfills": "^0.9.0"
   },
   "dependencies": {
-    "@famiprog-foundation/tests-are-demo": "^0.11.0-beta1",
     "antd": "^3.6.5",
     "typedoc": "^0.24.8"
   },

@@ -1,12 +1,11 @@
 {
   "name": "@crispico/react-timeline-10000",
-  "version": "v2.4.1",
+  "version": "v2.5.0",
   "description": "Performance focused timeline for react",
   "private": false,
   "types": "./types/index.d.ts",
   "scripts": {
-    "build_lib": "yarn tsc && babel src --out-dir lib -x '.js,.jsx,.mdx,.html,.tsx,.ts' --ignore **/demo.js,**/demo_index.js,**/demo.html,**/demo/,**/setupTests.js,**/*/*.test.js,**/stories/,**/testsAreDemo --copy-files --source-maps inline --no-copy-ignored",
-    "start": "webpack-dev-server --open --config webpack.dev.js",
+    "lib-build": "yarn tsc && babel src --out-dir lib -x '.js,.jsx,.mdx,.html,.tsx,.ts' --ignore **/demo.js,**/demo_index.js,**/demo.html,**/demo/,**/setupTests.js,**/*/*.test.js,**/stories/,**/testsAreDemo --copy-files --source-maps inline --no-copy-ignored",
     "pretty": "prettier --write --tab-width 4 \"src/**/*.js\"",
     "precommit": "lint-staged",
     "tsc": "tsc && cp src/types.d.ts types/types.d.ts"
@@ -34,6 +33,11 @@
   "homepage": "https://github.com/flower-platform/react-timeline-10000",
   "devDependencies": {
     "@babel/cli": "^7.0.0",
+    "@babel/core": "^7.0.0",
+    "@babel/plugin-transform-runtime": "^7.21.0",
+    "@babel/preset-env": "^7.23.2",
+    "@babel/preset-react": "^7.22.15",
+    "@babel/preset-typescript": "^7.23.2",
     "babel-loader": "^8.2.5",
     "chai": "^4.1.2",
     "core-js": "^2.4.0",
@@ -61,8 +65,7 @@
     "typescript": "~4.6.0"
   },
   "dependencies": {
-    "@babel/plugin-transform-runtime": "^7.21.0",
-    "@famiprog-foundation/tests-are-demo": "^0.11.0-beta1",
+    "@famiprog-foundation/tests-are-demo": "^0.11.0",
     "color": "^4.2.3",
     "core-js": "^2.4.0",
     "fixed-data-table-2": "^1.2.17",
