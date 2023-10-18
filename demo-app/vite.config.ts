@@ -48,6 +48,12 @@ export default defineConfig({
       allow: ['..'],
     },
   },
+  resolve: {
+    alias: {
+      // duplicated in tsconfig.json
+      "@famiprog-foundation/react-gantt": "/../src"
+    }
+  },
   // JSX in .js files, part 1
   optimizeDeps: {
     force: true,

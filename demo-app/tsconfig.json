@@ -2,5 +2,11 @@
     "extends": "../tsconfig.json",
     "include": [
         "src"
-    ]
+    ],
+    "compilerOptions": {
+        "paths": {
+            // duplicated in vite.config.js
+            "@famiprog-foundation/react-gantt": ["../src"]
+        }
+    }
 }

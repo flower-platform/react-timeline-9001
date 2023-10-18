@@ -6,12 +6,11 @@ import _ from 'lodash';
 import moment from 'moment';
 import {Component} from 'react';
 
-import Timeline from '../../src/timeline';
+import { Timeline, ItemRenderer } from "@famiprog-foundation/react-gantt";
 
 import {Button, Checkbox, DatePicker, Form, Icon, InputNumber, Switch} from 'antd';
 import 'antd/dist/antd.css';
 
-import {ItemRenderer} from '../../src';
 import {Table, Column, DataCell} from 'fixed-data-table-2';
 import {CustomItemRenderer} from './demo/customRenderers';
 

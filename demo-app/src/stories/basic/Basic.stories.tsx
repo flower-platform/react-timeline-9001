@@ -1,9 +1,9 @@
 import React from 'react';
-import Timeline from '../../../../src/timeline';
+import { Timeline, Group, Item } from '@famiprog-foundation/react-gantt';
+
 import { timelineScenarios } from '../TimelineScenarios';
 import { d, someHumanResources, someTasks } from '../sampleData';
 import { ComponentStory } from '@storybook/react';
-import { Group, Item } from '../../../../src/index';
 import { Table, Column, DataCell } from 'fixed-data-table-2';
 
 export default {
