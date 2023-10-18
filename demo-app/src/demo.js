@@ -10,8 +10,7 @@ import Timeline from '../../src/timeline';
 
 import {Button, Checkbox, DatePicker, Form, Icon, InputNumber, Switch} from 'antd';
 import 'antd/dist/antd.css';
-import './stories/storybook.css';
-import '../../src/style.css';
+
 import {ItemRenderer} from '../../src';
 import {Table, Column, DataCell} from 'fixed-data-table-2';
 import {CustomItemRenderer} from './demo/customRenderers';

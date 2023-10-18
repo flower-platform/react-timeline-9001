@@ -1,5 +1,7 @@
 ## Unreleased
 
+* Internal: for `demo-app`, upgraded storybook version to v7.5. It also uses vite now.
+
 ## v2.5.0
 
 * [Separated lib and demo-app](https://github.com/flower-platform/react-timeline-10000/commit/b5936969f7ffe67a52139c04b2275849e9c5b078)

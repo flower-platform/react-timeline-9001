@@ -1,6 +1,9 @@
 import "semantic-ui-css/semantic.min.css";
 import { Label, Segment } from "semantic-ui-react";
 
+import '../src/stories/storybook.css';
+import '../../src/style.css';
+
 export const parameters = {
   // actions: { argTypesRegex: "^on[A-Z].*" },
   previewTabs: {

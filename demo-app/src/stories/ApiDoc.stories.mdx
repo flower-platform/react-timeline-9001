@@ -1,6 +1,6 @@
 import { Meta } from '@storybook/addon-docs';
 
-<!-- "Canvas" tab is not needed, show only "Docs" tab -->
+{/* "Canvas" tab is not needed, show only "Docs" tab */}
 <Meta
     title="API doc"
     parameters={{
@@ -13,7 +13,7 @@ import { Meta } from '@storybook/addon-docs';
     }}
 />
 
-<!-- We use parent.window because we are already inside an iframe.-->
+{/* We use parent.window because we are already inside an iframe.*/}
 <iframe
     src={(new URLSearchParams(parent.window.location.search)).get('subpath') ? (new URLSearchParams(parent.window.location.search)).get('subpath') : 'index-docs.html'}
     width="100%"

@@ -1,6 +1,5 @@
 {
-    // I find it curious that it works w/o having to specify things similar to ../tsconfig.json. For example "experimentalDecorators"
-    // I also renamed ../tsconfig, to make sure it's not included somehow; had same positive (and curious) result
+    "extends": "../tsconfig.json",
     "include": [
         "src"
     ]

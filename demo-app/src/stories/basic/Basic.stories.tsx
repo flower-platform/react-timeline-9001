@@ -3,7 +3,7 @@ import Timeline from '../../../../src/timeline';
 import { timelineScenarios } from '../TimelineScenarios';
 import { d, someHumanResources, someTasks } from '../sampleData';
 import { ComponentStory } from '@storybook/react';
-import { Group, Item } from '../../index';
+import { Group, Item } from '../../../../src/index';
 import { Table, Column, DataCell } from 'fixed-data-table-2';
 
 export default {

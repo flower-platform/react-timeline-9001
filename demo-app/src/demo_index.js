@@ -3,6 +3,9 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 
+import './stories/storybook.css';
+import '../../src/style.css';
+
 import DemoTimeline from './demo';
 import {TestsAreDemoAppWrapper} from '@famiprog-foundation/tests-are-demo';
 import {tad} from '@famiprog-foundation/tests-are-demo';
