@@ -14,7 +14,7 @@ export default defineConfig({
     {
       name: 'treat-js-files-as-jsx',
       async transform(code, id) {
-        if (!id.match(/src\/.*\.js$/))  return null
+        if (!id.match(/src\/.*\.js$/)) return null
 
         // Use the exposed transform from vite, instead of directly
         // transforming with esbuild
@@ -39,6 +39,7 @@ export default defineConfig({
       }
     })
   ],
+  // This section is not honored by storybook. See main.js for corresponding configs
   server: {
     port: 3000,
     open: true,
@@ -51,7 +52,11 @@ export default defineConfig({
   resolve: {
     alias: {
       // duplicated in tsconfig.json
-      "@famiprog-foundation/react-gantt": "/../src"
+      "@famiprog-foundation/react-gantt": "/../src",
+      // W/ this line, we use foundation as a linked dir. To switch to "use as lib", comment this, and add in package.json, in dependencies:
+      // "@crispico/foundation-react": "link:../../foundation-jhipster-gwt/foundation-react/dist/foundation-react",
+      // For the "storybook" script, I think "yarn docs" needs to be removed. There seems to be a dependency issue, which I didn't look into
+      "@crispico/foundation-react": "/../../foundation-jhipster-gwt/foundation-react/src/foundation-react"
     }
   },
   // JSX in .js files, part 1

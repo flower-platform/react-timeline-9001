@@ -625,8 +625,6 @@ export default class Timeline extends React.Component {
   }
 
   componentWillReceiveProps(nextProps) {
-    const tableWidth = this.getInitialTableWidth(nextProps);
-
     if (!_.isEqual(nextProps.groups, this.props.groups)) {
       // If the table had the groups scrolled before it will internally try to keep the scroll position when the rows are reseted.
       // But because it aproximates the height of the rows this scrollPosition will be inexact and a desynchronization with the gantt will happen
@@ -646,8 +644,8 @@ export default class Timeline extends React.Component {
       }
     }
 
-    if (tableWidth != this.state.tableWidth) {
-      this.setState({tableWidth});
+    if (this.getInitialTableWidth(nextProps) !== this.getInitialTableWidth(this.props)) {
+      this.setState({tableWidth: this.getInitialTableWidth(nextProps)});
     }
 
     if (this.props.startDate != nextProps.startDate || this.props.endDate != nextProps.endDate) {

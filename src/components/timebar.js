@@ -270,7 +270,7 @@ export default class Timebar extends React.Component {
                   className={className}
                   key={i.key}
                   style={{width: intToPix(i.size)}}
-                  data-testId={testIds.timebarItem + '_' + index}>
+                  data-testid={testIds.timebarItem + '_' + index}>
                   {i.label}
                 </span>
               );

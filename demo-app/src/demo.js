@@ -8,7 +8,7 @@ import {Component} from 'react';
 
 import { Timeline, ItemRenderer } from "@famiprog-foundation/react-gantt";
 
-import {Button, Checkbox, DatePicker, Form, Icon, InputNumber, Switch} from 'antd';
+import {Button, Checkbox, DatePicker, Form, InputNumber, Switch} from 'antd';
 import 'antd/dist/antd.css';
 
 import {Table, Column, DataCell} from 'fixed-data-table-2';
@@ -433,7 +433,7 @@ export default class DemoTimeline extends Component {
                   width={100}
                   header={
                     <DataCell style={headerStyle}>
-                      <Icon type="check-circle" /> <span>Custom check</span>
+                      <u><i>Custom check</i></u>
                     </DataCell>
                   }
                   cell={({rowIndex}) => (

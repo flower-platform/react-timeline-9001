@@ -45,7 +45,7 @@ export class TableTestsAreDemo {
         // Because the table has a special type of scrolling mechanism by absolute positioning (with translate3d) 
         // the rows. 
         // We could have looked at the position of the first row but it was offseted with the
-        // height of the header in order to appear right under it. So we should have placed a data-testId on the header also
+        // height of the header in order to appear right under it. So we should have placed a data-testid on the header also
         // but being in a third library component this was not simple to implement
         assert.equal((tad.getObjectViaCheat(Table) as Table).props.scrollTop, 100);
     }

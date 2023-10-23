@@ -1,6 +1,7 @@
 ## Unreleased
 
 * Internal: for `demo-app`, upgraded storybook version to v7.5. It also uses vite now.
+* Small issue: on props changed, the width of the table was reset to the original value.
 
 ## v2.5.0
 

@@ -26,6 +26,7 @@
     "@storybook/addon-storysource": "^7.5.0",
     "@storybook/react": "^7.5.0",
     "@storybook/react-vite": "^7.5.0",
+    "@types/react": "17.0.69",
     "@vitejs/plugin-react": "^4.0.3",
     "cross-env": "^7.0.3",
     "eslint-plugin-storybook": "^0.6.15",
@@ -36,7 +37,7 @@
     "vite-plugin-node-polyfills": "^0.9.0"
   },
   "dependencies": {
-    "antd": "^3.6.5",
+    "antd": "^4.15.1",
     "typedoc": "^0.24.8"
   },
   "peerDependencies": {
@@ -45,7 +46,8 @@
   },
   "resolutions": {
     "// @types/react": "Needed, because a lot of packages import this w/ *. And yarn resolves + hoists this as the latest available version.",
-    "@types/react": "^17.0.0",
+    "// @types/react 2": "UPDATE: @see in foundation",
+    "@types/react": "17.0.69",
     "// jackspeak": "Appeared after migrating storybook to v7.5.0. The program detected it automatically and proposed this link: https://github.com/storybookjs/storybook/issues/22431#issuecomment-1630086092",
     "jackspeak": "2.1.1"
   }
