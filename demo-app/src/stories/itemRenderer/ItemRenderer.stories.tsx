@@ -1,12 +1,10 @@
 import {Alert} from 'antd';
 import React from 'react';
-import ItemRenderer from '../../../../src/components/ItemRenderer';
-import Timeline from '../../../../src/timeline';
+import { Timeline, Item, ItemRenderer } from '@famiprog-foundation/react-gantt';
 import {d, someHumanResources, someTasks} from '../sampleData';
 import {itemRendererScenarios} from './ItemRendererScenarios';
 import {timelineScenarios} from '../TimelineScenarios';
 import { ComponentStory } from '@storybook/react';
-import { Item } from '../../../../src/types';
 import { Table, Column, DataCell} from 'fixed-data-table-2';
 
 export default {

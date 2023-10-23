@@ -4,7 +4,7 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 
 import './stories/storybook.css';
-import '../../src/style.css';
+import '@famiprog-foundation/react-gantt/style.css';
 
 import DemoTimeline from './demo';
 import {TestsAreDemoAppWrapper} from '@famiprog-foundation/tests-are-demo';

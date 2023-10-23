@@ -1,9 +1,9 @@
 import { Only, Scenario, ScenarioOptions, render, tad } from "@famiprog-foundation/tests-are-demo";
-import { contextMenuTestIds } from "../../../src/components/ContextMenu/ContextMenu";
+import { contextMenuTestIds } from "@famiprog-foundation/react-gantt";
 import { ContextMenu, addTaskActionIcon, addTaskActionLabel, addTaskNotPossibleAction, deleteActionIcon, deleteActionIconColor, deleteActionLabel, editActionLabel } from "../stories/contextMenuAndSelection/ContextMenuAndSelection.stories";
 import { someHumanResources, someTasks } from "../stories/sampleData";
-import Timeline, { PARENT_ELEMENT, timelineTestids as testids } from "../../../src/timeline";
-import { getPixelAtTime, getTimeAtPixel } from "../../../src/utils/timeUtils";
+import { Timeline, PARENT_ELEMENT, timelineTestids as testids } from "@famiprog-foundation/react-gantt";
+import { getPixelAtTime, getTimeAtPixel } from "@famiprog-foundation/react-gantt";
 import { rightClick } from "./testUtils";
 
 const CLICK_X =30;

@@ -3,7 +3,7 @@ import { assert } from "chai";
 import { Table } from "fixed-data-table-2";
 import { ProvidingCustomTable } from "../stories/table/Table.stories";
 import { DEMO_TABLE_WIDTH, tableTestIds } from "../stories/table/TableScenarios";
-import { TABLE_OFFSET, timelineTestids as testids } from "../../../src/timeline";
+import { TABLE_OFFSET, timelineTestids as testids } from "@famiprog-foundation/react-gantt";
 
 export class TableTestsAreDemo {
     async before() {

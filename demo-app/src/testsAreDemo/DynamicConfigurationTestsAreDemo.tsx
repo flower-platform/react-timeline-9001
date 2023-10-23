@@ -1,6 +1,6 @@
 import { Only, Scenario, ScenarioOptions, render, tad } from "@famiprog-foundation/tests-are-demo";
 import { Main, testIds } from "../stories/dynamicConfiguration/DynamicConfiguration.stories";
-import { timebarTestIds } from "../../../src/components/timebar";
+import { timebarTestIds } from "@famiprog-foundation/react-gantt";
 
 /**
  * @author Daniela Buzatu

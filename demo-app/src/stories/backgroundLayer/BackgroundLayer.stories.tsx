@@ -1,12 +1,9 @@
 import React from 'react';
-import Timeline from '../../../../src/timeline';
-import { BackgroundLayer } from '../../../../src/components/BackgroundLayer';
-import { HighlightedInterval } from '../../../../src/components/HighlightedInterval';
-import { Marker } from '../../../../src/components/Marker';
-import { someHumanResources, startOfCurrentMonth, endOfCurrentMonth, dateAndHourOfCurrentMonth, manyHumanResources } from '../sampleData';
+import { Timeline, BackgroundLayer, HighlightedInterval, Marker, Item } from '@famiprog-foundation/react-gantt';
+import { startOfCurrentMonth, endOfCurrentMonth, dateAndHourOfCurrentMonth, manyHumanResources } from '../sampleData';
 import { backgroundLayerScenarios } from './BackgroundLayerScenarios';
-import { Item } from '../../../../src/types';
 import { Table, Column, DataCell} from 'fixed-data-table-2';
+
 export default {
   title: 'Features/Background Layer'
 };
