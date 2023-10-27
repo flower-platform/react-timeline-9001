@@ -650,13 +650,14 @@ export default class Timeline extends React.Component {
       scrollTop != 0 &&
       (!_.isEqual(nextProps.items, this.props.items) || !_.isEqual(nextProps.groups, this.props.groups))
     ) {
-      this.setState({tableScrollTop: scrollTop - 1});
-      this.setState({tableScrollTop: scrollTop});
+      setTimeout(() => {
+        this.setState({tableScrollTop: scrollTop - 1});
+        this.setState({tableScrollTop: scrollTop});
+      }, 10);
     }
 
     // VERTICAL SCROLL POSITION change
     if (this.props.verticalScrollPosition != nextProps.verticalScrollPosition) {
-      this._gridDomNode.scrollTop;
       // Programatically scroll table
       this.setState({tableScrollTop: nextProps.verticalScrollPosition});
       this.setState({avoidCallingTableScrollHandlers: true});
@@ -917,6 +918,10 @@ export default class Timeline extends React.Component {
         useMoment
       );
     });
+
+    if (this._table) {
+      this._table.getApi().updateRowHeights();
+    }
   }
 
   /**

@@ -68,10 +68,10 @@ export const manyHumanResources: Employee[] = [...someHumanResources, { id: 4, t
 { id: 26, title: 'Michael E. Smith', job: 'Developer'},
 { id: 27, title: 'David E. Brown', job: 'Developer'}];
 
-export const [lotsOfGroups, lotsOfItems] = generateRandomRowsAndItems(100, 30, true, 60, moment('2018-07-31'),  moment('2018-10-30'));
-
 const ITEM_DURATIONS = [moment.duration(6, 'hours'), moment.duration(12, 'hours'), moment.duration(18, 'hours')];
 const COLORS = ['#0099cc', '#f03a36', '#06ad96', '#fce05b', '#dd5900', '#cc6699'];
+
+export const [lotsOfGroups, lotsOfItems] = generateRandomRowsAndItems(100, 30, true, 60, moment('2018-07-31'),  moment('2018-10-30'));
 
 export function generateRandomRowsAndItems(numberOfRows, numberOfItemsPerRow: number, useMoment: boolean, snap: number, minDate: Moment, maxDate: Moment): [Group[], Item[]] {
   const lotsOfGroups:Group[] = [];

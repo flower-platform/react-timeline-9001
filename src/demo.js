@@ -74,7 +74,7 @@ export default class DemoTimeline extends Component {
 
   reRender(useMoment = this.state.useMoment) {
     const {snap} = this.state;
-    [groups, items] = generateRandomRowsAndItems(
+    const [groups, items] = generateRandomRowsAndItems(
       this.state.rows,
       this.state.items_per_row,
       useMoment,
