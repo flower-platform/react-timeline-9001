@@ -221,10 +221,10 @@
   width: 2px;
 }
 
-.rct9k-item-renderer {
-  opacity: 0.8;
-  border: darkgrey solid 1px;
-  border-radius: 3px;
+.rct9k-custom-shape-item-renderer {
+  box-shadow: none !important;
+  border: none !important;
+  background: none !important;
 }
 
 .rct9k-item-renderer-inner {

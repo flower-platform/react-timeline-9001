@@ -1,16 +1,56 @@
 
 import { TreeFixedDataTableRRC } from "@crispico/foundation-react/components/treeFixedDataTable/TreeFixedDataTable";
-import { Main, Task, root } from "@crispico/foundation-react/components/treeFixedDataTable/TreeFixedDataTable.stories";
+import { Main, Task, root, Segment } from "@crispico/foundation-react/components/treeFixedDataTable/TreeFixedDataTable.stories";
 import { ReduxReusableComponents } from "@crispico/foundation-react/reduxReusableComponents/ReduxReusableComponents";
 import { Utils } from "@crispico/foundation-react/utils/Utils";
-import { Group, Item, Timeline } from "@famiprog-foundation/react-gantt";
+import { Group, Item, ItemRenderer, Timeline } from "@famiprog-foundation/react-gantt";
 import { Cell, Column, Table } from 'fixed-data-table-2';
 import { d } from "../sampleData";
 import { Message } from "semantic-ui-react";
+import { getKeyThenIncreaseKey } from "antd/lib/message";
 
 export default {
     title: 'Features/Table',
 };
+
+class CustomItemRenderer extends ItemRenderer {
+    render() {
+        if (this.props.item.isParentSegment) {
+            return <ParentItemRenderer {...this.props}/>
+        } else {
+            return super.render();
+        }
+    }
+}
+
+class ParentItemRenderer extends ItemRenderer {
+    hasCustomShape() {
+        return true;
+    }
+
+    drawCustomShapeRenderer() {
+        const ARROW_WIDTH = 20;
+        const height = this.getHeight() as number;
+        // We need to make the rectangle a little bit bigger because the row height is 40 px and the actual segment height is 30.
+        // So if we draw the rectangle only till the middle of the segment 
+        // the text (that has 18px height) will overflow the rectangle with 3 px
+        const rectangleHeight = (this.getHeight() as number) / 2 + 4;
+        const rightArrowStartX = this.props.width - ARROW_WIDTH;
+        const leftArrowPoints = "0," + rectangleHeight + " " + ARROW_WIDTH + "," + rectangleHeight + " " + ARROW_WIDTH / 2 + "," + height + " 0," + rectangleHeight;
+        const rightArrowPoints = rightArrowStartX + "," + rectangleHeight + " " + (rightArrowStartX + ARROW_WIDTH) + "," + rectangleHeight + " " 
+                                + (rightArrowStartX + ARROW_WIDTH / 2) + "," + height + " " +  rightArrowStartX + "," + rectangleHeight;
+
+        return <>
+                    <rect width={this.props.width} height={rectangleHeight} fill={this.getColor()}  fillRule="evenodd"/>
+                    <polygon points={leftArrowPoints} fill={this.getColor()} fillRule="evenodd"/>
+                    <polygon points={rightArrowPoints} fill={this.getColor()} fillRule="evenodd"/>
+                </>
+    }
+
+    getTitleStyle() {
+        return {alignSelf: "start"};
+    }
+}
 
 export const TreeTable = () => {
     // adding an additional task here, so that the shape of the data appears in the Storybook code snippet
@@ -55,7 +95,7 @@ export const TreeTable = () => {
             getChildrenFunction={task => Object.keys(task.subtasks).map(key => { return { localId: key, item: task.subtasks[key] } })}
             initialExpandedIds={{ 1: true, 2: true, [`2${Utils.defaultIdSeparator}0`]: true }}
             renderMainElementFunction={({ mainChildren, linearizedItems }) => {
-                const items: Item[] = [];
+                const items: (Item & {isParentSegment: boolean}) [] = [];
                 const groups: Group[] = [];
                 // using a for (instead of 2 x map()) in order to avoid 2 iterations
                 linearizedItems.forEach((li, i) => {
@@ -64,7 +104,8 @@ export const TreeTable = () => {
                     const task = navigateToTask(li.itemId);
                     task.segments.forEach((segment, j) => items.push({
                         key: "" + i + "." + j, row: i, start: segment.start, end: segment.end, title: segment.percentComplete + "%",
-                        color: segment.percentComplete == 0 ? "#FA0000" : (segment.percentComplete === 100 ? "#9ACD32" : "#FFA500")
+                        color: segment.percentComplete == 0 ? "#FA0000" : (segment.percentComplete === 100 ? "#9ACD32" : "#FFA500"),
+                        isParentSegment: task.subtasks != undefined && task.subtasks.length > 0
                     }))
                 });
 
@@ -74,7 +115,8 @@ export const TreeTable = () => {
                         width={420} height={300}>
                         <Column header={<Cell>Name</Cell>} width={400} cell={props => mainChildren[props.rowIndex]} />
                     </Table>
-                    } />
+                    } 
+                    itemRenderer={CustomItemRenderer}/>
             }}
             renderItemFunction={({ linearizedItem }) => navigateToTask(linearizedItem.itemId).name}
         />
