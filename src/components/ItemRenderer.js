@@ -4,6 +4,12 @@ import React from 'react';
 import {Item} from '../utils/itemUtils';
 
 const ITEM_RENDERER_CLS = 'rct9k-item-renderer';
+
+// This class is used in case of a custom shape renderer drawn via `drawCustomShapeRenderer()`.
+// It disables the visual styles related to the default rectangle shape of the renderer:
+// 1. The background color and the borders
+// 2. The box shadow effect
+const CUSTOM_FIGURE_ITEM_RENDERER_CLS = 'rct9k-custom-shape-item-renderer';
 const ITEM_RENDERER_GLOW_CLS = 'rct9k-item-glow';
 
 /**
@@ -33,6 +39,12 @@ export default class ItemRenderer extends React.Component {
      * @type { string }
      */
     tooltip: PropTypes.string,
+
+    /**
+     * It's passed by the parent. Though not used by this component. It exists because maybe subclasses want to use it.
+     * @type { number }
+     */
+    width: PropTypes.number,
 
     /**
      * The height of the segment (item).
@@ -84,6 +96,11 @@ export default class ItemRenderer extends React.Component {
     style: PropTypes.object,
 
     /**
+     * @type { object }
+     */
+    titleStyle: PropTypes.object,
+
+    /**
      * Class name used to render the segment (item).
      * @type { string }
      */
@@ -100,6 +117,7 @@ export default class ItemRenderer extends React.Component {
     tooltip: undefined,
     className: undefined,
     style: {},
+    titleStyle: {},
     item: {}
   };
 
@@ -209,6 +227,10 @@ export default class ItemRenderer extends React.Component {
     return style;
   }
 
+  getTitleStyle() {
+    return this.props.titleStyle;
+  }
+
   /**
    * Returns a css class used to apply glow on item hover.
    * @returns { string }
@@ -222,13 +244,48 @@ export default class ItemRenderer extends React.Component {
    * @returns { string }
    */
   getClassName() {
-    return ITEM_RENDERER_CLS + ' ' + this.props.className + ' ' + this.getGlowOnHoverClassName();
+    return (
+      ITEM_RENDERER_CLS +
+      ' ' +
+      this.props.className +
+      ' ' +
+      this.getGlowOnHoverClassName() +
+      (this.hasCustomShape() ? ' ' + CUSTOM_FIGURE_ITEM_RENDERER_CLS : '')
+    );
+  }
+
+  hasCustomShape() {
+    return false;
+  }
+
+  /**
+   * If the user wants an item renderer with a special shape:
+   * 1. It needs to override `hasCustomShape()` to return true
+   * 1. And implement the drawCustomShapeRenderer(). This needs to return the content of a svg
+   *
+   * @type { JSX.element | undefined}
+   */
+  drawCustomShapeRenderer() {
+    throw new Error('In case of a custom shape renderer the `drawCustomShapeRenderer()` should be implemented');
   }
 
   render() {
     return (
-      <span className={this.getClassName()} style={this.getStyle()} title={this.getTooltip()}>
-        <span className="rct9k-item-renderer-inner">{this.getTitle()}</span>
+      <span
+        className={this.getClassName()}
+        style={{...this.getStyle(), position: 'relative'}}
+        title={this.getTooltip()}>
+        <span className="rct9k-item-renderer-inner" style={this.getTitleStyle()}>
+          {this.getTitle()}
+        </span>
+        {this.hasCustomShape() && (
+          <svg
+            style={{position: 'absolute', zIndex: '-10', left: '0', top: '0'}}
+            width={this.props.width}
+            height={this.getHeight()}>
+            {this.drawCustomShapeRenderer()}
+          </svg>
+        )}
       </span>
     );
   }
