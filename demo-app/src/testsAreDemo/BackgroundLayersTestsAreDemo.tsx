@@ -9,7 +9,6 @@ export class BackgroundLayersTestsAreDemo {
         render(<Main/>);
     }
     
-    @Only()
     @Scenario("The highlighted intervals are correctly displayed")
     async highlightedIntervalsAreDisplayed() {
         const ganttLeftOffset = PARENT_ELEMENT(tad.getObjectViaCheat(Timeline).props.componentId).getBoundingClientRect().left;

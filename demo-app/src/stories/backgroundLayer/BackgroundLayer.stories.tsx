@@ -7,7 +7,6 @@ import { someHumanResources, startOfCurrentMonth, endOfCurrentMonth, dateAndHour
 import { backgroundLayerScenarios } from './BackgroundLayerScenarios';
 import { Item } from '../../../../src/types';
 import { Table, Column, DataCell} from 'fixed-data-table-2';
-import { createTestids } from '@famiprog-foundation/tests-are-demo';
 export default {
   title: 'Features/Background Layer'
 };

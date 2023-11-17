@@ -3,6 +3,12 @@
 * Internal: for `demo-app`, upgraded storybook version to v7.5. It also uses vite now.
 * Small issue: on props changed, the width of the table was reset to the original value.
 
+### Added
+* [Tests for highlighted intervals](https://github.com/flower-platform/react-timeline-10000/pull/70)
+
+### Fixed
+* [Highlighted interval positioned at the beginning of the gantt was not displayed](https://github.com/flower-platform/react-timeline-10000/pull/70)
+
 ## v2.5.0
 
 * [Separated lib and demo-app](https://github.com/flower-platform/react-timeline-10000/commit/b5936969f7ffe67a52139c04b2275849e9c5b078)

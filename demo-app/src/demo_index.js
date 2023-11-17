@@ -23,11 +23,11 @@ ReactDOM.render(
     app={<DemoTimeline />}
     importTestsCallback={() => {
       tad.addTests(
-        // DragToCreateTestsAreDemo,
-        // SelectedItemsTestsAreDemo,
-        // ContextMenuTestsAreDemo,
-        // TableTestsAreDemo,
-        // DynamicConfigurationTestsAreDemo,
+        DragToCreateTestsAreDemo,
+        SelectedItemsTestsAreDemo,
+        ContextMenuTestsAreDemo,
+        TableTestsAreDemo,
+        DynamicConfigurationTestsAreDemo,
         BackgroundLayersTestsAreDemo
       );
     }}
