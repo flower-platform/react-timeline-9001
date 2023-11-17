@@ -89,6 +89,17 @@ export function getDurationFromPixels(pixels, vis_start, vis_end, total_width) {
 }
 
 /**
+ * @param  {duration} the duration in milliseconds
+ * @param  {moment} vis_start The visible start of the timeline
+ * @param  {moment} vis_end The visible end of the timeline
+ * @param  {number} total_width The width in pixels of the grid
+ */
+export function getPixelsFromDuration(duration, vis_start, vis_end, total_width, snapMilliseconds = 0) {
+  if (snapMilliseconds !== 0) duration = Math.round(duration / snapMilliseconds) * snapMilliseconds;
+  return duration * pixelsPerMillisecond(vis_start, vis_end, total_width);
+}
+
+/**
  * If `useMoment` is `true` then returns `date` as is. Otherwise converts `date` to
  * a moment object.
  *
