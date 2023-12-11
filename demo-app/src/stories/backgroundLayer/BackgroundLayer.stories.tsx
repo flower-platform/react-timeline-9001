@@ -31,6 +31,7 @@ export const Main = () => {
       backgroundLayer={
         <BackgroundLayer verticalGrid nowMarker highlightWeekends
           highlightedIntervals={[
+            <HighlightedInterval start={dateAndHourOfCurrentMonth(1)} end={dateAndHourOfCurrentMonth(2)} />,
             <HighlightedInterval start={dateAndHourOfCurrentMonth(15)} end={dateAndHourOfCurrentMonth(18)} />,
             <HighlightedInterval start={dateAndHourOfCurrentMonth(20, 19)} end={dateAndHourOfCurrentMonth(21, 10)} />
           ]}
