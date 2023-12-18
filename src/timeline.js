@@ -2285,6 +2285,7 @@ export default class Timeline extends React.Component {
                         ref: this.table_ref_callback,
                         touchScrollEnabled: true,
                         onVerticalScroll: this.handleScrollTable,
+                        isVerticalScrollExact: true,
                         scrollTop: this.state.tableScrollTop,
                         headerHeight: timebarHeight,
                         height: this.state.screenHeight,
@@ -2295,8 +2296,7 @@ export default class Timeline extends React.Component {
                           (rowIndex % 2 == 0 ? this.props.rowOddClassName : this.props.rowEvenClassName),
                         // Because the content of the empty rows are now significant
                         // avoid showing vertical scrollbar in case horizontal scrollbar is needed when shrinking the table
-                        showScrollbarY: !hasEmptyRows,
-                        exactScrollTopInCaseOfVariableRowHeights: true
+                        showScrollbarY: !hasEmptyRows
                       })}
                     />
                     {this.renderGanttPart({bodyHeight, timebarHeight})}
