@@ -293,6 +293,11 @@ export default class Timeline extends React.Component {
     table: PropTypes.object,
 
     /**
+     * @type { JSX.element}
+     */
+    bodyWrapperComponent: PropTypes.object,
+
+    /**
      * @type { number }
      */
     snap: PropTypes.number, //like snapMinutes, but for seconds; couldn't get it any lower because the pixels are not calculated correctly
@@ -2051,6 +2056,21 @@ export default class Timeline extends React.Component {
       this._gridDomNode && this._gridDomNode.firstChild
         ? this._gridDomNode.getBoundingClientRect().width - this._gridDomNode.firstChild.getBoundingClientRect().width
         : 0;
+    const timelineBody = (
+      <TimelineBody
+        width={this.state.gridWidth}
+        columnWidth={() => this.state.gridWidth}
+        height={bodyHeight - (this.state.hasHorizontalScrollbar ? SCROLLBAR_SIZE : 0)}
+        rowHeight={this.rowHeight}
+        rowCount={this.state.groups.length}
+        columnCount={1}
+        cellRenderer={this.cellRenderer(this.getTimelineWidth(this.state.gridWidth))}
+        grid_ref_callback={this.grid_ref_callback}
+        shallowUpdateCheck={shallowUpdateCheck}
+        forceRedrawFunc={forceRedrawFunc}
+        onScroll={this.handleScrollGantt}
+      />
+    );
     return (
       <div style={{flex: 1, overflow: 'hidden'}}>
         <Measure
@@ -2105,19 +2125,9 @@ export default class Timeline extends React.Component {
                       className="rct9k-marker-overlay"
                     />
                   ))}
-                  <TimelineBody
-                    width={this.state.gridWidth}
-                    columnWidth={() => this.state.gridWidth}
-                    height={bodyHeight - (this.state.hasHorizontalScrollbar ? SCROLLBAR_SIZE : 0)}
-                    rowHeight={this.rowHeight}
-                    rowCount={this.state.groups.length}
-                    columnCount={1}
-                    cellRenderer={this.cellRenderer(this.getTimelineWidth(this.state.gridWidth))}
-                    grid_ref_callback={this.grid_ref_callback}
-                    shallowUpdateCheck={shallowUpdateCheck}
-                    forceRedrawFunc={forceRedrawFunc}
-                    onScroll={this.handleScrollGantt}
-                  />
+                  {this.props.bodyWrapperComponent
+                    ? React.cloneElement(this.props.bodyWrapperComponent, {}, timelineBody)
+                    : timelineBody}
                   <Scrollbar
                     minScrollPosition={this.getMinDate().valueOf()}
                     maxScrollPosition={this.getMaxDate().valueOf()}
