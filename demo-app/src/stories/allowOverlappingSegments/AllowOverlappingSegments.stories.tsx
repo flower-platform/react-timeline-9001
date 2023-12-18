@@ -1,7 +1,8 @@
 import { Column, DataCell, Table } from 'fixed-data-table-2';
 import { useState } from "react";
 import { Button } from "semantic-ui-react";
-import { Item, Timeline } from "../..";
+import Timeline from '../../../../src/timeline';
+import { Item } from '../../../../src/types';
 import { d, someHumanResources, someTasks } from "../sampleData";
 
 export default {
