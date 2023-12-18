@@ -473,7 +473,14 @@ export default class Timeline extends React.Component {
      * @default false
      * @type { boolean }
      */
-    allowOverlappingSegments: PropTypes.bool
+    allowOverlappingSegments: PropTypes.bool,
+
+    /**
+     * The segments with bigger index are staying in front of the ones with smaller index
+     *
+     * @type {(item: Item) => number}
+     */
+    zIndexFunction: PropTypes.func
   };
 
   static defaultProps = {
@@ -520,7 +527,10 @@ export default class Timeline extends React.Component {
     onContextMenuShow: undefined,
     onSelectionChange() {},
     onTableResize: undefined,
-    allowOverlappingSegments: false
+    allowOverlappingSegments: false,
+    zIndexFunction() {
+      return 3;
+    }
   };
 
   /**
@@ -1657,7 +1667,8 @@ export default class Timeline extends React.Component {
             this.getStartFromItem,
             this.getEndFromItem,
             timelineTestids,
-            this.props.allowOverlappingSegments
+            this.props.allowOverlappingSegments,
+            this.props.zIndexFunction
           )}
           {rowLayerRenderer(
             layersInRow,
