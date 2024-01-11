@@ -639,23 +639,6 @@ export default class Timeline extends React.Component {
   componentWillReceiveProps(nextProps) {
     const tableWidth = this.getInitialTableWidth(nextProps);
 
-    // GROUPS/ITEMS change
-    // Now in gantt we scroll to a position in pixels not to a given row.
-    // When reseting the groups/items the `virtualized-grid` will keep this scroll position in pixels
-    // But the `fixed-data-table` will keep the scrolled row index
-    // That's why the scroll of the table and of the gantt will not be in sync after a groups/items reset
-    let scrollTop = this._gridDomNode.scrollTop;
-    if (
-      scrollTop != 0 &&
-      (!_.isEqual(nextProps.items, this.props.items) || !_.isEqual(nextProps.groups, this.props.groups))
-    ) {
-      setTimeout(() => {
-        this.setState({tableScrollTop: scrollTop - 1});
-
-        this.setState({tableScrollTop: scrollTop});
-      }, 10);
-    }
-
     // VERTICAL SCROLL POSITION change
     if (this.props.verticalScrollPosition != nextProps.verticalScrollPosition) {
       // Programatically scroll table
