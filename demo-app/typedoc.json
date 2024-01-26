@@ -1,0 +1,7 @@
+{
+    "$schema": "https://typedoc.org/schema.json",
+    "entryPoints": ["../src/index.js"],
+    // W/o this, it will use the tsconfig from the current dir, which point to src from the current dir.
+    // Hence it will try to operate also on this dir.
+    "tsconfig": "../tsconfig.json"
+}

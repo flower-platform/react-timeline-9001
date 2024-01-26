@@ -1,0 +1,21 @@
+{
+    "cells": [
+        {
+            "image": "DragToCreateTestsAreDemo.whenClickAddMenuEntry/ContextMenu_popup_ContextMenu_menuItem_0.png",
+            "text": "Open the context menu (right click or click on the hamburger button from the top/left corner. Click ..."
+        },
+        {
+            "image": "DragToCreateTestsAreDemo.whenClickAddMenuEntry/Timeline_dragToCreatePopup.png",
+            "text": "... and you enter in the 'drag to create' mode. The popup hides itself quickly, to make sure it doesn't bother the user. This mode is cancelable via button or simple click (i.e. not click and drag).",
+            "newLineAfter": true
+        },
+        {
+            "image": "DragToCreateTestsAreDemo.givenDragToCreateModeInProgressWhenMouseUp/Timeline_ganttBody_Timeline_row_3_REP2.png",
+            "text": "Click and drag on a row. A green rectangle appears as you drag. A right drag cancels the operation and exits the 'drag to create' mode.\n\n **TODO!!!** avem acest comportament de anulare a dragului?"
+        },
+        {
+            "image": "DragToCreateTestsAreDemo.givenDragToCreateModeInProgressWhenMouseUp/Timeline_ganttBody_Timeline_row_2_Timeline_item_11.png",
+            "text": "When you do `mouse up` (to `drop`), your handler will be called, receiving useful args (e.g. row, start/end, etc.). It can e.g. create a new segment.\n\n **TODO!!!** poza nu e buna. Ar fi trebuit sa captureze segmentul nou creat"
+        }
+    ]
+}

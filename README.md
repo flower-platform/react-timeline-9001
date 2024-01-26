@@ -1,5 +1,23 @@
 # React Timeline 10000 (forked by the Flower Platform team)
 
+## About `demo-app`
+
+Previously, there was a single project containing the lib + demo app. Now, the demo, scenarios, tests are demo: exist in the `demo-app` subproject. This way, `demo-app` can depend on `foundation`, which itself depends on this lib. Thanks to the separation, we don't have a dependency cycle.
+
+Currently the dependency towards `foundation` is done by using its source dir. Hence 1/ `foundation` needs to be cloned from git, next to this repo. And 2/ one should run from `foundation-react`: `yarn install`. `foundation` can be also be used as a lib. This is experimental. Look in `demo-app/vite.config.ts` for info.
+
+In `demo-app/tsconfig.json` and `demo-app/vite.config.ts`, we created the `@famiprog-foundation/react-gantt` alias. This means that from `demo-app` source files:
+
+```ts
+// we can do this
+import { Timeline, ItemRenderer } from "@famiprog-foundation/react-gantt";
+
+// instead of this 
+import { ItemRenderer } from "../../src";
+```
+
+---
+
 ## Intro
 
 This fork is developed and maintained by the "Flower Platform" team (which FYI has authored in the past [Gantt4Flex](http://gantt4flex.crispico.com/), a popular (at that time) commercial Gantt diagramming component during the [Adobe Flex](http://flex.apache.org/) era). The motivation of our contributions is driven by the fact that we use "react-timeline-9000" in some of our industrial projects. The intention is to develop new features that we can use ASAP in our software. ALL our contributions are meant to be integrated in the upstream repo, so they are developed having this constraint in mind. The upstream repo is the **official** one (for releases, clone, adding issues, etc.). And this is to be considered as an internal repo for us = the Flower Platform team.
@@ -167,5 +185,4 @@ Required props:
 | Timeline items                        | 3     |
 | Timeline items when dragging/resizing | 4     |
 | Selection box (for multi-select)      | 5     |
-| Group column                          | 6     |
 

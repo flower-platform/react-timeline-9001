@@ -1,0 +1,13 @@
+{
+    "extends": "../tsconfig.json",
+    "include": [
+        "src"
+    ],
+    "compilerOptions": {
+        "paths": {
+            // duplicated in vite.config.js
+            "@famiprog-foundation/react-gantt": ["../src"],
+            "@crispico/foundation-react/*": ["../../foundation-jhipster-gwt/foundation-react/src/foundation-react/*"]
+        }
+    }
+}

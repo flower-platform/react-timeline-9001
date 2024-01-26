@@ -1,4 +1,79 @@
-# Change Log
+## Unreleased
+
+* Internal: for `demo-app`, upgraded storybook version to v7.5. It also uses vite now.
+* Small issue: on props changed, the width of the table was reset to the original value.
+* [Highlighted interval positioned at the beginning of the gantt was not displayed](https://github.com/flower-platform/react-timeline-10000/pull/70)
+
+## v2.5.0
+
+* [Separated lib and demo-app](https://github.com/flower-platform/react-timeline-10000/commit/b5936969f7ffe67a52139c04b2275849e9c5b078)
+* [Upgraded to TAD v0.11.0](https://github.com/flower-platform/react-timeline-10000/commit/a87a58b74898e3a5017b8e4d5028e9e5a4c0f325), generated screenshots, .md reports, and first .md docs 
+
+## v2.4.1
+
+### Fixed
+
+* [Reseting start/end date didn't work](https://github.com/flower-platform/react-timeline-10000/pull/65)
+
+## v2.4.0
+
+### Added
+
+* [Horizontal scrollbar](https://github.com/flower-platform/react-timeline-10000/pull/57)
+* [Added `onTableResize` property](https://github.com/flower-platform/react-timeline-10000/pull/62)
+
+### Fixed
+
+* [External drag and drop doesn't work](https://github.com/flower-platform/react-timeline-10000/pull/60)
+* [Changing the `width` property of the table didn't updated of the UI](https://github.com/flower-platform/react-timeline-10000/pull/59)
+* [Various small isues](https://github.com/flower-platform/react-timeline-10000/pull/63)
+  * Problem with the scroll after reseting the `groups`
+  * `SplitPanel` has `absolute` position instead of `relative`position 
+  * Exception when dragging above the timeline
+  * Exception when reseting the `groups` of a gantt that was scrolled
+  * Gantt surface was not receiving events because of the `backgroundLayers`
+  * Background layers were overlapping the vertical scrollbar
+
+## v2.3.0
+
+### Added
+
+* [A `<Table>` is used for displaying rows](https://github.com/flower-platform/react-timeline-10000/pull/52), i.e. in the left part of the Gantt. `<Table>` comes from the [FixedDataTable lib](https://schrodinger.github.io/fixed-data-table-2/). This addition is **not backwards compatible**.
+
+## v2.2.4
+
+### Added
+
+* `forceDragToCreateMode` example in storybook
+* `forceDragToCreateMode` test case
+
+### Changed
+
+* [Modify selection trigger: from `click` to `mouseDown`](https://github.com/flower-platform/react-timeline-10000/pull/50)
+
+### Fixed
+
+* Drag to create rectangle was blue instead of green when `forceDragToCreateMode = true` 
+* [Parameter `selectedItems` of `onSelectionChange` handler was `number[]` instead of `(number|string)[]`](https://github.com/flower-platform/react-timeline-10000/pull/51)
+
+## v2.2.3
+
+### Fixed
+
+Right click selection didn't worked on custom segments with a complex children hierarchy
+
+## v2.2.2
+
+### Fixed
+
+* [Various small issues](https://github.com/flower-platform/react-timeline-10000/pull/47)
+  * drag to create popup auto-closing 
+  * visual improvements of the selected and hovered segments style
+  * Error in console when running an action without `run` property defined 
+  * Right clicking on one segments caused drag to select on the entire row
+  * A semantic-ui `Icon` can be passed to IAction.icon 
+  * On Firefox a thin blue line appeared on top of segments
+  * Improve storybook documentation for "drag to create" feature
 
 ## v2.2.1
 
