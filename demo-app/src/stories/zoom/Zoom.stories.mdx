@@ -1,0 +1,15 @@
+import { Meta, ArgsTable } from '@storybook/addon-docs';
+import Timeline from '../../../../src/timeline';
+import ItemRenderer from '../../../../src/components/ItemRenderer';
+import { encodeApiDocURIForSubpath, parametersDocPage } from '../StorybookUtils';
+
+<Meta title="Features/Zoom/Doc"  />
+
+## Zoom
+
+Zoom mechanism work on `CTRL + mouse wheel` on gantt table part.
+For show the shortcuts in context menu the proprety <code><a href={encodeApiDocURIForSubpath("/classes/Timeline.html#propTypes")}>Timeline.showZommShortcuts</a></code> to be set.
+
+## `Timeline`   
+
+<ArgsTable of={Timeline} sort="none" include={["showZommShortcuts"]}/>

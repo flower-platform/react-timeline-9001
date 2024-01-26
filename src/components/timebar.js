@@ -6,6 +6,13 @@ import _ from 'lodash';
 import moment from 'moment';
 import {intToPix} from '../utils/commonUtils';
 import {timebarFormat as defaultTimebarFormat} from '../consts/timebarConsts';
+import {createTestids} from '@famiprog-foundation/tests-are-demo';
+
+export const timebarTestIds = createTestids('Timebar', {
+  timebarInnerBottom: '',
+  timebarItem: ''
+});
+const testIds = timebarTestIds;
 import {timelineTestids as testids} from '../timeline';
 
 /**
@@ -255,12 +262,16 @@ export default class Timebar extends React.Component {
               );
             })}
           </div>
-          <div className="rct9k-timebar-inner rct9k-timebar-inner-bottom">
-            {_.map(bottomBarComponent, i => {
+          <div className="rct9k-timebar-inner rct9k-timebar-inner-bottom" data-testid={testIds.timebarInnerBottom}>
+            {_.map(bottomBarComponent, (i, index) => {
               let className = 'rct9k-timebar-item';
               if (i.isSelected) className += ' rct9k-timebar-item-selected';
               return (
-                <span className={className} key={i.key} style={{width: intToPix(i.size)}}>
+                <span
+                  className={className}
+                  key={i.key}
+                  style={{width: intToPix(i.size)}}
+                  data-testid={testIds.timebarItem + '_' + index}>
                   {i.label}
                 </span>
               );

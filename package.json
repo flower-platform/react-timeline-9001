@@ -1,23 +1,14 @@
 {
   "name": "@crispico/react-timeline-10000",
-  "version": "v2.3.0-SNAPSHOT2",
+  "version": "v2.5.0",
   "description": "Performance focused timeline for react",
   "private": false,
   "types": "./types/index.d.ts",
   "scripts": {
-    "build": "yarn tsc && webpack --config webpack.prod.js",
-    "build_lib": "yarn tsc && babel src --out-dir lib -x '.js,.jsx,.mdx,.html,.tsx,.ts' --ignore **/demo.js,**/demo_index.js,**/demo.html,**/demo/,**/setupTests.js,**/*/*.test.js,**/stories/,**/testsAreDemo --copy-files --source-maps inline --no-copy-ignored",
-    "build_demo": "webpack --config webpack.demo.prod.js",
-    "start": "webpack-dev-server --open --config webpack.dev.js",
-    "docs": "typedoc && mv docs/index.html docs/index-docs.html",
+    "lib-build": "yarn tsc && babel src --out-dir lib -x '.js,.jsx,.mdx,.html,.tsx,.ts' --ignore **/demo.js,**/demo_index.js,**/demo.html,**/demo/,**/setupTests.js,**/*/*.test.js,**/stories/,**/testsAreDemo --copy-files --source-maps inline --no-copy-ignored",
     "pretty": "prettier --write --tab-width 4 \"src/**/*.js\"",
     "precommit": "lint-staged",
-    "storybook": "yarn tsc && start-storybook -p 6006",
-    "storybook-build": "yarn tsc && yarn docs && build-storybook",
-    "storybook-move": "rm -r ../flower-platform.github.io/foundation-react-gantt; mv storybook-static ../flower-platform.github.io/foundation-react-gantt",
-    "storybook-build-move": "yarn storybook-build && yarn storybook-move",
-    "tsc": "tsc && cp src/types.d.ts types/types.d.ts",
-    "dev": "vite"
+    "tsc": "tsc && cp src/types.d.ts types/types.d.ts"
   },
   "lint-staged": {
     "src/**/*.{js,jsx,json,css}": [
@@ -42,14 +33,11 @@
   "homepage": "https://github.com/flower-platform/react-timeline-10000",
   "devDependencies": {
     "@babel/cli": "^7.0.0",
-    "@famiprog-foundation/tests-are-demo": "^0.10.5",
-    "@storybook/addon-actions": "^6.3.11",
-    "@storybook/addon-essentials": "^6.3.11",
-    "@storybook/addon-links": "^6.3.11",
-    "@storybook/addon-storysource": "^6.5.12",
-    "@storybook/react": "^6.3.11",
-    "@vitejs/plugin-react": "^4.0.3",
-    "antd": "^3.6.5",
+    "@babel/core": "^7.0.0",
+    "@babel/plugin-transform-runtime": "^7.21.0",
+    "@babel/preset-env": "^7.23.2",
+    "@babel/preset-react": "^7.22.15",
+    "@babel/preset-typescript": "^7.23.2",
     "babel-loader": "^8.2.5",
     "chai": "^4.1.2",
     "core-js": "^2.4.0",
@@ -62,7 +50,6 @@
     "eslint-plugin-import": "^2.12.0",
     "eslint-plugin-prettier": "^2.6.0",
     "eslint-plugin-react": "^7.10.0",
-    "html-webpack-plugin": "5.5.0",
     "husky": "^0.14.3",
     "ignore-styles": "^5.0.1",
     "jsdom": "^16.5.0",
@@ -75,17 +62,10 @@
     "style-loader": "^0.21.0",
     "tern": "^0.21.0",
     "ts-loader": "^9.4.2",
-    "typescript": "~4.6.0",
-    "uglifyjs-webpack-plugin": "^2.2.0",
-    "vite": "^4.4.7",
-    "vite-plugin-node-polyfills": "^0.9.0",
-    "webpack": "^5.67.0",
-    "webpack-cli": "^4.9.2",
-    "webpack-dev-server": "^4.7.3",
-    "webpack-merge": "^5.8.0"
+    "typescript": "~4.6.0"
   },
   "dependencies": {
-    "@babel/plugin-transform-runtime": "^7.21.0",
+    "@famiprog-foundation/tests-are-demo": "^0.13.0",
     "color": "^4.2.3",
     "core-js": "^2.4.0",
     "fixed-data-table-2": "^1.2.17",
@@ -95,11 +75,10 @@
     "pretty-format": "^29.5.0",
     "react-measure": "^2.5.2",
     "react-split-pane": "^0.1.92",
-    "react-virtualized": "^9.19.1",
-    "typedoc": "^0.24.8"
+    "react-virtualized": "^9.19.1"
   },
   "dependencies / comments": {
-    "// pretty-format": "We have a TypeError on buid, it is imported from @testing-library/dom but was needed to add it explicitly"
+    "// pretty-format": "We have a TypeError on build, it is imported from @testing-library/dom but was needed to add it explicitly"
   },
   "peerDependencies": {
     "react": "^16.4.1 || ^17.0.0",

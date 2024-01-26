@@ -1,0 +1,56 @@
+#root, 
+/* 
+  For a doc page, the div w/ id="storybook-root" still exists; it has an attribute hidden (which has a selector to make display: none 
+  Hence we want this style NOT to be applied IF id = storybook-root AND has attribute hidden
+*/
+#storybook-root:not([hidden])  { 
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.demo {
+  height: 100%;
+  display: flex;
+  gap: 5px;
+  flex-direction: column;
+}
+
+.story-custom-highlighted-interval-class {
+  opacity: 0.5 !important;
+}
+
+.story-custom-highlighted-weekends-class {
+  background: #ceefed !important;
+}
+
+.story-custom-item-class {
+  opacity: 1;
+  border: #d47b37 3px solid;
+  border-radius: 0;
+}
+
+.story-custom-marker-class {
+  background: #03c61a !important;
+}
+
+.story-custom-now-marker-class {
+  background: #f28de6 !important;
+}
+
+.story-custom-vertical-grid-class {
+  border-left: 1px solid #209ad8 !important;
+}
+
+.story-custom-row {
+  border-bottom: 1px solid #94b9cf !important;
+}
+
+.story-custom-row-even {
+  background-color: #dbe8f0 !important;
+}
+
+.story-custom-row-odd {
+  background-color: #f4f7f8 !important;
+}

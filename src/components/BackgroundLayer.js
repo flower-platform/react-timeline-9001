@@ -209,7 +209,10 @@ export class BackgroundLayer extends React.Component {
     }
 
     let offset = startAsMoment.diff(this.props.startDateTimeline, 'milliseconds');
-    let duration = endAsMoment.diff(startAsMoment, 'milliseconds');
+    let duration = (endAsMoment <= this.props.endDateTimeline ? endAsMoment : this.props.endDateTimeline).diff(
+      startAsMoment,
+      'milliseconds'
+    );
     const left = this.props.leftOffset + offset * pixelsPerMillis;
     let width = Math.round(duration * pixelsPerMillis);
     return {left, width};
@@ -258,6 +261,7 @@ export class BackgroundLayer extends React.Component {
             return (
               <HighlightedInterval
                 key={index}
+                id={index}
                 start={weekend.start}
                 end={weekend.end}
                 className={weekend.className}
@@ -274,11 +278,13 @@ export class BackgroundLayer extends React.Component {
   }
 
   renderCustomComponents(components) {
+    let weekendsCount = this.props.highlightWeekends ? this.state.weekends.length : 0;
     return (
       <Fragment>
         {components.map((component, index) => {
           return React.cloneElement(component, {
             key: index,
+            id: weekendsCount + index,
             height: this.props.height,
             top: this.props.topOffset,
             shouldUpdate: this.state.shouldUpdate,
@@ -336,13 +342,13 @@ export class BackgroundLayer extends React.Component {
 
   render() {
     return (
-      <Fragment>
+      <div className="rct9k-background-layer">
         {this.renderHighlightedWeekends()}
         {this.renderCustomComponents(this.props.highlightedIntervals)}
         {this.renderNowMarker()}
         {this.renderCustomComponents(this.props.markers)}
         {this.renderVerticalGrid()}
-      </Fragment>
+      </div>
     );
   }
 }
