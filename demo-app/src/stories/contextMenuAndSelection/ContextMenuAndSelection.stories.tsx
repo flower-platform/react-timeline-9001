@@ -78,7 +78,7 @@ export const ContextMenu = () => {
                                         let end = moment(param.time); 
                                         end.hours(end.hours() + 3);
                                         const maxKey = tasks.reduce((maxKey, task) => maxKey > (task.key as number) ?  maxKey : (task.key as number), 0);
-                                        setTasks([...tasks, { key: maxKey + 1, row: param.row, title: 'NEW TASK', start: param.time, end: end}]);
+                                        setTasks([...tasks, { key: maxKey + 1, row: someHumanResources[param.row].id, title: 'NEW TASK', start: param.time, end: end}]);
                                     }
                                 });
                             } else {
