@@ -79,16 +79,7 @@ export const DEFAULT_ROW_ODD_CLASS = '';
 export const DRAG_TO_CREATE_POPUP_CLOSE_TIME = 5000;
 export const DRAG_TO_CREATE_POPUP_LABEL_2 = 'Popup will close in a few moments.';
 
-/**
- * Before the parent element was considered to be the .parent-div
- * But there was a bug found in tests: the segments positioning (and length) are computed relative to the interior react virtualized grid
- * that is smaller than the .parent-div with 1px because there is a left border of 1px on the parent of the grid
- *
- * So the parent element should be considered the grid itself for the computation to be exact
- *
- */
-export const PARENT_ELEMENT = componentId =>
-  document.querySelector(`.rct9k-id-${componentId} .ReactVirtualized__Grid__innerScrollContainer`);
+export const PARENT_ELEMENT = componentId => document.querySelector(`.rct9k-id-${componentId} .parent-div`);
 
 const TableWithStyle = ({table}) => {
   const tableStyle = `.public_fixedDataTableCell_main {
@@ -469,9 +460,9 @@ export default class Timeline extends React.Component {
      * If this handler is provided, it will be called when the table is resized
      * by dragging the split bar between the table and the gantt.
      *
-     * @type {(splitSize: number) => void}
+     * @type {(tableWidth: number) => void}
      */
-    onSplitChange: PropTypes.func
+    onTableResize: PropTypes.func
   };
 
   static defaultProps = {
@@ -518,7 +509,7 @@ export default class Timeline extends React.Component {
     onDragToCreateEnded: undefined,
     onContextMenuShow: undefined,
     onSelectionChange() {},
-    onSplitChange: undefined
+    onTableResize: undefined
   };
 
   /**
@@ -548,9 +539,15 @@ export default class Timeline extends React.Component {
    */
   static no_op = () => {};
 
+  getInitialTableWidth(props) {
+    props = props ? props : this.props;
+    return (props.table ? props.table.props.width : 0) + TABLE_OFFSET;
+  }
+
   constructor(props) {
     super(props);
     this.selecting = false;
+    this.getInitialTableWidth = this.getInitialTableWidth.bind(this);
     this.state = {
       selection: [],
       cursorTime: null,
@@ -558,7 +555,7 @@ export default class Timeline extends React.Component {
       verticalGridLines: [],
       screenHeight: 0,
       gridWidth: 0,
-      splitSize: props.table ? props.table.props.width : 0,
+      tableWidth: this.getInitialTableWidth(),
       dragToCreateMode: false,
       dragToCreatePopupClosed: false,
       openMenu: false,
@@ -614,7 +611,7 @@ export default class Timeline extends React.Component {
     this.setVerticalGridLines = this.setVerticalGridLines.bind(this);
     this.handleScrollTable = this.handleScrollTable.bind(this);
     this.handleScrollGantt = this.handleScrollGantt.bind(this);
-    this.onSplitChange = this.onSplitChange.bind(this);
+    this.handleDrag = this.handleDrag.bind(this);
     this.selectionChangedHandler = this.selectionChangedHandler.bind(this);
 
     const canSelect = Timeline.isBitSet(Timeline.TIMELINE_MODES.SELECT, this.props.timelineMode);
@@ -645,6 +642,10 @@ export default class Timeline extends React.Component {
           this.setState({scrollTop: 0});
         }, 10);
       }
+    }
+
+    if (this.getInitialTableWidth(nextProps) !== this.getInitialTableWidth(this.props)) {
+      this.setState({tableWidth: this.getInitialTableWidth(nextProps)});
     }
 
     if (this.props.startDate != nextProps.startDate || this.props.endDate != nextProps.endDate) {
@@ -1756,7 +1757,7 @@ export default class Timeline extends React.Component {
   throttledMouseMoveFunc(e) {
     const leftOffset = PARENT_ELEMENT(this.props.componentId).getBoundingClientRect().left;
     const cursorSnappedTime = getTimeAtPixel(
-      e.clientX - leftOffset,
+      e.clientX - leftOffset + 2,
       this.getStartDate(),
       this.getEndDate(),
       this.getTimelineWidth(),
@@ -1888,11 +1889,10 @@ export default class Timeline extends React.Component {
     return true;
   };
 
-  onSplitChange(width) {
-    if (this.props.onSplitChange) {
-      this.props.onSplitChange(width);
-    } else {
-      this.setState({splitSize: width});
+  handleDrag(width) {
+    this.setState({tableWidth: width});
+    if (this.props.onTableResize) {
+      this.props.onTableResize(width);
     }
     return true;
   }
@@ -2237,8 +2237,8 @@ export default class Timeline extends React.Component {
                   <SplitPane
                     split="vertical"
                     style={{height: this.state.screenHeight, position: 'relative'}}
-                    size={this.props.onSplitChange ? this.props.table.props.width : this.state.splitSize}
-                    onChange={this.onSplitChange}
+                    size={this.state.tableWidth}
+                    onChange={this.handleDrag}
                     ref={this.splitPane_ref_callback}>
                     <TableWithStyle
                       table={React.cloneElement(this.props.table, {
@@ -2251,14 +2251,14 @@ export default class Timeline extends React.Component {
                         scrollTop: this.state.scrollTop,
                         headerHeight: timebarHeight,
                         height: this.state.screenHeight,
+                        width: this.state.tableWidth,
                         rowClassNameGetter: rowIndex =>
                           this.props.rowClassName +
                           ' ' +
                           (rowIndex % 2 == 0 ? this.props.rowOddClassName : this.props.rowEvenClassName),
                         // Because the content of the empty rows are now significant
                         // avoid showing vertical scrollbar in case horizontal scrollbar is needed when shrinking the table
-                        showScrollbarY: !hasEmptyRows,
-                        ...(this.props.onSplitChange ? {} : {width: this.state.splitSize})
+                        showScrollbarY: !hasEmptyRows
                       })}
                     />
                     {this.renderGanttPart({bodyHeight, timebarHeight})}

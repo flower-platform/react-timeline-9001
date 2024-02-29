@@ -342,14 +342,12 @@ export class BackgroundLayer extends React.Component {
 
   render() {
     return (
-      <div className="rct9k-background-layer-wrapper">
-        <div className="rct9k-background-layer">
-          {this.renderHighlightedWeekends()}
-          {this.renderCustomComponents(this.props.highlightedIntervals)}
-          {this.renderNowMarker()}
-          {this.renderCustomComponents(this.props.markers)}
-          {this.renderVerticalGrid()}
-        </div>
+      <div className="rct9k-background-layer">
+        {this.renderHighlightedWeekends()}
+        {this.renderCustomComponents(this.props.highlightedIntervals)}
+        {this.renderNowMarker()}
+        {this.renderCustomComponents(this.props.markers)}
+        {this.renderVerticalGrid()}
       </div>
     );
   }

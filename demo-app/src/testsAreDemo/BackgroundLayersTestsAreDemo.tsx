@@ -1,6 +1,6 @@
 import { Only, Scenario, render, tad } from "@famiprog-foundation/tests-are-demo";
-import { Main, month } from "../stories/backgroundLayer/BackgroundLayer.stories";
-import { dateAndHourOfMonth } from "../stories/sampleData";
+import { Main } from "../stories/backgroundLayer/BackgroundLayer.stories";
+import { dateAndHourOfCurrentMonth } from "../stories/sampleData";
 import {PARENT_ELEMENT, Timeline, getPixelAtTime, getPixelsFromDuration, highlightedIntervalTestIds} from "@famiprog-foundation/react-gantt";
 import moment from "moment";
 
@@ -15,38 +15,38 @@ export class BackgroundLayersTestsAreDemo {
 
         var interval = tad.screenCapturing.getByTestId(highlightedIntervalTestIds.interval + "_0");
         await tad.assertWaitable.exists(interval);
-        await tad.assertWaitable.equal(Math.round(interval.getBoundingClientRect().x - ganttLeftOffset), this.getPixelsAtDate(dateAndHourOfMonth(month, 4)));
-        await tad.assertWaitable.equal(interval.getBoundingClientRect().width, this.getPixelsFromDuration(dateAndHourOfMonth(month, 4), dateAndHourOfMonth(month, 6)));
+        await tad.assertWaitable.equal(Math.round(interval.getBoundingClientRect().x - ganttLeftOffset), this.getPixelsAtDate(dateAndHourOfCurrentMonth(4)));
+        await tad.assertWaitable.equal(interval.getBoundingClientRect().width, this.getPixelsFromDuration(dateAndHourOfCurrentMonth(4), dateAndHourOfCurrentMonth(6)));
 
         interval = tad.screenCapturing.getByTestId(highlightedIntervalTestIds.interval + "_1");
         await tad.assertWaitable.exists(interval);
-        await tad.assertWaitable.equal(Math.round(interval.getBoundingClientRect().x - ganttLeftOffset), this.getPixelsAtDate(dateAndHourOfMonth(month, 11)));
-        await tad.assertWaitable.equal(interval.getBoundingClientRect().width, this.getPixelsFromDuration(dateAndHourOfMonth(month, 11), dateAndHourOfMonth(month, 13)));
+        await tad.assertWaitable.equal(Math.round(interval.getBoundingClientRect().x - ganttLeftOffset), this.getPixelsAtDate(dateAndHourOfCurrentMonth(11)));
+        await tad.assertWaitable.equal(interval.getBoundingClientRect().width, this.getPixelsFromDuration(dateAndHourOfCurrentMonth(11), dateAndHourOfCurrentMonth(13)));
 
         interval = tad.screenCapturing.getByTestId(highlightedIntervalTestIds.interval + "_2");
         await tad.assertWaitable.exists(interval);
-        await tad.assertWaitable.equal(Math.round(interval.getBoundingClientRect().x - ganttLeftOffset), this.getPixelsAtDate(dateAndHourOfMonth(month, 18)));
-        await tad.assertWaitable.equal(interval.getBoundingClientRect().width, this.getPixelsFromDuration(dateAndHourOfMonth(month, 18), dateAndHourOfMonth(month, 20)));
+        await tad.assertWaitable.equal(Math.round(interval.getBoundingClientRect().x - ganttLeftOffset), this.getPixelsAtDate(dateAndHourOfCurrentMonth(18)));
+        await tad.assertWaitable.equal(interval.getBoundingClientRect().width, this.getPixelsFromDuration(dateAndHourOfCurrentMonth(18), dateAndHourOfCurrentMonth(20)));
 
         interval = tad.screenCapturing.getByTestId(highlightedIntervalTestIds.interval + "_3");
         await tad.assertWaitable.exists(interval);
-        await tad.assertWaitable.equal(Math.round(interval.getBoundingClientRect().x - ganttLeftOffset), this.getPixelsAtDate(dateAndHourOfMonth(month, 25)));
-        await tad.assertWaitable.equal(interval.getBoundingClientRect().width, this.getPixelsFromDuration(dateAndHourOfMonth(month, 25), dateAndHourOfMonth(month, 27)));
+        await tad.assertWaitable.equal(Math.round(interval.getBoundingClientRect().x - ganttLeftOffset), this.getPixelsAtDate(dateAndHourOfCurrentMonth(25)));
+        await tad.assertWaitable.equal(interval.getBoundingClientRect().width, this.getPixelsFromDuration(dateAndHourOfCurrentMonth(25), dateAndHourOfCurrentMonth(27)));
 
         interval = tad.screenCapturing.getByTestId(highlightedIntervalTestIds.interval + "_4");
         await tad.assertWaitable.exists(interval);
-        await tad.assertWaitable.equal(Math.round(interval.getBoundingClientRect().x - ganttLeftOffset), this.getPixelsAtDate(dateAndHourOfMonth(month, 1)));
-        await tad.assertWaitable.equal(interval.getBoundingClientRect().width, this.getPixelsFromDuration(dateAndHourOfMonth(month, 1), dateAndHourOfMonth(month, 2)));
+        await tad.assertWaitable.equal(Math.round(interval.getBoundingClientRect().x - ganttLeftOffset), this.getPixelsAtDate(dateAndHourOfCurrentMonth(1)));
+        await tad.assertWaitable.equal(interval.getBoundingClientRect().width, this.getPixelsFromDuration(dateAndHourOfCurrentMonth(1), dateAndHourOfCurrentMonth(2)));
 
         interval = tad.screenCapturing.getByTestId(highlightedIntervalTestIds.interval + "_5");
         await tad.assertWaitable.exists(interval);
-        await tad.assertWaitable.equal(Math.round(interval.getBoundingClientRect().x - ganttLeftOffset), this.getPixelsAtDate(dateAndHourOfMonth(month, 15)));
-        await tad.assertWaitable.equal(interval.getBoundingClientRect().width, this.getPixelsFromDuration(dateAndHourOfMonth(month, 15), dateAndHourOfMonth(month, 18)));
+        await tad.assertWaitable.equal(Math.round(interval.getBoundingClientRect().x - ganttLeftOffset), this.getPixelsAtDate(dateAndHourOfCurrentMonth(15)));
+        await tad.assertWaitable.equal(interval.getBoundingClientRect().width, this.getPixelsFromDuration(dateAndHourOfCurrentMonth(15), dateAndHourOfCurrentMonth(18)));
 
         interval = tad.screenCapturing.getByTestId(highlightedIntervalTestIds.interval + "_6");
         await tad.assertWaitable.exists(interval);
-        await tad.assertWaitable.equal(Math.round(interval.getBoundingClientRect().x - ganttLeftOffset), this.getPixelsAtDate(dateAndHourOfMonth(month, 20, 19)));
-        await tad.assertWaitable.equal(interval.getBoundingClientRect().width, this.getPixelsFromDuration(dateAndHourOfMonth(month, 20, 19), dateAndHourOfMonth(month, 21, 10)));
+        await tad.assertWaitable.equal(Math.round(interval.getBoundingClientRect().x - ganttLeftOffset), this.getPixelsAtDate(dateAndHourOfCurrentMonth(20, 19)));
+        await tad.assertWaitable.equal(interval.getBoundingClientRect().width, this.getPixelsFromDuration(dateAndHourOfCurrentMonth(20, 19), dateAndHourOfCurrentMonth(21, 10)));
     }
 
     getPixelsAtDate(date) {

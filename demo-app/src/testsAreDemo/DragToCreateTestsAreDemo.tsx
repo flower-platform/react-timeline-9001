@@ -3,7 +3,6 @@ import { contextMenuTestIds } from "../../../src/components/ContextMenu/ContextM
 import { Main } from "../stories/dragToCreate/DragToCreate.stories";
 import Timeline, { DRAG_TO_CREATE_ACTION_LABEL, DRAG_TO_CREATE_POPUP_CLOSE_TIME, DRAG_TO_CREATE_POPUP_LABEL_2, timelineTestids } from "../../../src/timeline";
 import { dragToCreateStoriesTestIds as testIds } from "../stories/dragToCreate/DragToCreate.stories";
-import { someTasks } from "../stories/sampleData";
 
 export class DragToCreateTestsAreDemo {
 
@@ -136,7 +135,7 @@ export class DragToCreateTestsAreDemo {
         await tad.showSpotlight({ message: "We perform the mouse up", focusOnLastElementCaptured: true });
         tad.getObjectViaCheat(Timeline).dragEnd();
         tad.cc("The segment was created");
-        await tad.assertWaitable.exists(tad.screenCapturing.getByTestId(timelineTestids.item + "_" + (someTasks.length)));
+        await tad.assertWaitable.exists(tad.screenCapturing.getByTestId(timelineTestids.item + "_11"));
 
         tad.getObjectViaCheat(Timeline).setState({ dragToCreateMode: false });
     }
@@ -165,7 +164,7 @@ export class DragToCreateTestsAreDemo {
         
         // THEN
         tad.cc("THEN A segment is created");
-        await tad.assertWaitable.exists(tad.screenCapturing.getByTestId(timelineTestids.item + "_" + (someTasks.length + 1)));
+        await tad.assertWaitable.exists(tad.screenCapturing.getByTestId(timelineTestids.item + "_12"));
 
         // AND 
         await tad.userEventWaitable.click(tad.screenCapturing.getByTestId(timelineTestids.menuButton));
@@ -183,8 +182,8 @@ export class DragToCreateTestsAreDemo {
         await startDragKeepInProgress(2, 100);
         tad.screenCapturing.getByTestId(timelineTestids.row + "_2");
         tad.getObjectViaCheat(Timeline).dragEnd();
-        await tad.assertWaitable.notExists(tad.screenCapturing.queryByTestId(timelineTestids.item + "_" + (someTasks.length + 2)));
-       
+        await tad.assertWaitable.notExists(tad.screenCapturing.queryByTestId(timelineTestids.item + "_13"));
+
         // AND 
         await tad.userEventWaitable.click(tad.screenCapturing.getByTestId(timelineTestids.menuButton));
         await tad.assertWaitable.notExists(tad.screenCapturing.queryByTestId(contextMenuTestIds.popup), "AND no 'Drag to create' action is shown");

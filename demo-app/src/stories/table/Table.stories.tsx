@@ -41,7 +41,7 @@ export const ProvidingCustomTable: ComponentStory<typeof Timeline> = () => {
         <Fragment>
             <Alert message={<span> Table width: {tableWidth} </span>}/>
             <Timeline startDate={d('2018-09-20')} endDate={d('2018-09-21')} groups={manyHumanResources} items={someTasks}
-                onSplitChange={ size => setTableWidth(size)}
+                onTableResize={(size) => {setTableWidth(size);}}
                 table={<Table 
                             rowHeight={50}
                             width={tableWidth}
