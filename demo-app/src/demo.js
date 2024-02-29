@@ -419,7 +419,7 @@ export default class DemoTimeline extends Component {
           maxDate={useMoment ? maxDate : maxDate.valueOf()}
           table={
             useTable ? (
-              <Table rowHeight={50} width={300} isColumnResizing={true}>
+              <Table rowHeight={50} width={315} isColumnResizing={true}>
                 <Column
                   key={0}
                   columnKey={0}
