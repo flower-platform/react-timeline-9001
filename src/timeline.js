@@ -465,15 +465,15 @@ export default class Timeline extends React.Component {
     onTableResize: PropTypes.func,
 
     /**
-     * This property controls if the overlapping segments are displayed overlapped
-     * or if they are displayed one beneath the other.
+     * This property controls if one segment (item) whose period overlaps another segment (item)'s period
+     * is displayed on a separate subrow or it displayes on the same subrow, overlapping the other segment
      *
-     * In this last case, the row expands its height to include all its child segments
+     * In case of overlapping segments displayed on separate subrows, the main row expands its height to include all the subrows
      *
-     * @default false
-     * @type { boolean }
+     * @default true
+     * @type { boolean | (item: Item) => boolean }
      */
-    allowOverlappingSegments: PropTypes.bool,
+    displayItemOnSeparateRowsIfOverlap: PropTypes.oneOfType([PropTypes.bool, PropTypes.func]),
 
     /**
      * The segments with bigger index are staying in front of the ones with smaller index
@@ -527,7 +527,7 @@ export default class Timeline extends React.Component {
     onContextMenuShow: undefined,
     onSelectionChange() {},
     onTableResize: undefined,
-    allowOverlappingSegments: false,
+    displayItemOnSeparateRowsIfOverlap: true,
     zIndexFunction() {
       return 3;
     }
@@ -674,7 +674,7 @@ export default class Timeline extends React.Component {
       convertDateToMoment(nextProps.startDate, nextProps.useMoment),
       convertDateToMoment(nextProps.endDate, nextProps.useMoment),
       nextProps.useMoment,
-      nextProps.allowOverlappingSegments
+      nextProps.displayItemOnSeparateRowsIfOverlap
     );
     this.fillInTimelineWithEmptyRows(nextProps.groups);
 
@@ -877,14 +877,16 @@ export default class Timeline extends React.Component {
    * @param {boolean} useMoment This parameter is necessary because this method is also called when
    * the component receives new props.
    */
-  setTimeMap(items, startDate, endDate, useMoment, allowOverlappingSegments) {
+  setTimeMap(items, startDate, endDate, useMoment, displayItemOnSeparateRowsIfOverlap) {
     if (!startDate || !endDate) {
       startDate = this.getStartDate();
       endDate = this.getEndDate();
     }
-    if (allowOverlappingSegments == undefined) {
-      allowOverlappingSegments = this.props.allowOverlappingSegments;
-    }
+
+    displayItemOnSeparateRowsIfOverlap =
+      displayItemOnSeparateRowsIfOverlap == undefined
+        ? this.props.displayItemOnSeparateRowsIfOverlap
+        : displayItemOnSeparateRowsIfOverlap;
 
     this.itemRowMap = {}; // timeline elements (key) => (rowNo).
     this.rowItemMap = {}; // (rowNo) => timeline elements
@@ -910,14 +912,14 @@ export default class Timeline extends React.Component {
     let maxVisibleItemsRows = _.groupBy(maxVisibleItems, 'row');
     _.forEach(maxVisibleItemsRows, (maxVisibleItems, row) => {
       const rowInt = parseInt(row);
-      if (!allowOverlappingSegments) {
-        this.rowHeightCache[rowInt] = getMaxOverlappingItems(
-          visibleItems,
-          this.getStartFromItem,
-          this.getEndFromItem,
-          useMoment
-        );
-      }
+      //TODO DB pass the row
+      this.rowHeightCache[rowInt] = getMaxOverlappingItems(
+        maxVisibleItems,
+        this.getStartFromItem,
+        this.getEndFromItem,
+        useMoment,
+        displayItemOnSeparateRowsIfOverlap
+      );
     });
   }
 
@@ -1484,13 +1486,13 @@ export default class Timeline extends React.Component {
               this.setEndToItem(item, newEnd);
             }
 
-            // Check row height doesn't need changing
             let new_row_height = getMaxOverlappingItems(
               this.rowItemMap[rowNo],
               this.getStartFromItem,
-              this.getEndFromItem
+              this.getEndFromItem,
+              this.props.displayItemOnSeparateRowsIfOverlap
             );
-            if (!this.props.allowOverlappingSegments && new_row_height !== this.rowHeightCache[rowNo]) {
+            if (new_row_height !== this.rowHeightCache[rowNo]) {
               this.rowHeightCache[rowNo] = new_row_height;
             }
 
@@ -1667,7 +1669,7 @@ export default class Timeline extends React.Component {
             this.getStartFromItem,
             this.getEndFromItem,
             timelineTestids,
-            this.props.allowOverlappingSegments,
+            this.props.displayItemOnSeparateRowsIfOverlap,
             this.props.zIndexFunction
           )}
           {rowLayerRenderer(

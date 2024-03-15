@@ -61,7 +61,6 @@ export default defineConfig({
   },
   // JSX in .js files, part 1
   optimizeDeps: {
-    exclude: ["fixed-data-table-2"],
     force: true,
     esbuildOptions: {
       loader: {

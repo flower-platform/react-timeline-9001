@@ -31,36 +31,34 @@ export function rowItemsRenderer(
   getStartFromItem,
   getEndFromItem,
   timelineTestids,
-  allowOverlappingSegments,
+  displayItemOnSeparateRowsIfOverlap,
   zIndexFunction
 ) {
   const start_end_ms = vis_end.diff(vis_start, 'milliseconds');
   const pixels_per_ms = total_width / start_end_ms;
-  let filtered_items = _.sortBy(
-    _.filter(items, i => {
-      // if end not before window && start not after window
-      return !getEndFromItem(i).isBefore(vis_start) && !getStartFromItem(i).isAfter(vis_end);
-    }),
-    i => -getStartFromItem(i).unix()
-  ); // sorted in reverse order as we iterate over the array backwards
+  let filtered_items = _.filter(items, i => {
+    // if end not before window && start not after window
+    return !getEndFromItem(i).isBefore(vis_start) && !getStartFromItem(i).isAfter(vis_end);
+  });
   let displayItems = [];
-  let rowOffset = 0;
-  while (filtered_items.length > 0) {
-    let lastEnd = null;
-    for (let i = filtered_items.length - 1; i >= 0; i--) {
-      if (lastEnd === null || getStartFromItem(filtered_items[i]) >= lastEnd) {
-        let item = _.clone(filtered_items[i]);
-        item.rowOffset = rowOffset;
-        displayItems.push(item);
-        filtered_items.splice(i, 1);
-        lastEnd = getEndFromItem(item);
-      }
+  positionItemsOnRowAndGetRowHeight(
+    filtered_items,
+    displayItemOnSeparateRowsIfOverlap,
+    getStartFromItem,
+    getEndFromItem,
+    (item, rowOffset) => {
+      item = _.clone(item);
+      item.rowOffset = rowOffset;
+      displayItems.push(item);
     }
-    rowOffset++;
-  }
+  );
   return _.map(displayItems, i => {
     const Comp = itemRenderer;
-    let top = allowOverlappingSegments ? 0 : itemHeight * i['rowOffset'];
+    var displayCurrentItemOnSeparateRow =
+      typeof displayItemOnSeparateRowsIfOverlap === `function`
+        ? displayItemOnSeparateRowsIfOverlap(i)
+        : displayItemOnSeparateRowsIfOverlap;
+    let top = displayCurrentItemOnSeparateRow ? itemHeight * i['rowOffset'] : 0;
     // itemHeight is also used to calculate the row height; the row height is the maximum number of overlapping items
     // in a row multiplied with itemHeight.
     // If the max overlapping items is 1, then itemHeight = row height,
@@ -226,20 +224,18 @@ export function getNearestRowNumber(x, y, topDiv = document) {
  * the component receives new props.
  * @returns {number} Max row height
  */
-export function getMaxOverlappingItems(items, getStartFromItem, getEndFromItem, useMoment) {
-  let max = 0;
-  let sorted_items = _.sortBy(items, i => -getStartFromItem(i, useMoment).unix());
-  while (sorted_items.length > 0) {
-    let lastEnd = null;
-    for (let i = sorted_items.length - 1; i >= 0; i--) {
-      if (lastEnd === null || getStartFromItem(sorted_items[i], useMoment) >= lastEnd) {
-        lastEnd = getEndFromItem(sorted_items[i], useMoment);
-        sorted_items.splice(i, 1);
-      }
-    }
-    max++;
+export function getMaxOverlappingItems(
+  items,
+  getStartFromItem,
+  getEndFromItem,
+  useMoment,
+  displayItemOnSeparateRowsIfOverlap
+) {
+  if (displayItemOnSeparateRowsIfOverlap == false) {
+    return 1;
   }
-  return Math.max(max, 1);
+
+  return positionItemsOnRowAndGetRowHeight(items, displayItemOnSeparateRowsIfOverlap, getStartFromItem, getEndFromItem);
 }
 
 /**
@@ -267,4 +263,40 @@ export function adjustRowTopPositionToViewport(row, top) {
     return viewport.top;
   }
   return top;
+}
+
+// ***************************************************
+//  Internal functions
+// ***************************************************
+function positionItemsOnRowAndGetRowHeight(
+  items,
+  displayItemOnSeparateRowsIfOverlap,
+  getStartFromItem,
+  getEndFromItem,
+  positionItemOnRow = () => {}
+) {
+  let rowOffset = 0;
+  // sorted in reverse order as we iterate over the array backwards
+  let sorted_items = _.sortBy(items, i => -getStartFromItem(i).unix());
+  while (sorted_items.length > 0) {
+    let lastEnd = null;
+    for (let i = sorted_items.length - 1; i >= 0; i--) {
+      // TODO DB pass also the row near the item
+      var displayCurrentItemOnSeparateRow =
+        typeof displayItemOnSeparateRowsIfOverlap === `function`
+          ? displayItemOnSeparateRowsIfOverlap(sorted_items[i])
+          : displayItemOnSeparateRowsIfOverlap;
+      if (lastEnd === null || getStartFromItem(sorted_items[i]) >= lastEnd || !displayCurrentItemOnSeparateRow) {
+        // Update the lastEnd only for the items that are explicitlly requesting to be on a different row in case of overlapping,
+        // because the others act like they are invisible for overlapping (any other segments can overlap them without further checking)
+        if (displayCurrentItemOnSeparateRow) {
+          lastEnd = getEndFromItem(sorted_items[i]);
+        }
+        positionItemOnRow(sorted_items[i], rowOffset);
+        sorted_items.splice(i, 1);
+      }
+    }
+    rowOffset++;
+  }
+  return Math.max(rowOffset, 1);
 }
