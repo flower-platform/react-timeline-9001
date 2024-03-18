@@ -471,9 +471,9 @@ export default class Timeline extends React.Component {
      * In case of overlapping segments displayed on separate subrows, the main row expands its height to include all the subrows
      *
      * @default true
-     * @type { boolean | (item: Item) => boolean }
+     * @type { boolean | (item: Item, rowIndex: number) => boolean }
      */
-    displayItemOnSeparateRowsIfOverlap: PropTypes.oneOfType([PropTypes.bool, PropTypes.func]),
+    displayItemOnSeparateRowIfOverlap: PropTypes.oneOfType([PropTypes.bool, PropTypes.func]),
 
     /**
      * The segments with bigger index are staying in front of the ones with smaller index
@@ -527,7 +527,7 @@ export default class Timeline extends React.Component {
     onContextMenuShow: undefined,
     onSelectionChange() {},
     onTableResize: undefined,
-    displayItemOnSeparateRowsIfOverlap: true,
+    displayItemOnSeparateRowIfOverlap: true,
     zIndexFunction() {
       return 3;
     }
@@ -634,6 +634,7 @@ export default class Timeline extends React.Component {
     this.handleScrollGantt = this.handleScrollGantt.bind(this);
     this.handleDrag = this.handleDrag.bind(this);
     this.selectionChangedHandler = this.selectionChangedHandler.bind(this);
+    this.getRowClassName = this.getRowClassName.bind(this);
 
     const canSelect = Timeline.isBitSet(Timeline.TIMELINE_MODES.SELECT, this.props.timelineMode);
     const canDrag = Timeline.isBitSet(Timeline.TIMELINE_MODES.DRAG, this.props.timelineMode);
@@ -674,7 +675,7 @@ export default class Timeline extends React.Component {
       convertDateToMoment(nextProps.startDate, nextProps.useMoment),
       convertDateToMoment(nextProps.endDate, nextProps.useMoment),
       nextProps.useMoment,
-      nextProps.displayItemOnSeparateRowsIfOverlap
+      nextProps.displayItemOnSeparateRowIfOverlap
     );
     this.fillInTimelineWithEmptyRows(nextProps.groups);
 
@@ -877,16 +878,16 @@ export default class Timeline extends React.Component {
    * @param {boolean} useMoment This parameter is necessary because this method is also called when
    * the component receives new props.
    */
-  setTimeMap(items, startDate, endDate, useMoment, displayItemOnSeparateRowsIfOverlap) {
+  setTimeMap(items, startDate, endDate, useMoment, displayItemOnSeparateRowIfOverlap) {
     if (!startDate || !endDate) {
       startDate = this.getStartDate();
       endDate = this.getEndDate();
     }
 
-    displayItemOnSeparateRowsIfOverlap =
-      displayItemOnSeparateRowsIfOverlap == undefined
-        ? this.props.displayItemOnSeparateRowsIfOverlap
-        : displayItemOnSeparateRowsIfOverlap;
+    displayItemOnSeparateRowIfOverlap =
+      displayItemOnSeparateRowIfOverlap == undefined
+        ? this.props.displayItemOnSeparateRowIfOverlap
+        : displayItemOnSeparateRowIfOverlap;
 
     this.itemRowMap = {}; // timeline elements (key) => (rowNo).
     this.rowItemMap = {}; // (rowNo) => timeline elements
@@ -918,7 +919,8 @@ export default class Timeline extends React.Component {
         this.getStartFromItem,
         this.getEndFromItem,
         useMoment,
-        displayItemOnSeparateRowsIfOverlap
+        displayItemOnSeparateRowIfOverlap,
+        rowInt
       );
     });
   }
@@ -1049,6 +1051,12 @@ export default class Timeline extends React.Component {
       return this.props.snapMinutes * 60 * 1000;
     }
     return 1;
+  }
+
+  getRowClassName(rowIndex) {
+    return (
+      this.props.rowClassName + ' ' + (rowIndex % 2 == 0 ? this.props.rowOddClassName : this.props.rowEvenClassName)
+    );
   }
 
   /**
@@ -1490,7 +1498,8 @@ export default class Timeline extends React.Component {
               this.rowItemMap[rowNo],
               this.getStartFromItem,
               this.getEndFromItem,
-              this.props.displayItemOnSeparateRowsIfOverlap
+              this.props.displayItemOnSeparateRowIfOverlap,
+              rowNo
             );
             if (new_row_height !== this.rowHeightCache[rowNo]) {
               this.rowHeightCache[rowNo] = new_row_height;
@@ -1636,11 +1645,7 @@ export default class Timeline extends React.Component {
           key={key}
           style={style}
           data-row-index={rowIndex}
-          className={
-            this.props.rowClassName +
-            ' ' +
-            (rowIndex % 2 == 0 ? this.props.rowOddClassName : this.props.rowEvenClassName)
-          }
+          className={this.getRowClassName(rowIndex)}
           onClick={e => this._handleItemRowEvent(e, Timeline.no_op, this.props.onRowClick)}
           onMouseDown={e => {
             this.selecting = false;
@@ -1669,8 +1674,9 @@ export default class Timeline extends React.Component {
             this.getStartFromItem,
             this.getEndFromItem,
             timelineTestids,
-            this.props.displayItemOnSeparateRowsIfOverlap,
-            this.props.zIndexFunction
+            this.props.displayItemOnSeparateRowIfOverlap,
+            this.props.zIndexFunction,
+            rowIndex
           )}
           {rowLayerRenderer(
             layersInRow,
@@ -2280,10 +2286,17 @@ export default class Timeline extends React.Component {
                         headerHeight: timebarHeight,
                         height: this.state.screenHeight,
                         width: this.state.tableWidth,
-                        rowClassNameGetter: rowIndex =>
-                          this.props.rowClassName +
-                          ' ' +
-                          (rowIndex % 2 == 0 ? this.props.rowOddClassName : this.props.rowEvenClassName),
+                        rowClassNameGetter: rowIndex => {
+                          let classNameDefinedByUser =
+                            this.props.table !== undefined &&
+                            this.props.table.props.rowClassNameGetter !== undefined &&
+                            this.props.table.props.rowClassNameGetter(rowIndex);
+                          if (classNameDefinedByUser) {
+                            return classNameDefinedByUser;
+                          } else {
+                            return this.getRowClassName(rowIndex);
+                          }
+                        },
                         // Because the content of the empty rows are now significant
                         // avoid showing vertical scrollbar in case horizontal scrollbar is needed when shrinking the table
                         showScrollbarY: !hasEmptyRows

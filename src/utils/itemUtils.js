@@ -31,8 +31,9 @@ export function rowItemsRenderer(
   getStartFromItem,
   getEndFromItem,
   timelineTestids,
-  displayItemOnSeparateRowsIfOverlap,
-  zIndexFunction
+  displayItemOnSeparateRowIfOverlap,
+  zIndexFunction,
+  rowIndex
 ) {
   const start_end_ms = vis_end.diff(vis_start, 'milliseconds');
   const pixels_per_ms = total_width / start_end_ms;
@@ -43,7 +44,8 @@ export function rowItemsRenderer(
   let displayItems = [];
   positionItemsOnRowAndGetRowHeight(
     filtered_items,
-    displayItemOnSeparateRowsIfOverlap,
+    rowIndex,
+    displayItemOnSeparateRowIfOverlap,
     getStartFromItem,
     getEndFromItem,
     (item, rowOffset) => {
@@ -55,9 +57,9 @@ export function rowItemsRenderer(
   return _.map(displayItems, i => {
     const Comp = itemRenderer;
     var displayCurrentItemOnSeparateRow =
-      typeof displayItemOnSeparateRowsIfOverlap === `function`
-        ? displayItemOnSeparateRowsIfOverlap(i)
-        : displayItemOnSeparateRowsIfOverlap;
+      typeof displayItemOnSeparateRowIfOverlap === `function`
+        ? displayItemOnSeparateRowIfOverlap(i, rowIndex)
+        : displayItemOnSeparateRowIfOverlap;
     let top = displayCurrentItemOnSeparateRow ? itemHeight * i['rowOffset'] : 0;
     // itemHeight is also used to calculate the row height; the row height is the maximum number of overlapping items
     // in a row multiplied with itemHeight.
@@ -229,13 +231,20 @@ export function getMaxOverlappingItems(
   getStartFromItem,
   getEndFromItem,
   useMoment,
-  displayItemOnSeparateRowsIfOverlap
+  displayItemOnSeparateRowIfOverlap,
+  rowIndex
 ) {
-  if (displayItemOnSeparateRowsIfOverlap == false) {
+  if (displayItemOnSeparateRowIfOverlap == false) {
     return 1;
   }
 
-  return positionItemsOnRowAndGetRowHeight(items, displayItemOnSeparateRowsIfOverlap, getStartFromItem, getEndFromItem);
+  return positionItemsOnRowAndGetRowHeight(
+    items,
+    rowIndex,
+    displayItemOnSeparateRowIfOverlap,
+    getStartFromItem,
+    getEndFromItem
+  );
 }
 
 /**
@@ -270,7 +279,8 @@ export function adjustRowTopPositionToViewport(row, top) {
 // ***************************************************
 function positionItemsOnRowAndGetRowHeight(
   items,
-  displayItemOnSeparateRowsIfOverlap,
+  rowIndex,
+  displayItemOnSeparateRowIfOverlap,
   getStartFromItem,
   getEndFromItem,
   positionItemOnRow = () => {}
@@ -281,11 +291,10 @@ function positionItemsOnRowAndGetRowHeight(
   while (sorted_items.length > 0) {
     let lastEnd = null;
     for (let i = sorted_items.length - 1; i >= 0; i--) {
-      // TODO DB pass also the row near the item
       var displayCurrentItemOnSeparateRow =
-        typeof displayItemOnSeparateRowsIfOverlap === `function`
-          ? displayItemOnSeparateRowsIfOverlap(sorted_items[i])
-          : displayItemOnSeparateRowsIfOverlap;
+        typeof displayItemOnSeparateRowIfOverlap === `function`
+          ? displayItemOnSeparateRowIfOverlap(sorted_items[i], rowIndex)
+          : displayItemOnSeparateRowIfOverlap;
       if (lastEnd === null || getStartFromItem(sorted_items[i]) >= lastEnd || !displayCurrentItemOnSeparateRow) {
         // Update the lastEnd only for the items that are explicitlly requesting to be on a different row in case of overlapping,
         // because the others act like they are invisible for overlapping (any other segments can overlap them without further checking)

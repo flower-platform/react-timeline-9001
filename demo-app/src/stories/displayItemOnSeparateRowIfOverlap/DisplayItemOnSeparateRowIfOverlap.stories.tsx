@@ -2,16 +2,17 @@ import { createTestids } from '@famiprog-foundation/tests-are-demo';
 import { Column, DataCell, Table } from 'fixed-data-table-2';
 import { useState } from "react";
 import { Dropdown, Form, FormField } from "semantic-ui-react";
-import Timeline from '../../../../src/timeline';
+import Timeline, { DEFAULT_ROW_CLASS } from '../../../../src/timeline';
 import { Item } from '../../../../src/types';
 import { d, someHumanResources, someTasks } from "../sampleData";
+import { CustomTimeline } from './CustomTimeline';
 
 export default {
     title: "Features/Display item on separate rows if overlap",
-    includeStories: /^[A-Z]/
+    includeStories: /^[A-Z][a-z].*/
 }
 
-export const displayItemOnSeparateRowsIfOverlapStoryTestIds = createTestids('DisplayItemOnSeparateRowsIfOverlapStory', {
+export const displayItemOnSeparateRowIfOverlapStoryTestIds = createTestids('DisplayItemOnSeparateRowIfOverlapStory', {
     displayItemOnSeparateRowDropdown: ''
 });
 
@@ -19,36 +20,35 @@ export const TRUE = "True";
 export const FALSE = "False";
 export const ONLY_FOR_SELECTED = "Only for selected rows";
 
+export var selectedRow, setSelectedRow;
+
 export const Main = () => {
     const tasks: Item[] = [
         ...someTasks,
         { key: 11, row: 1, title: 'Task AR4', start: d('2018-09-20 10:00'), end: d('2018-09-20 11:00') },
         { key: 12, row: 2, title: 'Task MD6', start: d('2018-09-20 07:30'), end: d('2018-09-20 15:00') }
       ];
-    const [displayItemOnSeparateRowsIfOverlap, setDisplayItemOnSeparateRowsIfOverlap] = useState<boolean | ( (Item) => boolean)>(true); 
-    const [selectedRow, setSelectedRow] = useState<number>(1); 
+    const [displayItemOnSeparateRowIfOverlap, setDisplayItemOnSeparateRowIfOverlap] = useState<boolean | ( (Item, number) => boolean)>(true);  
+    [selectedRow, setSelectedRow] = useState<number>(-1);
     const [displayIntervalStart, displayIntervalEnd] = [d('2018-09-20'), d('2018-09-21')] 
     // Smaller segments are staying on top of the bigger ones
     const zIndexFunction = (item: Item) => {
         return Math.floor((displayIntervalEnd - displayIntervalStart) /  ((item.end.valueOf() as number) - (item.start.valueOf() as number))); 
     }
 
-    var displayItemOnSeparateRowsOnlyForSelectedRow = (rowIndex) => {
-        return (item) => {
-            if (item.row == (rowIndex == undefined ? selectedRow : rowIndex)) {
+    var displayItemOnSeparateRowOnlyForSelectedRow = () => {
+        return (item, rowIndex) => {
+            if (rowIndex == (selectedRow)) {
                 return true;
             } else {
                 return false;
             }
         }
-
     }
-    const onTableRowClick = (event, rowIndex, rowData) => {
+    const onRowClick = (event, rowIndex) => {
         setSelectedRow(rowIndex);
-        // TODO force reset for the gantt to ask again displayItemOnSeparateRowsIfOverlap function 
-        if (typeof displayItemOnSeparateRowsIfOverlap === 'function') {
-            // setdisplayItemOnSeparateRowsIfOverlap(true);
-            setDisplayItemOnSeparateRowsIfOverlap(() => displayItemOnSeparateRowsOnlyForSelectedRow(rowIndex));
+        if (typeof displayItemOnSeparateRowIfOverlap === 'function') {
+            setDisplayItemOnSeparateRowIfOverlap(() => displayItemOnSeparateRowOnlyForSelectedRow());
         }
     }
 
@@ -67,19 +67,22 @@ export const Main = () => {
                                 { key: 'onlyForSelectedRow', text: ONLY_FOR_SELECTED, value: 'onlyForSelectedRow' },
                             ]}
                             onChange={(e, {value}) => {
-                                setDisplayItemOnSeparateRowsIfOverlap(value == 'onlyForSelectedRow' ? () => displayItemOnSeparateRowsOnlyForSelectedRow(selectedRow) : value === 'true');
+                                setDisplayItemOnSeparateRowIfOverlap(value == 'onlyForSelectedRow' ? () => displayItemOnSeparateRowOnlyForSelectedRow() : value === 'true');
                             }} 
-                            value={typeof displayItemOnSeparateRowsIfOverlap === 'function' ? 'onlyForSelectedRow' : displayItemOnSeparateRowsIfOverlap + ''} 
-                            data-testid={displayItemOnSeparateRowsIfOverlapStoryTestIds.displayItemOnSeparateRowDropdown}
+                            value={typeof displayItemOnSeparateRowIfOverlap === 'function' ? 'onlyForSelectedRow' : displayItemOnSeparateRowIfOverlap + ''} 
+                            data-testid={displayItemOnSeparateRowIfOverlapStoryTestIds.displayItemOnSeparateRowDropdown}
                         />
                     </FormField>
                 </Form>
             </div>
-            <Timeline startDate={displayIntervalStart} endDate={displayIntervalEnd} groups={someHumanResources} items={tasks}
+            <CustomTimeline startDate={displayIntervalStart} endDate={displayIntervalEnd} groups={someHumanResources} items={tasks}
                 itemRendererDefaultProps={{color: "rgba(55,145,212,0.6)"}}
-                displayItemOnSeparateRowsIfOverlap={displayItemOnSeparateRowsIfOverlap}
+                displayItemOnSeparateRowIfOverlap={displayItemOnSeparateRowIfOverlap}
+                selectedIndex={selectedRow}
                 zIndexFunction={zIndexFunction}
-                table={<Table width={100} onRowClick={onTableRowClick}>
+                onRowClick={onRowClick}
+                table={<Table width={100} onRowClick={onRowClick}
+                            rowClassNameGetter={(rowIndex) => rowIndex == selectedRow ? DEFAULT_ROW_CLASS + " selected-row" : undefined}>
                             <Column
                                 columnKey="title"
                                 width={100}

@@ -9,8 +9,8 @@ import { encodeApiDocURIForSubpath, parametersDocPage } from '../StorybookUtils'
 
 If some items are overlapping, the gantt diagram doesn't display them overlapped. It puts them one beneath the other. 
 
-This can be changed by setting the `displayItemOnSeparateRowsIfOverlap` to `true`
+This can be changed by setting the `displayItemOnSeparateRowIfOverlap` to `true`
 or to a function that decides (given an item) whether it allows to be displayed on a new row in case of overlapping or it should be displayed on the first row no matter the overlapping with other segments.
 
 ## `Timeline`
-  <ArgsTable of={Timeline} sort="none" include={["displayItemOnSeparateRowsIfOverlap"]}/>
+  <ArgsTable of={Timeline} sort="none" include={["displayItemOnSeparateRowIfOverlap"]}/>
