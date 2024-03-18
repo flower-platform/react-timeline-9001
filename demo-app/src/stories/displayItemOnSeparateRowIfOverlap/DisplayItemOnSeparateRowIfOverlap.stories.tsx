@@ -46,7 +46,7 @@ export const Main = () => {
         }
     }
     const onRowClick = (event, rowIndex) => {
-        setSelectedRow(rowIndex);
+        setSelectedRow(Number(rowIndex));
         if (typeof displayItemOnSeparateRowIfOverlap === 'function') {
             setDisplayItemOnSeparateRowIfOverlap(() => displayItemOnSeparateRowOnlyForSelectedRow());
         }
