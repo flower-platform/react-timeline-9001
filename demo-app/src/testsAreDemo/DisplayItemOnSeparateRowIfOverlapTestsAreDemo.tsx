@@ -2,8 +2,6 @@ import { Only, Scenario, render, tad } from "@famiprog-foundation/tests-are-demo
 import { FALSE, Main, ONLY_FOR_SELECTED, TRUE, setSelectedRow } from "../stories/displayItemOnSeparateRowIfOverlap/DisplayItemOnSeparateRowIfOverlap.stories";
 import { displayItemOnSeparateRowIfOverlapStoryTestIds } from "../stories/displayItemOnSeparateRowIfOverlap/DisplayItemOnSeparateRowIfOverlap.stories";
 import { timelineTestids } from "../../../src/timeline";
-import { act } from "react-dom/test-utils";
-// import { act } from "react-dom/test-utils";
 
 export class DisplayItemOnSeparateRowIfOverlapTestsAreDemo {
     
@@ -15,7 +13,7 @@ export class DisplayItemOnSeparateRowIfOverlapTestsAreDemo {
     /**
      * This is the default behavior.
      *
-     * @img poza
+     * @img displayItemOnSeparateRowIfOverlap_dropdown_click_true
      */
     @Scenario("..., AND displayItemOnSeparateRowIfOverlap is true, WHEN render, THEN they are drawn on different rows, to avoid overlapping")
     async givenTrue() {
@@ -42,7 +40,7 @@ export class DisplayItemOnSeparateRowIfOverlapTestsAreDemo {
      *
      * It may also be interesting to play w/ transparency (alpha) of your renderers. E.g. it may be interesting for the ones that are rather on top, to be (a bit) transparent.
      *
-     * @img poza
+     * @img displayItemOnSeparateRowIfOverlap_dropdown_click_false
      */
     @Scenario("..., AND displayItemOnSeparateRowIfOverlap is false, WHEN render, THEN they overlap as well")
     async givenFalse() {
@@ -69,7 +67,7 @@ export class DisplayItemOnSeparateRowIfOverlapTestsAreDemo {
     /**
      * An example use case: have something like an expand/collapse for a row. E.g. w/ a +/- button in the table, or expanding the row that is currently selected.
      *
-     * @img poza
+     * @img displayItemOnSeparateRowIfOverlap_dropdown_click_function
      */
     @Only()
     @Scenario("..., AND displayItemOnSeparateRowIfOverlap is a function, THEN it's used to decide about the overlapping behavior")

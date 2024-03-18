@@ -66,7 +66,7 @@ export default defineConfig({
       loader: {
         '.js': 'tsx',
       },
-    }
+    },
   }
 })
 

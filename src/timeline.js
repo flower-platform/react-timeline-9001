@@ -670,13 +670,17 @@ export default class Timeline extends React.Component {
       this.setState({tableWidth: this.getInitialTableWidth(nextProps)});
     }
 
-    this.setTimeMap(
-      nextProps.items,
-      convertDateToMoment(nextProps.startDate, nextProps.useMoment),
-      convertDateToMoment(nextProps.endDate, nextProps.useMoment),
-      nextProps.useMoment,
-      nextProps.displayItemOnSeparateRowIfOverlap
-    );
+    if (this.props.startDate != nextProps.startDate || this.props.endDate != nextProps.endDate) {
+      this.setState({startDate: nextProps.startDate, endDate: nextProps.endDate});
+    } else {
+      this.setTimeMap(
+        nextProps.items,
+        convertDateToMoment(nextProps.startDate, nextProps.useMoment),
+        convertDateToMoment(nextProps.endDate, nextProps.useMoment),
+        nextProps.useMoment,
+        nextProps.displayItemOnSeparateRowIfOverlap
+      );
+    }
     this.fillInTimelineWithEmptyRows(nextProps.groups);
 
     // @TODO
@@ -913,7 +917,6 @@ export default class Timeline extends React.Component {
     let maxVisibleItemsRows = _.groupBy(maxVisibleItems, 'row');
     _.forEach(maxVisibleItemsRows, (maxVisibleItems, row) => {
       const rowInt = parseInt(row);
-      //TODO DB pass the row
       this.rowHeightCache[rowInt] = getMaxOverlappingItems(
         maxVisibleItems,
         this.getStartFromItem,
@@ -1494,6 +1497,7 @@ export default class Timeline extends React.Component {
               this.setEndToItem(item, newEnd);
             }
 
+            // Check row height doesn't need changing
             let new_row_height = getMaxOverlappingItems(
               this.rowItemMap[rowNo],
               this.getStartFromItem,

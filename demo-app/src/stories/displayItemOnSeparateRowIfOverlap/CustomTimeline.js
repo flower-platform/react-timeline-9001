@@ -2,8 +2,7 @@ import PropTypes from 'prop-types';
 import Timeline, { DEFAULT_ROW_CLASS } from '../../../../src/timeline';
 
 export class CustomTimeline extends Timeline {
-
-
+  
   static propTypes = {
     ...Timeline.propTypes,
     /**

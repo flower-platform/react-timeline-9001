@@ -159,6 +159,7 @@
   position: absolute;
   display: flex;
   overflow: visible;
+  z-index: 3;
 }
 
 /* Styles that draws the drag achors that appears on selecting an element */
