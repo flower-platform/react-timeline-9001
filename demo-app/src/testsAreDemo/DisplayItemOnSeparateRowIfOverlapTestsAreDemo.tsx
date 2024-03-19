@@ -1,13 +1,16 @@
-import { Only, Scenario, render, tad } from "@famiprog-foundation/tests-are-demo"
+import { Only, Scenario, ScenarioOptions, render, tad } from "@famiprog-foundation/tests-are-demo"
 import { FALSE, Main, ONLY_FOR_SELECTED, TRUE, setSelectedRow } from "../stories/displayItemOnSeparateRowIfOverlap/DisplayItemOnSeparateRowIfOverlap.stories";
 import { displayItemOnSeparateRowIfOverlapStoryTestIds } from "../stories/displayItemOnSeparateRowIfOverlap/DisplayItemOnSeparateRowIfOverlap.stories";
 import { timelineTestids } from "../../../src/timeline";
 
 export class DisplayItemOnSeparateRowIfOverlapTestsAreDemo {
     
-    // GIVEN there are some segments (items) for which the periods overlap ...
     async before() {
         render(<Main/>);
+    }
+
+    @Scenario("GIVEN there are some segments (items) for which the periods overlap ...")
+    async _() {
     }
 
     /**
@@ -32,7 +35,6 @@ export class DisplayItemOnSeparateRowIfOverlapTestsAreDemo {
 
         item = tad.withinCapturing(ganttBody).getByTestId(timelineTestids.row + "_1");
         await tad.assertWaitable.equal(tad.withinCapturing(item).getByTestId(timelineTestids.item + "_4").offsetTop, 0);
-
     }
 
     /**
@@ -69,7 +71,6 @@ export class DisplayItemOnSeparateRowIfOverlapTestsAreDemo {
      *
      * @img displayItemOnSeparateRowIfOverlap_dropdown_click_function
      */
-    @Only()
     @Scenario("..., AND displayItemOnSeparateRowIfOverlap is a function, THEN it's used to decide about the overlapping behavior")
     async givenFunction() {
         let dropdown = tad.screenCapturing.getByTestId(displayItemOnSeparateRowIfOverlapStoryTestIds.displayItemOnSeparateRowDropdown);
