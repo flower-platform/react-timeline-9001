@@ -11,11 +11,19 @@
   position: relative;
 }
 
+.rct9k-background-layer-wrapper {
+  position: absolute;
+  top: 0px;
+  /* We need this 1px left in order for the background layer to perfectly overlap the ganttBody that has a 1px border left*/
+  left: 1px;
+}
+
 /**
 * We need this {pointerEvents: "none"} because the background layer is in front of the TimelineBody
 */
 .rct9k-background-layer {
   pointer-events: none;
+  position: relative;
 }
 
 .rct9k-background-layer-highlight-weekends {
