@@ -14,6 +14,8 @@ import {TableTestsAreDemo} from './testsAreDemo/TableTestsAreDemo';
 import {SelectedItemsTestsAreDemo} from './testsAreDemo/SelectedItemsTestsAreDemo';
 import {ContextMenuTestsAreDemo} from './testsAreDemo/ContextMenuTestsAreDemo';
 import {DynamicConfigurationTestsAreDemo} from './testsAreDemo/DynamicConfigurationTestsAreDemo';
+import { HighlightedInterval } from '../../src/components/HighlightedInterval';
+import { BackgroundLayersTestsAreDemo } from './testsAreDemo/BackgroundLayersTestsAreDemo';
 
 ReactDOM.render(
   <TestsAreDemoAppWrapper
@@ -25,7 +27,8 @@ ReactDOM.render(
         SelectedItemsTestsAreDemo,
         ContextMenuTestsAreDemo,
         TableTestsAreDemo,
-        DynamicConfigurationTestsAreDemo
+        DynamicConfigurationTestsAreDemo,
+        BackgroundLayersTestsAreDemo
       );
     }}
   />,
