@@ -1,12 +1,13 @@
 import React from 'react';
 import { Timeline, BackgroundLayer, HighlightedInterval, Marker, Item } from '@famiprog-foundation/react-gantt';
-import { startOfCurrentMonth, endOfCurrentMonth, dateAndHourOfCurrentMonth, manyHumanResources } from '../sampleData';
+import { startOfCurrentMonth, endOfCurrentMonth, dateAndHourOfCurrentMonth, manyHumanResources, dateAndHourOfMonth, d } from '../sampleData';
 import { backgroundLayerScenarios } from './BackgroundLayerScenarios';
 import { Table, Column, DataCell} from 'fixed-data-table-2';
 import moment from 'moment';
 
 export default {
-  title: 'Features/Background Layer'
+  title: 'Features/Background Layer',
+  includeStories: /^[A-Z]/
 };
 
 export const month = moment("2023 11", "YYYY MM");
