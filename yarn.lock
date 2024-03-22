@@ -1118,10 +1118,10 @@
     "@babel/helper-validator-identifier" "^7.22.5"
     to-fast-properties "^2.0.0"
 
-"@famiprog-foundation/tests-are-demo@^0.13.2":
-  version "0.13.2"
-  resolved "http://csp-dev-tools.lan/nexus/repository/npm-public/@famiprog-foundation/tests-are-demo/-/tests-are-demo-0.13.2.tgz#23c145008b6445dd5243fbbda85b0c22a994fb78"
-  integrity sha512-pMYc42QLl8ESV6Dpcc9qFGST1Xu/ma5jCS1BUt/xxID3zNfmvDh2WGXV0NGhrUk1cppPtHSwwIxk8WBE7pS5sg==
+"@famiprog-foundation/tests-are-demo@^0.16.2":
+  version "0.16.2"
+  resolved "http://csp-dev-tools.lan/nexus/repository/npm-public/@famiprog-foundation/tests-are-demo/-/tests-are-demo-0.16.2.tgz#afeffd56eb45ace3ae85978a34aff239cb5fc7eb"
+  integrity sha512-A0+DCpQGoFyipfsunYPngjRJcg9C3LfZTts5s1C/7E3znSOQ1DJ3kNSOT8rqoxz0SVyzCloiBnhEQ/YaHoRNDA==
   dependencies:
     "@jridgewell/trace-mapping" "^0.3.19"
     "@testing-library/react" "^12.1.2"
