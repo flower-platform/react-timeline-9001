@@ -20,6 +20,11 @@ export class DisplayItemOnSeparateRowIfOverlapTestsAreDemo {
      */
     @Scenario("..., AND displayItemOnSeparateRowIfOverlap is true, WHEN render, THEN they are drawn on different rows, to avoid overlapping")
     async givenTrue() {
+        // We need to actual click on true, because even if this property is true by default and even if the test passes when on a first run, it will fail if run second time
+        let dropdown = tad.screenCapturing.getByTestId(displayItemOnSeparateRowIfOverlapStoryTestIds.displayItemOnSeparateRowDropdown);
+        tad.userEventWaitable.click(dropdown);
+        tad.userEventWaitable.click(tad.withinCapturing(dropdown).getByRole("option", { name: TRUE }));
+
         // Rows expand to fit all the segments
         let ganttBody = tad.screenCapturing.getByTestId(timelineTestids.ganttBody);
         await tad.assertWaitable.equal(tad.withinCapturing(ganttBody).getByTestId(timelineTestids.row + "_0").offsetHeight, 40);
