@@ -14,8 +14,8 @@ import {TableTestsAreDemo} from './testsAreDemo/TableTestsAreDemo';
 import {SelectedItemsTestsAreDemo} from './testsAreDemo/SelectedItemsTestsAreDemo';
 import {ContextMenuTestsAreDemo} from './testsAreDemo/ContextMenuTestsAreDemo';
 import {DynamicConfigurationTestsAreDemo} from './testsAreDemo/DynamicConfigurationTestsAreDemo';
-import { HighlightedInterval } from '../../src/components/HighlightedInterval';
 import { BackgroundLayersTestsAreDemo } from './testsAreDemo/BackgroundLayersTestsAreDemo';
+import { DisplayItemOnSeparateRowIfOverlapTestsAreDemo } from './testsAreDemo/DisplayItemOnSeparateRowIfOverlapTestsAreDemo';
 
 ReactDOM.render(
   <TestsAreDemoAppWrapper
@@ -28,7 +28,8 @@ ReactDOM.render(
         ContextMenuTestsAreDemo,
         TableTestsAreDemo,
         DynamicConfigurationTestsAreDemo,
-        BackgroundLayersTestsAreDemo
+        BackgroundLayersTestsAreDemo,
+        DisplayItemOnSeparateRowIfOverlapTestsAreDemo
       );
     }}
   />,
