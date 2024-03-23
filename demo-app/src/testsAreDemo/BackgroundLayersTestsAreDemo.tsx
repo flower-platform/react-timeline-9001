@@ -1,8 +1,9 @@
 import { Only, Scenario, render, tad } from "@famiprog-foundation/tests-are-demo";
 import { Main, month } from "../stories/backgroundLayer/BackgroundLayer.stories";
 import { dateAndHourOfMonth } from "../stories/sampleData";
-import {PARENT_ELEMENT, Timeline, getPixelAtTime, getPixelsFromDuration, highlightedIntervalTestIds} from "@famiprog-foundation/react-gantt";
+import {PARENT_ELEMENT, Timeline, getPixelAtTime, getPixelsFromDuration} from "@famiprog-foundation/react-gantt";
 import moment from "moment";
+import { highlightedIntervalTestIds } from "../../../src/components/HighlightedInterval";
 
 export class BackgroundLayersTestsAreDemo {
     async before() {

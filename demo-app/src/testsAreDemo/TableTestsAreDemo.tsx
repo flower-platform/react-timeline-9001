@@ -3,6 +3,7 @@ import { assert } from "chai";
 import { Table } from "fixed-data-table-2";
 import { ProvidingCustomTable } from "../stories/table/Table.stories";
 import { DEMO_TABLE_WIDTH, tableTestIds } from "../stories/table/TableScenarios";
+import { timelineTestids as testids } from "../../../src/timeline";
 
 export class TableTestsAreDemo {
     async before() {
