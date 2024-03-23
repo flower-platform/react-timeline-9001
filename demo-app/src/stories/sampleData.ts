@@ -1,5 +1,5 @@
 import moment from 'moment';
-import { Group, Item } from '../types';
+import { Group, Item } from '@famiprog-foundation/react-gantt';
 
 ////////////////////////////////////////////////////////
 // utility functions used for hardcoding our sample data

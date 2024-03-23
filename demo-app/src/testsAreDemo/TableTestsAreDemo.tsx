@@ -1,7 +1,6 @@
 import { Scenario, render, tad } from "@famiprog-foundation/tests-are-demo";
 import { assert } from "chai";
 import { Table } from "fixed-data-table-2";
-import { timelineTestids as testids } from "../../../src/timeline";
 import { ProvidingCustomTable } from "../stories/table/Table.stories";
 import { DEMO_TABLE_WIDTH, tableTestIds } from "../stories/table/TableScenarios";
 

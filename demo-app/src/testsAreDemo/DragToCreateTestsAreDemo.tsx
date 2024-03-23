@@ -1,7 +1,6 @@
 import { Only, render, Scenario, tad } from "@famiprog-foundation/tests-are-demo";
-import { contextMenuTestIds } from "../../../src/components/ContextMenu/ContextMenu";
 import { Main } from "../stories/dragToCreate/DragToCreate.stories";
-import Timeline, { DRAG_TO_CREATE_ACTION_LABEL, DRAG_TO_CREATE_POPUP_CLOSE_TIME, DRAG_TO_CREATE_POPUP_LABEL_2, timelineTestids } from "../../../src/timeline";
+import {Timeline, DRAG_TO_CREATE_ACTION_LABEL, DRAG_TO_CREATE_POPUP_CLOSE_TIME, DRAG_TO_CREATE_POPUP_LABEL_2, timelineTestids, contextMenuTestIds } from "@famiprog-foundation/react-gantt";
 import { dragToCreateStoriesTestIds as testIds } from "../stories/dragToCreate/DragToCreate.stories";
 import { someTasks } from "../stories/sampleData";
 

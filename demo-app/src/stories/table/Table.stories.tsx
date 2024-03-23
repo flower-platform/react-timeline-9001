@@ -1,7 +1,7 @@
 import { ComponentStory } from "@storybook/react";
 import { Fragment, useState } from "react";
 import { Checkbox, Icon } from "semantic-ui-react";
-import Timeline from '../../../../src/timeline';
+import { Timeline } from '@famiprog-foundation/react-gantt';
 import { d, manyHumanResources, someTasks } from "../sampleData";
 
 import { Column, DataCell, Table } from "fixed-data-table-2";
