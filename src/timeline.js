@@ -79,16 +79,7 @@ export const DEFAULT_ROW_ODD_CLASS = '';
 export const DRAG_TO_CREATE_POPUP_CLOSE_TIME = 5000;
 export const DRAG_TO_CREATE_POPUP_LABEL_2 = 'Popup will close in a few moments.';
 
-/**
- * Before the parent element was considered to be the .parent-div
- * But there was a bug found in tests: the segments positioning (and length) are computed relative to the interior react virtualized grid
- * that is smaller than the .parent-div with 1px because there is a left border of 1px on the parent of the grid
- *
- * So the parent element should be considered the grid itself for the computation to be exact
- *
- */
-export const PARENT_ELEMENT = componentId =>
-  document.querySelector(`.rct9k-id-${componentId} .ReactVirtualized__Grid__innerScrollContainer`);
+export const PARENT_ELEMENT = componentId => document.querySelector(`.rct9k-id-${componentId} .parent-div`);
 
 const TableWithStyle = ({table}) => {
   const tableStyle = `.public_fixedDataTableCell_main {
@@ -863,6 +854,20 @@ export default class Timeline extends React.Component {
   }
 
   /**
+   * Before the gantt leftOffset was considered to be: PARENT_ELEMENT.getBoundingClientRect().left
+   * But there was a bug found in tests: The segments are in fact positioned (in the html page) relative to the interior of the react virtualized grid
+   * that is smaller than the .parent-div with 1px (Because of a 1px left border of the grid)
+   *
+   * So the left offset of the gantt (needed when converting the position in pixels in time) should take in consideration
+   * that 1px left border of the gantt grid
+   *
+   * @return {number}
+   */
+  getGanttLeftOffset() {
+    return PARENT_ELEMENT(this.props.componentId).getBoundingClientRect().left + 1;
+  }
+
+  /**
    * Re-renders the grid when the window or container is resized
    */
   updateDimensions() {
@@ -1231,10 +1236,9 @@ export default class Timeline extends React.Component {
       if (event.button == 2) {
         this.setState({openedContextMenuCoordinates: {x: event.clientX, y: event.clientY}});
         this.setState({openedContextMenuRow: bottomRow});
-        const leftOffset = PARENT_ELEMENT(this.props.componentId).getBoundingClientRect().left;
         this.setState({
           openedContextMenuTime: getTimeAtPixel(
-            event.clientX - leftOffset,
+            event.clientX - this.getGanttLeftOffset(),
             this.getStartDate(),
             this.getEndDate(),
             this.getTimelineWidth(),
@@ -1578,9 +1582,8 @@ export default class Timeline extends React.Component {
       }
     } else {
       row = e.target.getAttribute('data-row-index');
-      const leftOffset = PARENT_ELEMENT(this.props.componentId).getBoundingClientRect().left;
       let clickedTime = getTimeAtPixel(
-        e.clientX - leftOffset,
+        e.clientX - this.getGanttLeftOffset(),
         this.getStartDate(),
         this.getEndDate(),
         this.getTimelineWidth()
@@ -1598,10 +1601,9 @@ export default class Timeline extends React.Component {
       // right click => open CM
       this.setState({openedContextMenuCoordinates: {x: e.clientX, y: e.clientY}});
       this.setState({openedContextMenuRow: Number(row)});
-      const leftOffset = PARENT_ELEMENT(this.props.componentId).getBoundingClientRect().left;
       this.setState({
         openedContextMenuTime: getTimeAtPixel(
-          e.clientX - leftOffset,
+          e.clientX - this.getGanttLeftOffset(),
           this.getStartDate(),
           this.getEndDate(),
           this.getTimelineWidth(),
@@ -1792,9 +1794,8 @@ export default class Timeline extends React.Component {
    * Only calls back if a new snap time is reached
    */
   throttledMouseMoveFunc(e) {
-    const leftOffset = PARENT_ELEMENT(this.props.componentId).getBoundingClientRect().left;
     const cursorSnappedTime = getTimeAtPixel(
-      e.clientX - leftOffset,
+      e.clientX - this.getGanttLeftOffset(),
       this.getStartDate(),
       this.getEndDate(),
       this.getTimelineWidth(),
@@ -2330,9 +2331,8 @@ export default class Timeline extends React.Component {
   ////////////////////////////////////////////////////////////////////////////////////////
 
   setCursorTime(x) {
-    const leftOffset = PARENT_ELEMENT(this.props.componentId).getBoundingClientRect().left;
     const cursorTime = getTimeAtPixel(
-      x - leftOffset,
+      x - this.getGanttLeftOffset(),
       this.getStartDate(),
       this.getEndDate(),
       this.getTimelineWidth(),
