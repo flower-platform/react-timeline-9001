@@ -1,5 +1,9 @@
 ## Unreleased
 
+## v2.6.1
+
+* [Error when moving the mouse and the grid inside the gantt in not yet rendered](https://github.com/flower-platform/react-timeline-10000/pull/77)
+
 ## v2.6.0
 
 * Internal: for `demo-app`, upgraded storybook version to v7.5. It also uses vite now.
