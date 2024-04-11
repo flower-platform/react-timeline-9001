@@ -3,7 +3,7 @@ import { Menu, Popup } from 'semantic-ui-react';
 import { IAction, IActionParamForRun } from './IAction';
 import { createTestids } from '@famiprog-foundation/tests-are-demo';
 
-type Point = { x: number, y: number };
+export type Point = { x: number, y: number };
 
 type IParamsForAction = {
   selection: any[];
@@ -17,6 +17,10 @@ interface ContextMenuProps {
    * if undefined => the menu is closed else {x, y} position where the menu should open
    */
   positionToOpen?: Point;
+  /**
+   * Handler for extra actions when the menu is closed
+   */
+  onClose?: () => void;
 }
 
 const testids = createTestids('ContextMenu', {
@@ -67,7 +71,11 @@ export class ContextMenu extends React.Component<ContextMenuProps, { isOpened?: 
   render() {
     const visibleActions = this.getVisisbleActions(this.props.actions);
     return <Popup basic wide='very' data-testid={testids.popup} context={this.getPopupContext()} 
-                onClose={() => this.setState({ isOpened: false })} open={(this.state.isOpened && visibleActions.length > 0)}>
+                onClose={() => {
+                  this.setState({ isOpened: false });
+                  this.props.onClose && this.props.onClose();
+                }}
+                open={(this.state.isOpened && visibleActions.length > 0)}>
       <Menu className="rct9k-context-menu" secondary vertical>
         {visibleActions.map((action: IAction) => {
           const key = visibleActions.indexOf(action);
