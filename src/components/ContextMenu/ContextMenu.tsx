@@ -1,12 +1,15 @@
 import React from 'react';
-import { Menu, Popup } from 'semantic-ui-react';
+import { Menu, Popup, StrictPopupProps } from 'semantic-ui-react';
 import { IAction, IActionParamForRun } from './IAction';
 import { createTestids } from '@famiprog-foundation/tests-are-demo';
 
 export type Point = { x: number, y: number };
 
+type Position = StrictPopupProps["position"];
+
 type IParamsForAction = {
   selection: any[];
+  position?: Position;
   [key: string]: any;
 }
 interface ContextMenuProps {
@@ -70,7 +73,8 @@ export class ContextMenu extends React.Component<ContextMenuProps, { isOpened?: 
 
   render() {
     const visibleActions = this.getVisisbleActions(this.props.actions);
-    return <Popup basic wide='very' data-testid={testids.popup} context={this.getPopupContext()} 
+    return <Popup basic wide='very' data-testid={testids.popup} context={this.getPopupContext()}
+                position={this.props.paramsForAction.position}
                 onClose={() => {
                   this.setState({ isOpened: false });
                   this.props.onClose && this.props.onClose();
@@ -84,9 +88,10 @@ export class ContextMenu extends React.Component<ContextMenuProps, { isOpened?: 
               data-testid={testids.menuItem + "_" + key} 
               key={key}
               icon={action.icon} 
+              disabled={action.disabled}
               content={action.label instanceof Function ? action.label({ ...this.props.paramsForAction }) : action.label}
-              onClick={() => {
-                let params:IActionParamForRun = { ...this.props.paramsForAction, closeContextMenu: this.close }
+              onClick={(event) => {
+                let params:IActionParamForRun = { ...this.props.paramsForAction, closeContextMenu: this.close, eventPoint: { x: event.clientX, y: event.clientY } }
                 action.run && action.run(params);
                 if (!params.dontCloseContextMenuAfterRunAutomatically) {
                   this.close();

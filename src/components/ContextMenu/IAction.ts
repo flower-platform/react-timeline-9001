@@ -1,5 +1,6 @@
 import React from "react"
 import { IconProps, SemanticShorthandItem } from "semantic-ui-react"
+import { Point } from "./ContextMenu"
 
 export interface IActionParam {
     selection: any[]
@@ -13,7 +14,12 @@ export interface IActionParamForRun extends IActionParam {
      * If the user wants to avoid the closing of the menu after action runs he needs to set this property to true
      * and maybe explicitly call closeContextMenu() when needed
      */
-    dontCloseContextMenuAfterRunAutomatically?: boolean
+    dontCloseContextMenuAfterRunAutomatically?: boolean,
+
+    /**
+     * It would contains the mouse coordinates (obtained when click is done on an action) that can be used by an action
+     */
+    eventPoint?: Point
 }
 
 export interface IOnContextMenuShowParam {
@@ -33,6 +39,7 @@ export interface IAction {
     isVisible?: (param: IActionParam) => boolean,
     icon?: SemanticShorthandItem<IconProps>,
     label?: string | ((param: IActionParam) => string),
+    disabled?: boolean,
     /**
      * Function that will be called when user will click this menu entry. Will receives as parameter the current selected items
      */
