@@ -21,7 +21,7 @@ interface ContextMenuProps {
    */
   positionToOpen?: Point;
   /**
-   * Handler for extra actions when the menu is closed
+   * Callback for extra actions when the menu is closed
    */
   onClose?: () => void;
 }
@@ -50,6 +50,7 @@ export class ContextMenu extends React.Component<ContextMenuProps, { isOpened?: 
 
   close() {
     this.setState({ isOpened: false });
+    this.props.onClose && this.props.onClose();
   }
 
   getPopupContext(): HTMLElement {
@@ -76,8 +77,7 @@ export class ContextMenu extends React.Component<ContextMenuProps, { isOpened?: 
     return <Popup basic wide='very' data-testid={testids.popup} context={this.getPopupContext()}
                 position={this.props.paramsForAction.position}
                 onClose={() => {
-                  this.setState({ isOpened: false });
-                  this.props.onClose && this.props.onClose();
+                  this.close();
                 }}
                 open={(this.state.isOpened && visibleActions.length > 0)}>
       <Menu className="rct9k-context-menu" secondary vertical>
