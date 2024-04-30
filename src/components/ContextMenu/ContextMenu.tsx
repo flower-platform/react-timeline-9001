@@ -88,7 +88,7 @@ export class ContextMenu extends React.Component<ContextMenuProps, { isOpened?: 
               data-testid={testids.menuItem + "_" + key} 
               key={key}
               icon={action.icon} 
-              disabled={action.disabled}
+              disabled={action.isDisabled ? action.isDisabled(this.props.paramsForAction) : false}
               content={action.label instanceof Function ? action.label({ ...this.props.paramsForAction }) : action.label}
               onClick={(event) => {
                 let params:IActionParamForRun = { ...this.props.paramsForAction, closeContextMenu: this.close, eventPoint: { x: event.clientX, y: event.clientY } }

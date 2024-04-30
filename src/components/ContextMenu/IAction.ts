@@ -17,7 +17,7 @@ export interface IActionParamForRun extends IActionParam {
     dontCloseContextMenuAfterRunAutomatically?: boolean,
 
     /**
-     * It would contains the mouse coordinates (obtained when click is done on an action) that can be used by an action
+     * It contains the mouse coordinates, obtained from onClick event of an action
      */
     eventPoint?: Point
 }
@@ -37,9 +37,9 @@ export interface IAction {
      * Should return true of false whether or not the action is visible for the selected items received as parameter
      */
     isVisible?: (param: IActionParam) => boolean,
+    isDisabled?: (param: IActionParam) => boolean,
     icon?: SemanticShorthandItem<IconProps>,
     label?: string | ((param: IActionParam) => string),
-    disabled?: boolean,
     /**
      * Function that will be called when user will click this menu entry. Will receives as parameter the current selected items
      */
