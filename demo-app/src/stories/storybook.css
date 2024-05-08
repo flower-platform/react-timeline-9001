@@ -54,3 +54,7 @@
 .story-custom-row-odd {
   background-color: #f4f7f8 !important;
 }
+
+.selected-row {
+  background-color: #ffff001f !important;
+}

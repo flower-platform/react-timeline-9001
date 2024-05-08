@@ -2,7 +2,7 @@ import { Only, Scenario, ScenarioOptions, render, tad } from "@famiprog-foundati
 import { assert } from "chai";
 import { Selection, selectionStoryTestIds } from "../stories/contextMenuAndSelection/ContextMenuAndSelection.stories";
 import { someTasks } from "../stories/sampleData";
-import Timeline, { timelineTestids as testids } from "../../../src/timeline";
+import { Timeline, timelineTestids as testids } from "@famiprog-foundation/react-gantt";
 import { rightClick } from "./testUtils";
 
 /**

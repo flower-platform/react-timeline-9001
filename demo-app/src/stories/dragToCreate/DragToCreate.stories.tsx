@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
-import Timeline from '../../../../src/timeline';
+import { Timeline, DragToCreateParam, Item } from '@famiprog-foundation/react-gantt';
 import { d, someHumanResources, someTasks } from '../sampleData';
 import { dragToCreateScenarios } from './DragToCreateScenarios';
-import { DragToCreateParam, Item } from '../../../../src/types';
 import { Form, Radio } from 'semantic-ui-react';
 import { createTestids } from '@famiprog-foundation/tests-are-demo';
 import { Table, Column, DataCell} from 'fixed-data-table-2';

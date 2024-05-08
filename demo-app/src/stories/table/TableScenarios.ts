@@ -2,7 +2,7 @@ import { createTestids } from "@famiprog-foundation/tests-are-demo";
 
 export const tableScenarios = {
   propertyTable: 'PROPERTY table',
-  propertyOnTableResize:'PROOPERTY onTableResize'
+  propertyOnSplitChange:'PROPERTY onSplitChange'
 };
 
 // These are needed in TableTestsAreDemo
@@ -10,4 +10,4 @@ export const tableScenarios = {
 // And could not be exported directly from table.storie.tsx because  
 // everything exported there gets in the storybook tree as a story entry
 export const tableTestIds = createTestids("Table", {row:""});
-export const DEMO_TABLE_WIDTH = 260;
+export const DEMO_TABLE_WIDTH = 275;

@@ -4,7 +4,7 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 
 import './stories/storybook.css';
-import '../../src/style.css';
+import '@famiprog-foundation/react-gantt/style.css';
 
 import DemoTimeline from './demo';
 import {TestsAreDemoAppWrapper} from '@famiprog-foundation/tests-are-demo';
@@ -14,8 +14,8 @@ import {TableTestsAreDemo} from './testsAreDemo/TableTestsAreDemo';
 import {SelectedItemsTestsAreDemo} from './testsAreDemo/SelectedItemsTestsAreDemo';
 import {ContextMenuTestsAreDemo} from './testsAreDemo/ContextMenuTestsAreDemo';
 import {DynamicConfigurationTestsAreDemo} from './testsAreDemo/DynamicConfigurationTestsAreDemo';
-import { HighlightedInterval } from '../../src/components/HighlightedInterval';
 import { BackgroundLayersTestsAreDemo } from './testsAreDemo/BackgroundLayersTestsAreDemo';
+import { DisplayItemOnSeparateRowIfOverlapTestsAreDemo } from './testsAreDemo/DisplayItemOnSeparateRowIfOverlapTestsAreDemo';
 import { ZoomTestsAreDemo } from './testsAreDemo/ZoomTestsAreDemo';
 
 ReactDOM.render(
@@ -30,6 +30,7 @@ ReactDOM.render(
         TableTestsAreDemo,
         DynamicConfigurationTestsAreDemo,
         BackgroundLayersTestsAreDemo,
+        DisplayItemOnSeparateRowIfOverlapTestsAreDemo,
         ZoomTestsAreDemo
       );
     }}

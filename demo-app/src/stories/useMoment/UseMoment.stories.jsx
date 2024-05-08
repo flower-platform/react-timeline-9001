@@ -1,6 +1,6 @@
 import React from 'react';
 import moment from 'moment';
-import Timeline from '../../../../src/timeline';
+import { Timeline } from '@famiprog-foundation/react-gantt';
 
 const TIMELINE_EVENTS = [
   'onInteraction',

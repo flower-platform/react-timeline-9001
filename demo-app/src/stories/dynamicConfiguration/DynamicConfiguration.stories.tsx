@@ -1,6 +1,6 @@
 import { Table, Column, DataCell} from 'fixed-data-table-2';
 import { d, someHumanResources, someTasks } from "../sampleData";
-import Timeline from '../../../../src/timeline'
+import { Timeline } from '@famiprog-foundation/react-gantt'
 import { Button } from 'semantic-ui-react';
 import { useState } from 'react';
 import moment from 'moment';

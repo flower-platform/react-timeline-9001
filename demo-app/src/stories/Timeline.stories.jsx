@@ -2,7 +2,7 @@ import React from 'react';
 import moment from 'moment';
 
 import DemoTimeline from '../demo';
-import Timeline from '../../../src/timeline';
+import { Timeline } from '@famiprog-foundation/react-gantt';
 import {Alert, notification} from 'antd';
 
 export default {

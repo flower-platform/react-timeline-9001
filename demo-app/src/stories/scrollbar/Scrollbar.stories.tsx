@@ -1,5 +1,5 @@
 import SplitPane from "react-split-pane";
-import { Direction, Scrollbar } from "../../../../src/components/Scrollbar";
+import { Direction, Scrollbar } from "@famiprog-foundation/react-gantt";
 import { useRef, useState } from "react";
 import { Alert } from "antd";
 import Measure from 'react-measure';
