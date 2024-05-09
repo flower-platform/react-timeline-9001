@@ -1,5 +1,7 @@
 ## Unreleased
 
+* [Zoom](https://github.com/flower-platform/react-timeline-10000/pull/58)
+
 ## v2.6.1
 
 * [Error when moving the mouse and the grid inside the gantt in not yet rendered](https://github.com/flower-platform/react-timeline-10000/pull/77)
