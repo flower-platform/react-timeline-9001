@@ -60,7 +60,9 @@ const testids = createTestids('Timeline', {
   selector: '',
   table: '',
   ganttBody: '',
-  splitPaneResizer: ''
+  splitPaneResizer: '',
+  fadeEffect: '',
+  timeBar: ''
 });
 export const timelineTestids = testids;
 
@@ -79,6 +81,11 @@ export const DEFAULT_ROW_ODD_CLASS = '';
 export const DRAG_TO_CREATE_POPUP_CLOSE_TIME = 5000;
 export const DRAG_TO_CREATE_POPUP_LABEL_2 = 'Popup will close in a few moments.';
 
+const FADE_OPACITY_OFFSET = 0.1;
+const FADE_TIMER_INTERVAR = 100;
+export const ZOOM_PERCENT = 0.2;
+export const MIN_DISPLAY_TIME = 60000;
+
 export const PARENT_ELEMENT = componentId => document.querySelector(`.rct9k-id-${componentId} .parent-div`);
 
 const TableWithStyle = ({table}) => {
@@ -96,6 +103,8 @@ const TableWithStyle = ({table}) => {
 };
 
 export const DRAG_TO_CREATE_ACTION_LABEL = 'Drag to create';
+export const ZOOM_IN_ACTION_LABEL = 'Zoom in';
+export const ZOOM_OUT_ACTION_LABEL = 'Zoom out';
 /**
  * Timeline class
  * @extends React.Component<Timeline.propTypes>
@@ -480,7 +489,14 @@ export default class Timeline extends React.Component {
      *
      * @type {(item: Item) => number}
      */
-    zIndexFunction: PropTypes.func
+    zIndexFunction: PropTypes.func,
+
+    /**
+     * If this property is provided with true, then in context menu displays the shortcut for zoom in and zoom out.
+     *
+     * @type { undefined | boolean}
+     */
+    showZommShortcuts: PropTypes.bool
   };
 
   static defaultProps = {
@@ -508,7 +524,7 @@ export default class Timeline extends React.Component {
     minDate: undefined,
     maxDate: undefined,
     selectedItems: undefined,
-    snap: undefined,
+    snap: 1,
     timebarFormat: undefined,
     bottomResolution: undefined,
     topResolution: undefined,
@@ -530,7 +546,8 @@ export default class Timeline extends React.Component {
     displayItemOnSeparateRowIfOverlap: true,
     zIndexFunction() {
       return 3;
-    }
+    },
+    showZommShortcuts: false
   };
 
   /**
@@ -560,6 +577,16 @@ export default class Timeline extends React.Component {
    */
   static no_op = () => {};
 
+  /**
+   * Fade timer
+   */
+  fadeTimer = undefined;
+
+  getInitialTableWidth(props) {
+    props = props ? props : this.props;
+    return (props.table ? props.table.props.width : 0) + TABLE_OFFSET;
+  }
+
   constructor(props) {
     super(props);
     this.selecting = false;
@@ -583,7 +610,10 @@ export default class Timeline extends React.Component {
       startDate: this.props.startDate,
       endDate: this.props.endDate,
       hasHorizontalScrollbar: false,
-      touchPositionX: undefined
+      touchPositionX: undefined,
+      fadeEffectOpen: false,
+      fadeEffectContent: undefined,
+      fadeEffectOpacity: 0
     };
 
     // These functions need to be bound because they are passed as parameters.
@@ -629,6 +659,8 @@ export default class Timeline extends React.Component {
     this.onSplitChange = this.onSplitChange.bind(this);
     this.selectionChangedHandler = this.selectionChangedHandler.bind(this);
     this.getRowClassName = this.getRowClassName.bind(this);
+    this.mouseWheel = this.mouseWheel.bind(this);
+    this.startFadeOutEffect = this.startFadeOutEffect.bind(this);
 
     const canSelect = Timeline.isBitSet(Timeline.TIMELINE_MODES.SELECT, this.props.timelineMode);
     const canDrag = Timeline.isBitSet(Timeline.TIMELINE_MODES.DRAG, this.props.timelineMode);
@@ -638,6 +670,7 @@ export default class Timeline extends React.Component {
 
   componentDidMount() {
     window.addEventListener('resize', this.updateDimensions);
+    window.addEventListener('mousewheel', this.mouseWheel, {passive: false});
   }
 
   componentWillReceiveProps(nextProps) {
@@ -684,6 +717,7 @@ export default class Timeline extends React.Component {
     if (this._selectRectangleInteractable) this._selectRectangleInteractable.unset();
 
     window.removeEventListener('resize', this.updateDimensions);
+    window.removeEventListener('mousewheel', this.mouseWheel);
   }
 
   componentDidUpdate(prevProps, prevState) {
@@ -706,6 +740,48 @@ export default class Timeline extends React.Component {
         this.props.useMoment
       );
       this.refreshGrid();
+    }
+
+    if (prevState.hasHorizontalScrollbar != this.state.hasHorizontalScrollbar) {
+      this.fillInTimelineWithEmptyRows(this.props.groups);
+      this.refreshGrid();
+    }
+  }
+
+  mouseWheel(e) {
+    if (e.ctrlKey) {
+      let target = e.target;
+      while (target) {
+        if (target.className.includes('rct9k-grid')) {
+          break;
+        }
+        target = target.parentElement;
+      }
+      if (!target) {
+        return;
+      }
+      e.preventDefault();
+      e.stopPropagation();
+
+      const interval = moment(this.state.endDate).valueOf() - moment(this.state.startDate).valueOf();
+      const delta = e.clientX / this._grid.props.width;
+      let deltaInterval = interval * ZOOM_PERCENT;
+      if (e.deltaY > 0) {
+        deltaInterval *= -1;
+      }
+      let startDate = moment(moment(this.state.startDate).valueOf() + delta * deltaInterval);
+      let endDate = moment(moment(this.state.endDate).valueOf() - (1 - delta) * deltaInterval);
+      if (endDate - startDate < MIN_DISPLAY_TIME) {
+        return;
+      }
+      if (startDate.valueOf() < moment(this.getMinDate()).valueOf()) {
+        startDate = this.getMinDate();
+      }
+      if (endDate.valueOf() > moment(this.getMaxDate()).valueOf()) {
+        endDate = this.getMaxDate();
+      }
+      this.setState({startDate, endDate});
+      this.throttledMouseMoveFunc(e);
     }
   }
 
@@ -746,7 +822,7 @@ export default class Timeline extends React.Component {
     if (this.props.minDate) {
       return convertDateToMoment(this.props.minDate, this.props.useMoment);
     } else {
-      return this.getStartDate();
+      return convertDateToMoment(this.props.startDate, this.props.useMoment);
     }
   }
 
@@ -759,7 +835,7 @@ export default class Timeline extends React.Component {
     if (this.props.maxDate) {
       return convertDateToMoment(this.props.maxDate, this.props.useMoment);
     } else {
-      return this.getEndDate();
+      return convertDateToMoment(this.props.endDate, this.props.useMoment);
     }
   }
 
@@ -2031,6 +2107,41 @@ export default class Timeline extends React.Component {
         }
       });
     }
+    if (this.props.showZommShortcuts) {
+      let that = this;
+      actions.push({
+        label: ZOOM_IN_ACTION_LABEL,
+        icon: 'zoom-in',
+        run: param => {
+          let event = new MouseEvent('mousewheel', {
+            ctrlKey: true,
+            clientX: that._gridDomNode.getBoundingClientRect().x + that._grid.props.width / 2,
+            bubbles: true,
+            cancelable: true
+          });
+          event.deltaY = -1;
+          that._gridDomNode.dispatchEvent(event);
+          param.closeContextMenu();
+          that.startFadeOutEffect('Zommed in');
+        }
+      });
+      actions.push({
+        label: ZOOM_OUT_ACTION_LABEL,
+        icon: 'zoom-out',
+        run: param => {
+          let event = new MouseEvent('mousewheel', {
+            ctrlKey: true,
+            clientX: that._gridDomNode.getBoundingClientRect().x + that._grid.props.width / 2,
+            bubbles: true,
+            cancelable: true
+          });
+          event.deltaY = 1;
+          that._gridDomNode.dispatchEvent(event);
+          param.closeContextMenu();
+          that.startFadeOutEffect('Zommed out');
+        }
+      });
+    }
 
     return (
       <ContextMenu
@@ -2038,6 +2149,36 @@ export default class Timeline extends React.Component {
         positionToOpen={actions.length > 0 ? this.state.openedContextMenuCoordinates : undefined}
         actions={actions}
       />
+    );
+  }
+
+  /**
+   * Show a popup with fadeEffectContent, and start the fadeOut
+   * @param { string | JSX.Element } fadeEffectContent
+   */
+  startFadeOutEffect(fadeEffectContent) {
+    this.setState({fadeEffectOpen: true, fadeEffectContent, fadeEffectOpacity: 1});
+    let that = this;
+    this.fadeTimer = setInterval(function() {
+      if (that.state.fadeEffectOpacity > 0) {
+        that.setState({fadeEffectOpacity: that.state.fadeEffectOpacity - FADE_OPACITY_OFFSET});
+      } else {
+        clearInterval(that.fadeTimer);
+      }
+    }, FADE_TIMER_INTERVAR);
+  }
+
+  /**
+   * @returns { JSX.Element }
+   */
+  renderFadeEffect() {
+    return (
+      <Popup
+        data-testid={testids.fadeEffect}
+        open={this.state.fadeEffectOpen}
+        style={{opacity: this.state.fadeEffectOpacity}}>
+        {this.state.fadeEffectContent}
+      </Popup>
     );
   }
 
@@ -2170,6 +2311,7 @@ export default class Timeline extends React.Component {
                       this.setState({hasHorizontalScrollbar: isScrollbarVisible})
                     }
                     ref={node => (this._scrollbar = node)}></Scrollbar>
+                  {this.renderFadeEffect()}
                   {this.renderContextMenu()}
                   {backgroundLayer &&
                     React.cloneElement(backgroundLayer, {
