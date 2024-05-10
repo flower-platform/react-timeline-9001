@@ -2113,7 +2113,7 @@ export default class Timeline extends React.Component {
         label: ZOOM_IN_ACTION_LABEL,
         icon: 'zoom-in',
         run: param => {
-          let event = new MouseEvent('wheelHandler', {
+          let event = new MouseEvent('wheel', {
             ctrlKey: true,
             clientX: that._gridDomNode.getBoundingClientRect().x + that._grid.props.width / 2,
             bubbles: true,
@@ -2129,7 +2129,7 @@ export default class Timeline extends React.Component {
         label: ZOOM_OUT_ACTION_LABEL,
         icon: 'zoom-out',
         run: param => {
-          let event = new MouseEvent('wheelHandler', {
+          let event = new MouseEvent('wheel', {
             ctrlKey: true,
             clientX: that._gridDomNode.getBoundingClientRect().x + that._grid.props.width / 2,
             bubbles: true,
