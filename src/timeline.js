@@ -659,7 +659,7 @@ export default class Timeline extends React.Component {
     this.onSplitChange = this.onSplitChange.bind(this);
     this.selectionChangedHandler = this.selectionChangedHandler.bind(this);
     this.getRowClassName = this.getRowClassName.bind(this);
-    this.mouseWheel = this.mouseWheel.bind(this);
+    this.wheelHandler = this.wheelHandler.bind(this);
     this.startFadeOutEffect = this.startFadeOutEffect.bind(this);
 
     const canSelect = Timeline.isBitSet(Timeline.TIMELINE_MODES.SELECT, this.props.timelineMode);
@@ -670,7 +670,7 @@ export default class Timeline extends React.Component {
 
   componentDidMount() {
     window.addEventListener('resize', this.updateDimensions);
-    window.addEventListener('mousewheel', this.mouseWheel, {passive: false});
+    window.addEventListener('wheel', this.wheelHandler, {passive: false});
   }
 
   componentWillReceiveProps(nextProps) {
@@ -717,7 +717,7 @@ export default class Timeline extends React.Component {
     if (this._selectRectangleInteractable) this._selectRectangleInteractable.unset();
 
     window.removeEventListener('resize', this.updateDimensions);
-    window.removeEventListener('mousewheel', this.mouseWheel);
+    window.removeEventListener('wheel', this.wheelHandler);
   }
 
   componentDidUpdate(prevProps, prevState) {
@@ -748,7 +748,7 @@ export default class Timeline extends React.Component {
     }
   }
 
-  mouseWheel(e) {
+  wheelHandler(e) {
     if (e.ctrlKey) {
       let target = e.target;
       while (target) {
@@ -2113,7 +2113,7 @@ export default class Timeline extends React.Component {
         label: ZOOM_IN_ACTION_LABEL,
         icon: 'zoom-in',
         run: param => {
-          let event = new MouseEvent('mousewheel', {
+          let event = new MouseEvent('wheel', {
             ctrlKey: true,
             clientX: that._gridDomNode.getBoundingClientRect().x + that._grid.props.width / 2,
             bubbles: true,
@@ -2129,7 +2129,7 @@ export default class Timeline extends React.Component {
         label: ZOOM_OUT_ACTION_LABEL,
         icon: 'zoom-out',
         run: param => {
-          let event = new MouseEvent('mousewheel', {
+          let event = new MouseEvent('wheel', {
             ctrlKey: true,
             clientX: that._gridDomNode.getBoundingClientRect().x + that._grid.props.width / 2,
             bubbles: true,
