@@ -1,6 +1,8 @@
 ## Unreleased
 
-* [Zoom](https://github.com/flower-platform/react-timeline-10000/pull/58)
+## v2.7.0
+
+* [Zoom](https://github.com/flower-platform/react-timeline-10000/pull/58) and [small fix for Firefox](https://github.com/flower-platform/react-timeline-10000/pull/80)
 
 ## v2.6.1
 
