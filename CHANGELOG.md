@@ -1,5 +1,9 @@
 ## Unreleased
 
+## v2.7.1
+
+* Updated `@famiprog-foundation/scriptable-ui` @ v1.0.0.
+
 ## v2.7.0
 
 * [Zoom](https://github.com/flower-platform/react-timeline-10000/pull/58) and [small fix for Firefox](https://github.com/flower-platform/react-timeline-10000/pull/80)
