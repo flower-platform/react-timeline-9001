@@ -752,7 +752,7 @@ export default class Timeline extends React.Component {
     if (e.ctrlKey) {
       let target = e.target;
       while (target) {
-        if (target.className.includes('rct9k-grid')) {
+        if (target.className.includes(`rct9k-grid rct9k-grid-id-${this.props.componentId}`)) {
           break;
         }
         target = target.parentElement;
@@ -764,7 +764,7 @@ export default class Timeline extends React.Component {
       e.stopPropagation();
 
       const interval = moment(this.state.endDate).valueOf() - moment(this.state.startDate).valueOf();
-      const delta = e.clientX / this._grid.props.width;
+      const delta = (e.clientX - this.getGanttLeftOffset()) / this._grid.props.width;
       let deltaInterval = interval * ZOOM_PERCENT;
       if (e.deltaY > 0) {
         deltaInterval *= -1;
@@ -2286,6 +2286,7 @@ export default class Timeline extends React.Component {
                     />
                   ))}
                   <TimelineBody
+                    componentId={this.props.componentId}
                     width={this.state.gridWidth}
                     columnWidth={() => this.state.gridWidth}
                     height={bodyHeight - (this.state.hasHorizontalScrollbar ? SCROLLBAR_SIZE : 0)}

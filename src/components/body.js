@@ -37,7 +37,7 @@ class TimelineBody extends Component {
     return shallowChange;
   }
   render() {
-    const {width, columnWidth, height, rowHeight, rowCount, columnCount, onScroll} = this.props;
+    const {width, columnWidth, height, rowHeight, rowCount, columnCount, onScroll, componentId} = this.props;
     const {grid_ref_callback, cellRenderer} = this.props;
 
     return (
@@ -52,7 +52,7 @@ class TimelineBody extends Component {
         rowCount={rowCount}
         rowHeight={rowHeight}
         width={width}
-        className="rct9k-grid"
+        className={`rct9k-grid rct9k-grid-id-${componentId}`}
         onScroll={onScroll}
         data-testid={timelineTestids.grid}
       />
@@ -118,7 +118,13 @@ TimelineBody.propTypes = {
    * As e.g. @see Timeline.props.forceRedrawFunc
    * @type { Function }
    */
-  forceRedrawFunc: PropTypes.func
+  forceRedrawFunc: PropTypes.func,
+
+  /**
+   * A unique key to identify the component. Only needed when 2 grids are mounted.
+   * @type { string }
+   */
+  componentId: PropTypes.string
 };
 
 TimelineBody.defaultProps = {
