@@ -1,9 +1,9 @@
 import { Only, Scenario, ScenarioOptions, render, tad } from "@famiprog-foundation/tests-are-demo";
-import { contextMenuTestIds } from "../../../src/components/ContextMenu/ContextMenu";
+import { contextMenuTestIds } from "@famiprog-foundation/react-gantt";
 import { ContextMenu, addTaskActionIcon, addTaskActionLabel, addTaskNotPossibleAction, deleteActionIcon, deleteActionIconColor, deleteActionLabel, editActionLabel } from "../stories/contextMenuAndSelection/ContextMenuAndSelection.stories";
 import { someHumanResources, someTasks } from "../stories/sampleData";
-import Timeline, { PARENT_ELEMENT, timelineTestids as testids } from "../../../src/timeline";
-import { getPixelAtTime, getTimeAtPixel } from "../../../src/utils/timeUtils";
+import { Timeline, timelineTestids as testids } from "@famiprog-foundation/react-gantt";
+import { getPixelAtTime, getTimeAtPixel } from "@famiprog-foundation/react-gantt";
 import { rightClick } from "./testUtils";
 
 const CLICK_X =30;
@@ -56,12 +56,9 @@ export class ContextMenuTestsAreDemo {
         // Gantt works with times "snapped to grid" so the position for the new task should be snapped to grid 
         const timeline = tad.getObjectViaCheat(Timeline);
         const firstRow = tad.screenCapturing.getByTestId(testids.row + "_0");
-        const ganttLeftOffset = PARENT_ELEMENT(timeline.props.componentId).getBoundingClientRect().left;
-        const clickedX = firstRow.getBoundingClientRect().x + CLICK_X;
-        const clickedXInGantt = clickedX - ganttLeftOffset;
-        const clickedTime = getTimeAtPixel(clickedXInGantt, timeline.getStartDate(), timeline.getEndDate(), timeline.getTimelineWidth(undefined), timeline.getTimelineSnap());
+        const clickedTime = getTimeAtPixel(CLICK_X, timeline.getStartDate(), timeline.getEndDate(), timeline.getTimelineWidth(undefined), timeline.getTimelineSnap());
         const clickedXSnappedToGrid = getPixelAtTime(clickedTime, timeline.getStartDate(), timeline.getEndDate(), timeline.getTimelineWidth(undefined))
-             + ganttLeftOffset;     
+             + timeline.getGanttLeftOffset();     
         await tad.assertWaitable.equal(Math.round(newSegment.getBoundingClientRect().x), Math.round(clickedXSnappedToGrid));
         
         // AND is correctly added to the clicked row

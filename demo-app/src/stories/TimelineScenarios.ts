@@ -11,5 +11,6 @@ export const timelineScenarios = {
   propertyRowOddClassName: 'PROPERTY rowOddClassName',
   propertyMinDate: 'PROPERTY minDate',
   propertyMaxDate: 'PROPERTY maxDate',
+  propertyShowZoomShortcuts: 'PROPERTY showZoomShortcuts',
   givenIlegalDataThenShowWarning: "GIVEN illegal data, THEN show warning icon",
 };

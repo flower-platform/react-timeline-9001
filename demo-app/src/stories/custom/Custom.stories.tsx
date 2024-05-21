@@ -3,7 +3,7 @@ import { Segment } from "semantic-ui-react";
 import { d, someHumanResources, someTasks } from "../sampleData";
 import { CustomTimeline } from "./CustomTimeline";
 import { customTimelineScenarios } from "./CustomTimelineScenarios";
-import ItemRenderer from '../../../../src/components/ItemRenderer';
+import { ItemRenderer } from '@famiprog-foundation/react-gantt';
 import { Table, Column, DataCell} from 'fixed-data-table-2';
 
 export default {

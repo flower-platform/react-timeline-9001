@@ -13,6 +13,7 @@ export const timebarTestIds = createTestids('Timebar', {
   timebarItem: ''
 });
 const testIds = timebarTestIds;
+import {timelineTestids as testids} from '../timeline';
 
 /**
  * Timebar component - displays the current time on top of the timeline.
@@ -244,7 +245,7 @@ export default class Timebar extends React.Component {
     else if (topBarComponent.length > 0) topBarCursorKey = topBarComponent[0].key;
 
     return (
-      <div className="rct9k-timebar" style={{width: this.props.width}}>
+      <div className="rct9k-timebar" style={{width: this.props.width}} data-testid={testids.timeBar}>
         <div className="rct9k-timebar-outer" style={{width: this.props.width - this.props.leftOffset}}>
           <div className="rct9k-timebar-inner rct9k-timebar-inner-top">
             {_.map(topBarComponent, i => {
