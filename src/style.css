@@ -208,6 +208,7 @@
 }
 
 .rct9k-marker {
+  z-index: 999;
   position: absolute;
   margin: 0;
   background: #a9a9e6;
@@ -216,7 +217,6 @@
 }
 
 .rct9k-marker-overlay {
-  z-index: 4;
   height: 475px;
   position: absolute;
   width: 2px;

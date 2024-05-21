@@ -485,7 +485,8 @@ export default class Timeline extends React.Component {
     displayItemOnSeparateRowIfOverlap: PropTypes.oneOfType([PropTypes.bool, PropTypes.func]),
 
     /**
-     * The segments with bigger index are staying in front of the ones with smaller index
+     * The segments with bigger index are staying in front of the ones with smaller index.
+     * To not show the segment in front of the now marker, cursor time, and modal, please do not return a number greater than 998
      *
      * @type {(item: Item) => number}
      */
