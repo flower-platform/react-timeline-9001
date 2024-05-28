@@ -4,8 +4,9 @@ import { useState } from "react";
 import { Dropdown, Form, FormField } from "semantic-ui-react";
 import Timeline, { DEFAULT_ROW_CLASS } from '../../../../src/timeline';
 import { Item } from '../../../../src/types';
-import { d, someHumanResources, someTasks } from "../sampleData";
+import { someHumanResources, someTasks2 } from "../sampleData";
 import { CustomTimeline } from './CustomTimeline';
+import moment from 'moment';
 
 export default {
     title: "Features/Display item on separate rows if overlap",
@@ -24,16 +25,16 @@ export var selectedRow, setSelectedRow;
 
 export const Main = () => {
     const tasks: Item[] = [
-        ...someTasks,
-        { key: 11, row: 1, title: 'Task AR4', start: d('2018-09-20 10:00'), end: d('2018-09-20 11:00') },
-        { key: 12, row: 2, title: 'Task MD6', start: d('2018-09-20 07:30'), end: d('2018-09-20 15:00') }
+        ...someTasks2,
+        { key: 11, row: 1, title: 'Task AR4', start: moment('2018-09-20 10:00'), end: moment('2018-09-20 11:00') },
+        { key: 12, row: 2, title: 'Task MD6', start: moment('2018-09-20 07:30'), end: moment('2018-09-20 15:00') }
       ];
     const [displayItemOnSeparateRowIfOverlap, setDisplayItemOnSeparateRowIfOverlap] = useState<boolean | ( (Item, number) => boolean)>(true);  
     [selectedRow, setSelectedRow] = useState<number>(-1);
-    const [displayIntervalStart, displayIntervalEnd] = [d('2018-09-20'), d('2018-09-21')] 
+    const [displayIntervalStart, displayIntervalEnd] = [moment('2018-09-20'), moment('2018-09-21')] 
     // Smaller segments are staying on top of the bigger ones
     const zIndexFunction = (item: Item) => {
-        return Math.floor((displayIntervalEnd - displayIntervalStart) /  ((item.end.valueOf() as number) - (item.start.valueOf() as number))); 
+        return Math.floor((displayIntervalEnd.valueOf() - displayIntervalStart.valueOf()) /  ((item.end.valueOf() as number) - (item.start.valueOf() as number))); 
     }
 
     var displayItemOnSeparateRowOnlyForSelectedRow = () => {
@@ -81,6 +82,7 @@ export const Main = () => {
                 selectedIndex={selectedRow}
                 zIndexFunction={zIndexFunction}
                 onRowClick={onRowClick}
+                useMoment={true}
                 table={<Table width={100} onRowClick={onRowClick}
                             rowClassNameGetter={(rowIndex) => rowIndex == selectedRow ? DEFAULT_ROW_CLASS + " selected-row" : undefined}>
                             <Column
