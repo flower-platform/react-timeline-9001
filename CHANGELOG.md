@@ -1,5 +1,7 @@
 ## Unreleased
 
+* Small issue at update when useMoment props is true
+
 ## v2.7.1
 
 * Updated `@famiprog-foundation/scriptable-ui` @ v1.0.0.
