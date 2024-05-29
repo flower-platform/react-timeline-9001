@@ -47,7 +47,7 @@ import {SelectionHolder} from './utils/SelectionHolder';
 import {IGanttAction} from './types';
 import {ContextMenu} from './components/ContextMenu/ContextMenu';
 import moment from 'moment';
-import {SCROLLBAR_SIZE, Scrollbar} from './components/Scrollbar';
+import {Direction, SCROLLBAR_SIZE, Scrollbar} from './components/Scrollbar';
 
 const testids = createTestids('Timeline', {
   menuButton: '',
@@ -762,7 +762,7 @@ export default class Timeline extends React.Component {
     if (e.ctrlKey) {
       let target = e.target;
       while (target) {
-        if (target.className.includes('rct9k-grid')) {
+        if (target.className.includes(`rct9k-grid rct9k-grid-id-${this.props.componentId}`)) {
           break;
         }
         target = target.parentElement;
@@ -773,24 +773,23 @@ export default class Timeline extends React.Component {
       e.preventDefault();
       e.stopPropagation();
 
-      const interval = moment(this.state.endDate).valueOf() - moment(this.state.startDate).valueOf();
-      const delta = e.clientX / this._grid.props.width;
+      const interval = this.getEndDate().valueOf() - this.getStartDate().valueOf();
+      const delta = (e.clientX - this.getGanttLeftOffset()) / this._grid.props.width;
       let deltaInterval = interval * ZOOM_PERCENT;
       if (e.deltaY > 0) {
         deltaInterval *= -1;
       }
-      let startDate = moment(moment(this.state.startDate).valueOf() + delta * deltaInterval);
-      let endDate = moment(moment(this.state.endDate).valueOf() - (1 - delta) * deltaInterval);
+
+      const startDate = Math.max(this.getStartDate().valueOf() + delta * deltaInterval, this.getMinDate().valueOf());
+      const endDate = Math.min(this.getEndDate().valueOf() - (1 - delta) * deltaInterval, this.getMaxDate().valueOf());
       if (endDate - startDate < MIN_DISPLAY_TIME) {
         return;
       }
-      if (startDate.valueOf() < moment(this.getMinDate()).valueOf()) {
-        startDate = this.getMinDate();
-      }
-      if (endDate.valueOf() > moment(this.getMaxDate()).valueOf()) {
-        endDate = this.getMaxDate();
-      }
-      this.setState({startDate, endDate});
+
+      this.setState({
+        startDate: this.props.useMoment ? moment(startDate) : startDate,
+        endDate: this.props.useMoment ? moment(endDate) : endDate
+      });
       this.throttledMouseMoveFunc(e);
     }
   }
@@ -1732,7 +1731,7 @@ export default class Timeline extends React.Component {
       var props = this.props;
       return (
         <div
-          data-testid={testids.row + '_' + rowIndex}
+          data-testid={this.props.componentId + '_' + testids.row + '_' + rowIndex}
           key={key}
           style={style}
           data-row-index={rowIndex}
@@ -2041,13 +2040,13 @@ export default class Timeline extends React.Component {
   renderMenuButton() {
     return (
       <Popup
-        data-testid={testids.dragToCreatePopup}
+        data-testid={this.props.componentId + '_' + testids.dragToCreatePopup}
         position="top right"
         open={this.state.dragToCreateMode && !this.state.dragToCreatePopupClosed}
         wide="very"
         trigger={
           <Button
-            data-testid={testids.menuButton}
+            data-testid={this.props.componentId + '_' + testids.menuButton}
             size="mini"
             circular
             primary
@@ -2071,12 +2070,12 @@ export default class Timeline extends React.Component {
             ref={this.menuButton_ref_callback}></Button>
         }>
         <div>
-          <div data-testid={testids.dragToCreatePopupLabel + '_1'}>
+          <div data-testid={this.props.componentId + '_' + testids.dragToCreatePopupLabel + '_1'}>
             <b>Click and drag</b> to create a new segment
           </div>
           <div className="rct9k-drag-to-create-popup-buttons-div">
             <Button
-              data-testid={testids.dragToCreatePopupCancelButton}
+              data-testid={this.props.componentId + '_' + testids.dragToCreatePopupCancelButton}
               content="Cancel 'drag to create' mode"
               icon="cancel"
               negative
@@ -2084,10 +2083,14 @@ export default class Timeline extends React.Component {
               onClick={() => this.setDragToCreateMode(false)}
             />
           </div>
-          <div data-testid={testids.dragToCreatePopupLabel + '_2'} className="rct9k-drag-to-create-popup-hint-div">
+          <div
+            data-testid={this.props.componentId + '_' + testids.dragToCreatePopupLabel + '_2'}
+            className="rct9k-drag-to-create-popup-hint-div">
             {DRAG_TO_CREATE_POPUP_LABEL_2}
           </div>
-          <div data-testid={testids.dragToCreatePopupLabel + '_3'} className="rct9k-drag-to-create-popup-hint-div">
+          <div
+            data-testid={this.props.componentId + '_' + testids.dragToCreatePopupLabel + '_3'}
+            className="rct9k-drag-to-create-popup-hint-div">
             To <b>cancel</b> you can also click on gantt
           </div>
         </div>
@@ -2184,7 +2187,7 @@ export default class Timeline extends React.Component {
   renderFadeEffect() {
     return (
       <Popup
-        data-testid={testids.fadeEffect}
+        data-testid={this.props.componentId + '_' + testids.fadeEffect}
         open={this.state.fadeEffectOpen}
         style={{opacity: this.state.fadeEffectOpacity}}>
         {this.state.fadeEffectContent}
@@ -2194,8 +2197,8 @@ export default class Timeline extends React.Component {
 
   onHorizontalScroll(scrollPosition) {
     const displayIntervalInMiliseconds = this.getEndDate().diff(this.getStartDate(), 'milliseconds');
-    this.setState({startDate: this.props.useMoment ? moment(scrollPosition) : scrollPosition});
     this.setState({
+      startDate: this.props.useMoment ? moment(scrollPosition) : scrollPosition,
       endDate: this.props.useMoment
         ? moment(scrollPosition + displayIntervalInMiliseconds)
         : scrollPosition + displayIntervalInMiliseconds
@@ -2273,6 +2276,7 @@ export default class Timeline extends React.Component {
                     className={this.getDragToCreateMode() ? 'rct9k-selector-outer-add' : ''}
                   />
                   <Timebar
+                    componentId={this.props.componentId}
                     cursorTime={this.getCursor()}
                     start={this.getStartDate()}
                     end={this.getEndDate()}
@@ -2296,6 +2300,7 @@ export default class Timeline extends React.Component {
                     />
                   ))}
                   <TimelineBody
+                    componentId={this.props.componentId}
                     width={this.state.gridWidth}
                     columnWidth={() => this.state.gridWidth}
                     height={bodyHeight - (this.state.hasHorizontalScrollbar ? SCROLLBAR_SIZE : 0)}
@@ -2395,13 +2400,13 @@ export default class Timeline extends React.Component {
     return (
       // Can not use empty <> instead of <Fragment> because it fails the documentation generation
       <Fragment>
-        <TestsAreDemoCheat objectToPublish={this} />
+        <TestsAreDemoCheat objectToPublish={this} dataTestIdSuffix={this.props.componentId} />
         <SelectionHolder
           selectionChangedHandler={this.selectionChangedHandler}
           ref={this.selectionHolder_ref_callback}
           selectedItems={this.props.selectedItems}
         />
-        {this._table && <TestsAreDemoCheat objectToPublish={this._table} />}
+        {this._table && <TestsAreDemoCheat objectToPublish={this._table} dataTestIdSuffix={this.props.componentId} />}
         {
           // Instead of <Measure .../>, in the past <AutoSizer ... /> was used. However it would round with/height, which generated and endless
           // scrollbar appear/disappear, depending on the parent, depending on the resolution.
