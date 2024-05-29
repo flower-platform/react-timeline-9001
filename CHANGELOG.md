@@ -1,6 +1,9 @@
 ## Unreleased
 
+
 * Add z-index to marker to show on top of items, layers.
+* Small issue at update when useMoment props is true
+
 
 ## v2.7.1
 
