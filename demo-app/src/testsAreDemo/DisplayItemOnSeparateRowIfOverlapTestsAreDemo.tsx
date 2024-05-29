@@ -26,20 +26,20 @@ export class DisplayItemOnSeparateRowIfOverlapTestsAreDemo {
         tad.userEventWaitable.click(tad.withinCapturing(dropdown).getByRole("option", { name: TRUE }));
 
         // Rows expand to fit all the segments
-        let ganttBody = tad.screenCapturing.getByTestId(timelineTestids.ganttBody);
-        await tad.assertWaitable.equal(tad.withinCapturing(ganttBody).getByTestId(timelineTestids.row + "_0").offsetHeight, 40);
-        await tad.assertWaitable.equal(tad.withinCapturing(ganttBody).getByTestId(timelineTestids.row + "_1").offsetHeight, 80);
-        await tad.assertWaitable.equal(tad.withinCapturing(ganttBody).getByTestId(timelineTestids.row + "_2").offsetHeight, 80);
+        let ganttBody = tad.screenCapturing.getByTestId('r9k1_' + timelineTestids.ganttBody);
+        await tad.assertWaitable.equal(tad.withinCapturing(ganttBody).getByTestId('r9k1_' + timelineTestids.row + "_0").offsetHeight, 40);
+        await tad.assertWaitable.equal(tad.withinCapturing(ganttBody).getByTestId('r9k1_' + timelineTestids.row + "_1").offsetHeight, 80);
+        await tad.assertWaitable.equal(tad.withinCapturing(ganttBody).getByTestId('r9k1_' + timelineTestids.row + "_2").offsetHeight, 80);
         
         // Segments that overlapp are positioned on different sub-rows
-        let item = tad.withinCapturing(ganttBody).getByTestId(timelineTestids.row + "_1");
-        await tad.assertWaitable.equal(tad.withinCapturing(item).getByTestId(timelineTestids.item + "_3").offsetTop, 0);
+        let item = tad.withinCapturing(ganttBody).getByTestId('r9k1_' + timelineTestids.row + "_1");
+        await tad.assertWaitable.equal(tad.withinCapturing(item).getByTestId('r9k1_' + timelineTestids.item + "_3").offsetTop, 0);
 
-        item = tad.withinCapturing(ganttBody).getByTestId(timelineTestids.row + "_1");
-        await tad.assertWaitable.equal(tad.withinCapturing(item).getByTestId(timelineTestids.item + "_11").offsetTop, 40);
+        item = tad.withinCapturing(ganttBody).getByTestId('r9k1_' + timelineTestids.row + "_1");
+        await tad.assertWaitable.equal(tad.withinCapturing(item).getByTestId('r9k1_' + timelineTestids.item + "_11").offsetTop, 40);
 
-        item = tad.withinCapturing(ganttBody).getByTestId(timelineTestids.row + "_1");
-        await tad.assertWaitable.equal(tad.withinCapturing(item).getByTestId(timelineTestids.item + "_4").offsetTop, 0);
+        item = tad.withinCapturing(ganttBody).getByTestId('r9k1_' + timelineTestids.row + "_1");
+        await tad.assertWaitable.equal(tad.withinCapturing(item).getByTestId('r9k1_' + timelineTestids.item + "_4").offsetTop, 0);
     }
 
     /**
@@ -56,19 +56,19 @@ export class DisplayItemOnSeparateRowIfOverlapTestsAreDemo {
         tad.userEventWaitable.click(tad.withinCapturing(dropdown).getByRole("option", { name: FALSE }));
 
         // Rows are short
-        let ganttBody = tad.screenCapturing.getByTestId(timelineTestids.ganttBody);
-        await tad.assertWaitable.equal(tad.withinCapturing(ganttBody).getByTestId(timelineTestids.row + "_1").offsetHeight, 40);
-        await tad.assertWaitable.equal(tad.withinCapturing(ganttBody).getByTestId(timelineTestids.row + "_2").offsetHeight, 40);
+        let ganttBody = tad.screenCapturing.getByTestId('r9k1_' + timelineTestids.ganttBody);
+        await tad.assertWaitable.equal(tad.withinCapturing(ganttBody).getByTestId('r9k1_' + timelineTestids.row + "_1").offsetHeight, 40);
+        await tad.assertWaitable.equal(tad.withinCapturing(ganttBody).getByTestId('r9k1_' + timelineTestids.row + "_2").offsetHeight, 40);
         
         // All segments are positioned on the same subrow, even if they overlap
-        let item = tad.withinCapturing(ganttBody).getByTestId(timelineTestids.row + "_1");
-        await tad.assertWaitable.equal(tad.withinCapturing(item).getByTestId(timelineTestids.item + "_3").offsetTop, 0);
+        let item = tad.withinCapturing(ganttBody).getByTestId('r9k1_' + timelineTestids.row + "_1");
+        await tad.assertWaitable.equal(tad.withinCapturing(item).getByTestId('r9k1_' + timelineTestids.item + "_3").offsetTop, 0);
 
-        item = tad.withinCapturing(ganttBody).getByTestId(timelineTestids.row + "_1");
-        await tad.assertWaitable.equal(tad.withinCapturing(item).getByTestId(timelineTestids.item + "_11").offsetTop, 0);
+        item = tad.withinCapturing(ganttBody).getByTestId('r9k1_' + timelineTestids.row + "_1");
+        await tad.assertWaitable.equal(tad.withinCapturing(item).getByTestId('r9k1_' + timelineTestids.item + "_11").offsetTop, 0);
 
-        item = tad.withinCapturing(ganttBody).getByTestId(timelineTestids.row + "_1");
-        await tad.assertWaitable.equal(tad.withinCapturing(item).getByTestId(timelineTestids.item + "_4").offsetTop, 0);
+        item = tad.withinCapturing(ganttBody).getByTestId('r9k1_' + timelineTestids.row + "_1");
+        await tad.assertWaitable.equal(tad.withinCapturing(item).getByTestId('r9k1_' + timelineTestids.item + "_4").offsetTop, 0);
     }
 
     /**
@@ -84,24 +84,24 @@ export class DisplayItemOnSeparateRowIfOverlapTestsAreDemo {
         setSelectedRow(1)
 
         // All rows are short except the one selected
-        let ganttBody = tad.screenCapturing.getByTestId(timelineTestids.ganttBody);
-        await tad.assertWaitable.equal(tad.withinCapturing(ganttBody).getByTestId(timelineTestids.row + "_0").offsetHeight, 40);
-        await tad.assertWaitable.equal(tad.withinCapturing(ganttBody).getByTestId(timelineTestids.row + "_1").offsetHeight, 80);
-        await tad.assertWaitable.equal(tad.withinCapturing(ganttBody).getByTestId(timelineTestids.row + "_2").offsetHeight, 40);
+        let ganttBody = tad.screenCapturing.getByTestId('r9k1_' + timelineTestids.ganttBody);
+        await tad.assertWaitable.equal(tad.withinCapturing(ganttBody).getByTestId('r9k1_' + timelineTestids.row + "_0").offsetHeight, 40);
+        await tad.assertWaitable.equal(tad.withinCapturing(ganttBody).getByTestId('r9k1_' + timelineTestids.row + "_1").offsetHeight, 80);
+        await tad.assertWaitable.equal(tad.withinCapturing(ganttBody).getByTestId('r9k1_' + timelineTestids.row + "_2").offsetHeight, 40);
         
         // Segments that overlapp are positioned on different sub-rows, on the selected row
-        let row = tad.withinCapturing(ganttBody).getByTestId(timelineTestids.row + "_1");
-        await tad.assertWaitable.equal(tad.withinCapturing(row).getByTestId(timelineTestids.item + "_3").offsetTop, 0);
+        let row = tad.withinCapturing(ganttBody).getByTestId('r9k1_' + timelineTestids.row + "_1");
+        await tad.assertWaitable.equal(tad.withinCapturing(row).getByTestId('r9k1_' + timelineTestids.item + "_3").offsetTop, 0);
 
-        row = tad.withinCapturing(ganttBody).getByTestId(timelineTestids.row + "_1");
-        await tad.assertWaitable.equal(tad.withinCapturing(row).getByTestId(timelineTestids.item + "_11").offsetTop, 40);
+        row = tad.withinCapturing(ganttBody).getByTestId('r9k1_' + timelineTestids.row + "_1");
+        await tad.assertWaitable.equal(tad.withinCapturing(row).getByTestId('r9k1_' + timelineTestids.item + "_11").offsetTop, 40);
 
-        row = tad.withinCapturing(ganttBody).getByTestId(timelineTestids.row + "_1");
-        await tad.assertWaitable.equal(tad.withinCapturing(row).getByTestId(timelineTestids.item + "_4").offsetTop, 0);
+        row = tad.withinCapturing(ganttBody).getByTestId('r9k1_' + timelineTestids.row + "_1");
+        await tad.assertWaitable.equal(tad.withinCapturing(row).getByTestId('r9k1_' + timelineTestids.item + "_4").offsetTop, 0);
 
         // And on the same subrow, on the other not selected rows
-        row = tad.withinCapturing(ganttBody).getByTestId(timelineTestids.row + "_2");
-        await tad.assertWaitable.equal(tad.withinCapturing(row).getByTestId(timelineTestids.item + "_12").offsetTop, 0);
-        await tad.assertWaitable.equal(tad.withinCapturing(row).getByTestId(timelineTestids.item + "_6").offsetTop, 0);
+        row = tad.withinCapturing(ganttBody).getByTestId('r9k1_' + timelineTestids.row + "_2");
+        await tad.assertWaitable.equal(tad.withinCapturing(row).getByTestId('r9k1_' + timelineTestids.item + "_12").offsetTop, 0);
+        await tad.assertWaitable.equal(tad.withinCapturing(row).getByTestId('r9k1_' + timelineTestids.item + "_6").offsetTop, 0);
     }
 }

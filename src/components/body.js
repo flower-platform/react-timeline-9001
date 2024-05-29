@@ -42,7 +42,7 @@ class TimelineBody extends Component {
 
     return (
       <Grid
-        containerProps={{'data-testid': timelineTestids.ganttBody}}
+        containerProps={{'data-testid': this.props.componentId + '_' + timelineTestids.ganttBody}}
         ref={grid_ref_callback}
         autoContainerWidth
         cellRenderer={cellRenderer}
@@ -54,7 +54,7 @@ class TimelineBody extends Component {
         width={width}
         className={`rct9k-grid rct9k-grid-id-${componentId}`}
         onScroll={onScroll}
-        data-testid={timelineTestids.grid}
+        data-testid={this.props.componentId + '_' + timelineTestids.grid}
       />
     );
   }

@@ -1,5 +1,7 @@
 ## Unreleased
 
+* Small fix for zoom when have multiple instances, catch the event only if mouse is on our instance body
+
 ## v2.7.1
 
 * Updated `@famiprog-foundation/scriptable-ui` @ v1.0.0.

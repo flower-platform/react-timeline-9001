@@ -82,7 +82,7 @@ export default class SelectBox extends React.Component {
     let style = {left, top, width, height};
     return (
       <div
-        data-testid={timelineTestids.selector}
+        data-testid={'r9k1_' + timelineTestids.selector}
         className={`rct9k-selector-outer ${this.props.className}`}
         style={style}
       />
