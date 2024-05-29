@@ -693,7 +693,12 @@ export default class Timeline extends React.Component {
       }
     }
 
-    if (this.props.startDate != nextProps.startDate || this.props.endDate != nextProps.endDate) {
+    if (
+      convertDateToMoment(this.props.startDate, this.props.useMoment).valueOf() !=
+        convertDateToMoment(nextProps.startDate, nextProps.useMoment).valueOf() ||
+      convertDateToMoment(this.props.endDate, this.props.useMoment).valueOf() !=
+        convertDateToMoment(nextProps.endDate, nextProps.useMoment).valueOf()
+    ) {
       this.setState({startDate: nextProps.startDate, endDate: nextProps.endDate});
     } else {
       this.setTimeMap(
@@ -732,7 +737,12 @@ export default class Timeline extends React.Component {
       this.setUpDragging(canSelect, canDrag, canResize);
     }
 
-    if (prevState.startDate != this.state.startDate || prevState.endDate != this.state.endDate) {
+    if (
+      convertDateToMoment(prevState.startDate, prevProps.useMoment).valueOf() !=
+        convertDateToMoment(this.state.startDate, this.props.useMoment).valueOf() ||
+      convertDateToMoment(prevState.endDate, prevProps.useMoment).valueOf() !=
+        convertDateToMoment(this.state.endDate, this.props.useMoment).valueOf()
+    ) {
       this.setTimeMap(
         this.props.items,
         convertDateToMoment(this.state.startDate, this.props.useMoment),
