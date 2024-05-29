@@ -1,7 +1,9 @@
 ## Unreleased
 
+* Add z-index to marker to show on top of items, layers.
 * Small fix for zoom when have multiple instances, catch the event only if mouse is on our instance body
 * Small issue at update when useMoment props is true
+
 
 ## v2.7.1
 
