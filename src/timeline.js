@@ -486,7 +486,8 @@ export default class Timeline extends React.Component {
 
     /**
      * The segments with bigger index are staying in front of the ones with smaller index.
-     * To not show the segment in front of the now marker, cursor time, and modal, please do not return a number greater than 998
+     * To not show the segment in front of the now marker, cursor time
+     * please do not return a number greater than 998 @see rct9k-marker style
      *
      * @type {(item: Item) => number}
      */

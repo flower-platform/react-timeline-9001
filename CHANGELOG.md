@@ -1,5 +1,7 @@
 ## Unreleased
 
+* Add z-index to marker to show on top of items, layers.
+
 ## v2.7.1
 
 * Updated `@famiprog-foundation/scriptable-ui` @ v1.0.0.
