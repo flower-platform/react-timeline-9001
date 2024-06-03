@@ -16,6 +16,7 @@ import {ContextMenuTestsAreDemo} from './testsAreDemo/ContextMenuTestsAreDemo';
 import {DynamicConfigurationTestsAreDemo} from './testsAreDemo/DynamicConfigurationTestsAreDemo';
 import { BackgroundLayersTestsAreDemo } from './testsAreDemo/BackgroundLayersTestsAreDemo';
 import { DisplayItemOnSeparateRowIfOverlapTestsAreDemo } from './testsAreDemo/DisplayItemOnSeparateRowIfOverlapTestsAreDemo';
+import { ZoomTestsAreDemo } from './testsAreDemo/ZoomTestsAreDemo';
 
 ReactDOM.render(
   <TestsAreDemoAppWrapper
@@ -29,7 +30,8 @@ ReactDOM.render(
         TableTestsAreDemo,
         DynamicConfigurationTestsAreDemo,
         BackgroundLayersTestsAreDemo,
-        DisplayItemOnSeparateRowIfOverlapTestsAreDemo
+        DisplayItemOnSeparateRowIfOverlapTestsAreDemo,
+        ZoomTestsAreDemo
       );
     }}
   />,

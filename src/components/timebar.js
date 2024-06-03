@@ -13,6 +13,7 @@ export const timebarTestIds = createTestids('Timebar', {
   timebarItem: ''
 });
 const testIds = timebarTestIds;
+import {timelineTestids as testids} from '../timeline';
 
 /**
  * Timebar component - displays the current time on top of the timeline.
@@ -244,7 +245,10 @@ export default class Timebar extends React.Component {
     else if (topBarComponent.length > 0) topBarCursorKey = topBarComponent[0].key;
 
     return (
-      <div className="rct9k-timebar" style={{width: this.props.width}}>
+      <div
+        className="rct9k-timebar"
+        style={{width: this.props.width}}
+        data-testid={this.props.componentId + '_' + testids.timeBar}>
         <div className="rct9k-timebar-outer" style={{width: this.props.width - this.props.leftOffset}}>
           <div className="rct9k-timebar-inner rct9k-timebar-inner-top">
             {_.map(topBarComponent, i => {
@@ -261,7 +265,9 @@ export default class Timebar extends React.Component {
               );
             })}
           </div>
-          <div className="rct9k-timebar-inner rct9k-timebar-inner-bottom" data-testid={testIds.timebarInnerBottom}>
+          <div
+            className="rct9k-timebar-inner rct9k-timebar-inner-bottom"
+            data-testid={this.props.componentId + '_' + testIds.timebarInnerBottom}>
             {_.map(bottomBarComponent, (i, index) => {
               let className = 'rct9k-timebar-item';
               if (i.isSelected) className += ' rct9k-timebar-item-selected';
@@ -270,7 +276,7 @@ export default class Timebar extends React.Component {
                   className={className}
                   key={i.key}
                   style={{width: intToPix(i.size)}}
-                  data-testid={testIds.timebarItem + '_' + index}>
+                  data-testid={this.props.componentId + '_' + testIds.timebarItem + '_' + index}>
                   {i.label}
                 </span>
               );

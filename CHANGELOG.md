@@ -1,5 +1,18 @@
 ## Unreleased
 
+* Add z-index to marker to show on top of items, layers.
+* Small fix for zoom when have multiple instances, catch the event only if mouse is on our instance body
+* Small issue at update when useMoment props is true
+
+
+## v2.7.1
+
+* Updated `@famiprog-foundation/scriptable-ui` @ v1.0.0.
+
+## v2.7.0
+
+* [Zoom](https://github.com/flower-platform/react-timeline-10000/pull/58) and [small fix for Firefox](https://github.com/flower-platform/react-timeline-10000/pull/80)
+
 ## v2.6.1
 
 * [Error when moving the mouse and the grid inside the gantt in not yet rendered](https://github.com/flower-platform/react-timeline-10000/pull/77)

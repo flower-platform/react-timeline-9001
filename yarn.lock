@@ -1118,6 +1118,24 @@
     "@babel/helper-validator-identifier" "^7.22.5"
     to-fast-properties "^2.0.0"
 
+"@crispico/foundation-gwt-js@^1.4.0":
+  version "1.4.0"
+  resolved "http://csp-dev-tools.lan/nexus/repository/npm-public/@crispico/foundation-gwt-js/-/foundation-gwt-js-1.4.0.tgz#f8006fa4bde7b4cd10de2b769c5e98815f35df1c"
+  integrity sha512-p7j+OxT3dcO6fOxS1ISIvsJuiteIMjkXBrjHetwajUKFoDDsyJ+Pe/Enog3yzLxg/6PcfQ+jNbtheEWK9sI2rQ==
+
+"@famiprog-foundation/scriptable-ui@^1.0.0":
+  version "1.0.0"
+  resolved "http://csp-dev-tools.lan/nexus/repository/npm-public/@famiprog-foundation/scriptable-ui/-/scriptable-ui-1.0.0.tgz#16177fcc47486a1ea93ae6f96163a356903f65e6"
+  integrity sha512-UTKRZGsdYanrmiSCfy9V/bq4tIuvBrbstydqJsKgj5l/EZMA4Ki49N9cOjCG3jvP5EuNdsQgeW/LsyMi+kB/9Q==
+  dependencies:
+    "@crispico/foundation-gwt-js" "^1.4.0"
+    "@famiprog-foundation/utils" "^1.0.0"
+    "@types/react-measure" "2.0.6"
+    react-draggable "4.4.6"
+    react-floater "^0.8.2"
+    react-measure "2.3.0"
+    react-syntax-highlighter "^15.5.0"
+
 "@famiprog-foundation/tests-are-demo@^0.16.2":
   version "0.16.2"
   resolved "http://csp-dev-tools.lan/nexus/repository/npm-public/@famiprog-foundation/tests-are-demo/-/tests-are-demo-0.16.2.tgz#afeffd56eb45ace3ae85978a34aff239cb5fc7eb"
@@ -1142,6 +1160,11 @@
     rehype-slug "^5.1.0"
     remark-gfm "^3.0.1"
     stack-trace "^1.0.0-pre2"
+
+"@famiprog-foundation/utils@^1.0.0":
+  version "1.0.0"
+  resolved "http://csp-dev-tools.lan/nexus/repository/npm-public/@famiprog-foundation/utils/-/utils-1.0.0.tgz#bba2d4481ccb45c1bdea4cb72e7d924cb37b41c4"
+  integrity sha512-Z62/zh2PYTRwn2pxY72/FtlOI703abyd8KmqIkmJH59V3AIunQKJafvAppey2Vace3/819xilX05nuKOBe4HNQ==
 
 "@fluentui/react-component-event-listener@~0.63.0":
   version "0.63.1"
@@ -1374,7 +1397,14 @@
   dependencies:
     "@types/react" "^17"
 
-"@types/react@^17", "@types/react@^17.0.0":
+"@types/react-measure@2.0.6":
+  version "2.0.6"
+  resolved "https://registry.yarnpkg.com/@types/react-measure/-/react-measure-2.0.6.tgz#d66efad1960ea8b38eef9d8cc3cc857e7767b09e"
+  integrity sha512-FxAwgDVKvxm4SPXu24x9cwzsty8x33UueazHcpxM1UWZlGJI57yIHM2djE3xUJhYVxuzNzi4E8UL3kmCkdh+4A==
+  dependencies:
+    "@types/react" "*"
+
+"@types/react@*", "@types/react@^17", "@types/react@^17.0.0":
   version "17.0.68"
   resolved "https://registry.yarnpkg.com/@types/react/-/react-17.0.68.tgz#99b17f567e258f5e7be855a281ac67b49a34f9f2"
   integrity sha512-y8heXejd/Gi43S28GOqIFmr6BzhLa3anMlPojRu4rHh3MtRrrpB+BtLEcqP3XPO1urXByzBdkOLU7sodYWnpkA==
@@ -6513,6 +6543,14 @@ react-dom@^17.0.2:
     object-assign "^4.1.1"
     scheduler "^0.20.2"
 
+react-draggable@4.4.6:
+  version "4.4.6"
+  resolved "https://registry.yarnpkg.com/react-draggable/-/react-draggable-4.4.6.tgz#63343ee945770881ca1256a5b6fa5c9f5983fe1e"
+  integrity sha512-LtY5Xw1zTPqHkVmtM3X8MUOxNDOUhv/khTgBgrUvwaS064bwVvxT+q5El0uUFNx5IEPKXuRejr7UqLwBIg5pdw==
+  dependencies:
+    clsx "^1.1.1"
+    prop-types "^15.8.1"
+
 react-fast-compare@^3.0.1:
   version "3.2.2"
   resolved "https://registry.yarnpkg.com/react-fast-compare/-/react-fast-compare-3.2.2.tgz#929a97a532304ce9fee4bcae44234f1ce2c21d49"
@@ -6569,6 +6607,16 @@ react-markdown@^8.0.7:
     unified "^10.0.0"
     unist-util-visit "^4.0.0"
     vfile "^5.0.0"
+
+react-measure@2.3.0:
+  version "2.3.0"
+  resolved "https://registry.yarnpkg.com/react-measure/-/react-measure-2.3.0.tgz#75835d39abec9ae13517f35a819c160997a7a44e"
+  integrity sha512-dwAvmiOeblj5Dvpnk8Jm7Q8B4THF/f1l1HtKVi0XDecsG6LXwGvzV5R1H32kq3TW6RW64OAf5aoQxpIgLa4z8A==
+  dependencies:
+    "@babel/runtime" "^7.2.0"
+    get-node-dimensions "^1.2.1"
+    prop-types "^15.6.2"
+    resize-observer-polyfill "^1.5.0"
 
 react-measure@^2.5.2:
   version "2.5.2"
