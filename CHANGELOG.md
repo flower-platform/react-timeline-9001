@@ -1,6 +1,6 @@
 ## Unreleased
 
-## v2.7.2
+## v2.7.3
 
 * [Improved API for Context Menu](https://github.com/flower-platform/react-timeline-10000/pull/79)
 * [Add z-index to now marker to show on top of items, layers](https://github.com/flower-platform/react-timeline-10000/pull/82)
