@@ -1,12 +1,15 @@
 import React from 'react';
-import { Menu, Popup } from 'semantic-ui-react';
+import { Menu, Popup, StrictPopupProps } from 'semantic-ui-react';
 import { IAction, IActionParamForRun } from './IAction';
 import { TestsAreDemoCheat, createTestids } from '@famiprog-foundation/tests-are-demo';
 
-type Point = { x: number, y: number };
+export type Point = { x: number, y: number };
+
+type Position = StrictPopupProps["position"];
 
 type IParamsForAction = {
   selection: any[];
+  position?: Position;
   [key: string]: any;
 }
 interface ContextMenuProps {
@@ -17,6 +20,10 @@ interface ContextMenuProps {
    * if undefined => the menu is closed else {x, y} position where the menu should open
    */
   positionToOpen?: Point;
+  /**
+   * Callback for extra actions when the menu is closed
+   */
+  onClose?: () => void;
 }
 
 const testids = createTestids('ContextMenu', {
@@ -43,6 +50,7 @@ export class ContextMenu extends React.Component<ContextMenuProps, { isOpened?: 
 
   close() {
     this.setState({ isOpened: false });
+    this.props.onClose && this.props.onClose();
   }
 
   getPopupContext(): HTMLElement {
@@ -69,7 +77,10 @@ export class ContextMenu extends React.Component<ContextMenuProps, { isOpened?: 
     return <>
       <TestsAreDemoCheat objectToPublish={this} />
       <Popup basic wide='very' data-testid={testids.popup} context={this.getPopupContext()}
-        onClose={() => this.setState({ isOpened: false })} open={(this.state.isOpened && visibleActions.length > 0)}>
+        position={this.props.paramsForAction.position}
+        onClose={() => {
+          this.close();
+        }} open={(this.state.isOpened && visibleActions.length > 0)}>
         <Menu className="rct9k-context-menu" secondary vertical>
           {visibleActions.map((action: IAction) => {
             const key = visibleActions.indexOf(action);
@@ -78,9 +89,10 @@ export class ContextMenu extends React.Component<ContextMenuProps, { isOpened?: 
                 data-testid={testids.menuItem + "_" + key}
                 key={key}
                 icon={action.icon}
+                disabled={action.isDisabled ? action.isDisabled(this.props.paramsForAction) : false}
                 content={action.label instanceof Function ? action.label({ ...this.props.paramsForAction }) : action.label}
-                onClick={() => {
-                  let params: IActionParamForRun = { ...this.props.paramsForAction, closeContextMenu: this.close }
+                onClick={(event) => {
+                  let params: IActionParamForRun = { ...this.props.paramsForAction, closeContextMenu: this.close, eventPoint: { x: event.clientX, y: event.clientY } }
                   action.run && action.run(params);
                   if (!params.dontCloseContextMenuAfterRunAutomatically) {
                     this.close();
