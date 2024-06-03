@@ -1,9 +1,11 @@
 ## Unreleased
 
-* Add z-index to marker to show on top of items, layers.
-* Small fix for zoom when have multiple instances, catch the event only if mouse is on our instance body
-* Small issue at update when useMoment props is true
+## v2.7.2
 
+* [Improved API for Context Menu](https://github.com/flower-platform/react-timeline-10000/pull/79)
+* [Add z-index to now marker to show on top of items, layers](https://github.com/flower-platform/react-timeline-10000/pull/82)
+* [Small fix for zoom when have multiple instances, catch the event only if mouse is on our instance body](https://github.com/flower-platform/react-timeline-10000/pull/81)
+* [Small issue at update when useMoment props is true](https://github.com/flower-platform/react-timeline-10000/pull/83)
 
 ## v2.7.1
 
