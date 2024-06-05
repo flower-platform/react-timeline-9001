@@ -1,8 +1,8 @@
 ## Unreleased
 
-## v2.7.1
+## v2.7.4
 
-* Updated `@famiprog-foundation/scriptable-ui` @ v1.0.0.
+* Updated `@famiprog-foundation/tests-are-demo` @ v1.0.1.
 
 ## v2.7.0
 

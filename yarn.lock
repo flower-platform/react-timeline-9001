@@ -1136,11 +1136,13 @@
     react-measure "2.3.0"
     react-syntax-highlighter "^15.5.0"
 
-"@famiprog-foundation/tests-are-demo@^0.16.2":
-  version "0.16.2"
-  resolved "http://csp-dev-tools.lan/nexus/repository/npm-public/@famiprog-foundation/tests-are-demo/-/tests-are-demo-0.16.2.tgz#afeffd56eb45ace3ae85978a34aff239cb5fc7eb"
-  integrity sha512-A0+DCpQGoFyipfsunYPngjRJcg9C3LfZTts5s1C/7E3znSOQ1DJ3kNSOT8rqoxz0SVyzCloiBnhEQ/YaHoRNDA==
+"@famiprog-foundation/tests-are-demo@^1.0.1":
+  version "1.0.1"
+  resolved "http://csp-dev-tools.lan/nexus/repository/npm-public/@famiprog-foundation/tests-are-demo/-/tests-are-demo-1.0.1.tgz#51d7f7f35e379d737f6442f7ff8aabb6043a100b"
+  integrity sha512-SgODmAWHZd57C/IgDuGtzOBZh/4dhKH4w9+rfcEBbBEAmCdOOlJa3Qfsb6MbzVINYwuqLKTTKQXQsNc2Qg+Nhg==
   dependencies:
+    "@famiprog-foundation/scriptable-ui" "^1.0.0"
+    "@famiprog-foundation/utils" "^1.0.0"
     "@jridgewell/trace-mapping" "^0.3.19"
     "@testing-library/react" "^12.1.2"
     "@testing-library/user-event" "^13.2.1"
@@ -1151,10 +1153,8 @@
     lodash "4.17.15"
     mocha "^10.1.0"
     puppeteer "^19.6.2"
-    react-floater "^0.8.2"
     react-markdown "^8.0.7"
     react-split-pane "^0.1.92"
-    react-syntax-highlighter "^15.5.0"
     rehype-autolink-headings "^6.1.1"
     rehype-raw "^6.1.1"
     rehype-slug "^5.1.0"
