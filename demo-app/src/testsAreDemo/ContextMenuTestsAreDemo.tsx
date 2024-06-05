@@ -17,7 +17,7 @@ export class ContextMenuTestsAreDemo {
     @ScenarioOptions({ linkWithNextScenario: true })
     async whenRightClickOnARow() {
         // WHEN right click on a row
-        const firstRow = tad.screenCapturing.getByTestId(testids.row + "_0");
+        const firstRow = tad.screenCapturing.getByTestId('r9k1_' + testids.row + "_0");
         const clickPosition = { clientX: Math.round(firstRow.getBoundingClientRect().x) + CLICK_X, clientY: Math.round(firstRow.getBoundingClientRect().y) + 20 };
         await tad.showSpotlight({ message: "I right click on a row", focusOnLastElementCaptured: true });
         rightClick(firstRow, clickPosition);
@@ -45,7 +45,7 @@ export class ContextMenuTestsAreDemo {
         await tad.userEventWaitable.click(tad.withinCapturing(popup).getByTestId(contextMenuTestIds.menuItem + "_0"));
 
         // THEN a new task is added
-        let newSegment = tad.screenCapturing.getByTestId(testids.item + "_" + someTasks.length);
+        let newSegment = tad.screenCapturing.getByTestId('r9k1_' + testids.item + "_" + someTasks.length);
         await tad.assertWaitable.exists(newSegment);
 
         tad.demoForEndUserHide();
@@ -54,8 +54,8 @@ export class ContextMenuTestsAreDemo {
 
         // AND the new task is position correctly on x axes
         // Gantt works with times "snapped to grid" so the position for the new task should be snapped to grid 
-        const timeline = tad.getObjectViaCheat(Timeline);
-        const firstRow = tad.screenCapturing.getByTestId(testids.row + "_0");
+        const timeline = tad.getObjectViaCheat(Timeline, 'r9k1');
+        const firstRow = tad.screenCapturing.getByTestId('r9k1_' + testids.row + "_0");
         const clickedTime = getTimeAtPixel(CLICK_X, timeline.getStartDate(), timeline.getEndDate(), timeline.getTimelineWidth(undefined), timeline.getTimelineSnap());
         const clickedXSnappedToGrid = getPixelAtTime(clickedTime, timeline.getStartDate(), timeline.getEndDate(), timeline.getTimelineWidth(undefined))
              + timeline.getGanttLeftOffset();     
@@ -69,7 +69,7 @@ export class ContextMenuTestsAreDemo {
     @Scenario("WHEN I right click on a segment, THEN a context menu with 3 actions is shown")
     @ScenarioOptions({ linkWithNextScenario: true })
     async whenRightClickOnASegment() {
-        const segment = tad.screenCapturing.getByTestId(testids.item + "_0");
+        const segment = tad.screenCapturing.getByTestId('r9k1_' + testids.item + "_0");
         const segmentBoundingRect = segment.getBoundingClientRect();
 
         // WHEN right click on a segment
@@ -100,7 +100,7 @@ export class ContextMenuTestsAreDemo {
     @Scenario("WHEN I CTRL + right click on another segment, THEN a context menu with 2 actions is shown")
     @ScenarioOptions({ linkWithNextScenario: true })
     async whenCTRLRightClickOnAnotherSegment() {
-        const segment = tad.screenCapturing.getByTestId(testids.item + "_3");
+        const segment = tad.screenCapturing.getByTestId('r9k1_' + testids.item + "_3");
         const segmentBoundingRect = segment.getBoundingClientRect();
         await tad.showSpotlight({ message: "WHEN I CTRL + right click another segment", focusOnLastElementCaptured: true });
         rightClick(segment, { ctrlKey: true, clientX: segmentBoundingRect.x + segmentBoundingRect.width / 2, clientY: segmentBoundingRect.y + segmentBoundingRect.height / 2 });
@@ -121,10 +121,10 @@ export class ContextMenuTestsAreDemo {
     @Scenario("WHEN I click the hamburger button, THEN the context menu is shown besides that button")
     async whenClickTheHamburgerButton() {
         // GIVEN I select one segment
-        await tad.userEventWaitable.click(tad.screenCapturing.getByTestId(testids.item + "_1"));
+        await tad.userEventWaitable.click(tad.screenCapturing.getByTestId('r9k1_' + testids.item + "_1"));
 
         // WHEN
-        const menuButton = tad.screenCapturing.getByTestId(testids.menuButton);
+        const menuButton = tad.screenCapturing.getByTestId('r9k1_' + testids.menuButton);
         tad.cc("Click on the menu button");
         await tad.userEventWaitable.click(menuButton);
 

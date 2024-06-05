@@ -22,6 +22,7 @@ export {default as Selectbox} from './components/selector';
 export {BackgroundLayer} from './components/BackgroundLayer';
 export {HighlightedInterval} from './components/HighlightedInterval';
 export {Scrollbar, Direction} from './components/Scrollbar';
+export {ContextMenu} from './components/ContextMenu/ContextMenu';
 
 // consts
 export {timebarFormat} from './consts/timebarConsts';

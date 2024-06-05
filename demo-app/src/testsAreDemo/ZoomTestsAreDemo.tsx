@@ -11,29 +11,29 @@ export class ZoomTestsAreDemo {
 
     async before() {
         render(<Main />);
-        this.timeline = tad.getObjectViaCheat(Timeline);
+        this.timeline = tad.getObjectViaCheat(Timeline, "2");
     }
 
     private openContextMenu() {
-        const firstRow = tad.screenCapturing.getByTestId(testids.row + "_0");
-        const clickPosition = { clientX: Math.round(firstRow.getBoundingClientRect().x) + 20, clientY: Math.round(firstRow.getBoundingClientRect().y) + 20 };
+        const firstRow = tad.screenCapturing.getByTestId("2_" + testids.row + "_0");
+        const clickPosition = { clientX: Math.round(firstRow.getBoundingClientRect().x) + 40, clientY: Math.round(firstRow.getBoundingClientRect().y) + 40 };
         rightClick(firstRow, clickPosition);
     }
 
     private focusOnTimebar() {
         // focus screenCapturing on timeBar
-        tad.screenCapturing.getByTestId(testids.timeBar);
+        tad.screenCapturing.getByTestId("2_" + testids.timeBar);
     }
 
     private calculateExeptedStartEndDate(start: number | moment.Moment, end: number | moment.Moment, zoomIn: boolean) {
         const interval = moment(end).valueOf() - moment(start).valueOf();
-        const delta = Math.floor((this.timeline._gridDomNode as Element).getBoundingClientRect().x + this.timeline._grid.props.width / 2) / this.timeline._grid.props.width;
+        const delta = (Math.floor((this.timeline._gridDomNode as Element).getBoundingClientRect().x + this.timeline._grid.props.width / 2) - this.timeline.getGanttLeftOffset()) / this.timeline._grid.props.width;
         let deltaInterval = interval * ZOOM_PERCENT;
         if (zoomIn) {
             deltaInterval *= -1;
         }
-        let startDate = moment(moment(start).valueOf() + delta * deltaInterval);
-        let endDate = moment(moment(end).valueOf() - (1 - delta) * deltaInterval);
+        let startDate = moment(Math.max((this.timeline.getMinDate() as unknown as moment.Moment).valueOf(), moment(start).valueOf() + delta * deltaInterval));
+        let endDate = moment(Math.min((this.timeline.getMaxDate() as unknown as moment.Moment).valueOf(), moment(end).valueOf() - (1 - delta) * deltaInterval));
         return { exeptedStartDate: startDate, exeptedEndDate: endDate };
     }
 
@@ -55,7 +55,7 @@ export class ZoomTestsAreDemo {
         await tad.userEventWaitable.click(tad.withinCapturing(popup).getByTestId(contextMenuTestIds.menuItem + "_0"));
         // need to extract the startDate, endDate after zoom, because the scroll update this values
         const { startDate, endDate } = this.timeline.state;
-        await tad.assertWaitable.exists(tad.screenCapturing.getByTestId(testids.fadeEffect));
+        await tad.assertWaitable.exists(tad.screenCapturing.getByTestId("2_" + testids.fadeEffect));
         this.focusOnTimebar();
         await tad.assertWaitable.equal(moment(exeptedStartDate).valueOf(), moment(startDate).valueOf());
         await tad.assertWaitable.equal(moment(exeptedEndDate).valueOf(), moment(endDate).valueOf());
@@ -69,7 +69,7 @@ export class ZoomTestsAreDemo {
         await tad.userEventWaitable.click(tad.withinCapturing(popup).getByTestId(contextMenuTestIds.menuItem + "_1"));
         // need to extract the startDate, endDate after zoom, because the scroll update this values
         const { startDate, endDate } = this.timeline.state;
-        await tad.assertWaitable.exists(tad.screenCapturing.getByTestId(testids.fadeEffect));
+        await tad.assertWaitable.exists(tad.screenCapturing.getByTestId("2_" + testids.fadeEffect));
         this.focusOnTimebar();
         await tad.assertWaitable.equal(moment(exeptedStartDate).valueOf(), moment(startDate).valueOf());
         await tad.assertWaitable.equal(moment(exeptedEndDate).valueOf(), moment(endDate).valueOf());

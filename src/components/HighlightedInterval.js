@@ -127,7 +127,7 @@ export class HighlightedInterval extends React.Component {
   render() {
     return (
       <div
-        data-testid={testIds.interval + '_' + this.props.id}
+        data-testid={'r9k1_' + testIds.interval + '_' + this.props.id}
         className={this.getClassName()}
         style={this.getStyle()}
       />

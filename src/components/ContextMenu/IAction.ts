@@ -1,5 +1,6 @@
 import React from "react"
 import { IconProps, SemanticShorthandItem } from "semantic-ui-react"
+import { Point } from "./ContextMenu"
 
 // TODO RM34271 let's get rid of IActionParamForRun. It overcomplicates the inheritance. We'll have here closeContextMenu() that won't do anything.
 // export interface IActionParam<S> {
@@ -16,7 +17,12 @@ export interface IActionParamForRun extends IActionParam {
      * If the user wants to avoid the closing of the menu after action runs he needs to set this property to true
      * and maybe explicitly call closeContextMenu() when needed
      */
-    dontCloseContextMenuAfterRunAutomatically?: boolean
+    dontCloseContextMenuAfterRunAutomatically?: boolean,
+
+    /**
+     * It contains the mouse coordinates, obtained from onClick event of an action
+     */
+    eventPoint?: Point
 }
 
 // TODO RM34271 CS: for the moment it's not clear why we need this. It's not used by the lib. And currently, the task of opening
@@ -40,6 +46,7 @@ export interface IAction {
      * Should return true of false whether or not the action is visible for the selected items received as parameter
      */
     isVisible?: (param: IActionParam) => boolean,
+    isDisabled?: (param: IActionParam) => boolean,
     icon?: SemanticShorthandItem<IconProps>,
     label?: string | ((param: IActionParam) => string),
     /**

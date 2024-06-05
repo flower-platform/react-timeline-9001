@@ -4,6 +4,17 @@
 
 * Updated `@famiprog-foundation/tests-are-demo` @ v1.0.1.
 
+## v2.7.3
+
+* [Improved API for Context Menu](https://github.com/flower-platform/react-timeline-10000/pull/79)
+* [Add z-index to now marker to show on top of items, layers](https://github.com/flower-platform/react-timeline-10000/pull/82)
+* [Small fix for zoom when have multiple instances, catch the event only if mouse is on our instance body](https://github.com/flower-platform/react-timeline-10000/pull/81)
+* [Small issue at update when useMoment props is true](https://github.com/flower-platform/react-timeline-10000/pull/83)
+
+## v2.7.1
+
+* Updated `@famiprog-foundation/scriptable-ui` @ v1.0.0.
+
 ## v2.7.0
 
 * [Zoom](https://github.com/flower-platform/react-timeline-10000/pull/58) and [small fix for Firefox](https://github.com/flower-platform/react-timeline-10000/pull/80)
