@@ -123,7 +123,7 @@ export default class Timeline extends React.Component {
     /**
      * The rows (aka groups) of the Timeline.
      *
-     * `id` is mandatory, it should: be numeric, start with 0 and have consecutive values.
+     * `id` is mandatory, it should: be numeric
      *
      * `title` is used displayed by the default renderer. This is optional, i.e. you may use this and/or other fields, provided
      * you have a custom renderer.
@@ -984,9 +984,9 @@ export default class Timeline extends React.Component {
         ? this.props.displayItemOnSeparateRowIfOverlap
         : displayItemOnSeparateRowIfOverlap;
 
-    this.itemRowMap = {}; // timeline elements (key) => (rowNo).
-    this.rowItemMap = {}; // (rowNo) => timeline elements
-    this.rowHeightCache = {}; // (rowNo) => max number of stacked items
+    this.itemRowMap = {}; // timeline elements (key) => (rowId).
+    this.rowItemMap = {}; // (rowId) => timeline elements
+    this.rowHeightCache = {}; // (rowId) => max number of stacked items
     let visibleItems = _.filter(items, i => {
       return this.getEndFromItem(i, useMoment) > startDate && this.getStartFromItem(i, useMoment) < endDate;
     });
@@ -1040,14 +1040,16 @@ export default class Timeline extends React.Component {
     // of items that are overlapping on that row, multiplied by props.itemHeight
     let totalItemsHeight = 0;
     let that = this;
-    _.forEach(groups, group => {
+    this.rowIdToRowIndexMap = {};
+    _.forEach(groups, (group, index) => {
       totalItemsHeight += (that.rowHeightCache[group.id] || 1) * that.props.itemHeight;
+      this.rowIdToRowIndexMap[group.id] = index;
     });
     let heightToFillIn = this._grid.props.height - totalItemsHeight;
 
     let fillInGroups = [];
 
-    let groupId = groups.length;
+    let groupId = -1;
     while (heightToFillIn > 0) {
       // create new empty group;
       // if the last row would be only partially visible, then we set the height of the row as the remaining
@@ -1057,9 +1059,10 @@ export default class Timeline extends React.Component {
         emptyGroup.rowHeight = heightToFillIn;
       }
 
+      this.rowIdToRowIndexMap[groupId] = groups.length - 1 - groupId;
       fillInGroups.push(emptyGroup);
       heightToFillIn -= this.props.itemHeight;
-      groupId++;
+      groupId--;
     }
     this.setState({groups: [...groups, ...fillInGroups]});
   }
@@ -1075,11 +1078,12 @@ export default class Timeline extends React.Component {
    */
   itemFromElement(e) {
     const index = e.getAttribute('data-item-index');
-    const rowNo = this.itemRowMap[index];
-    const itemIndex = _.findIndex(this.rowItemMap[rowNo], i => i.key == index);
-    const item = this.rowItemMap[rowNo][itemIndex];
+    const rowId = this.itemRowMap[index];
+    const rowNo = this.rowIdToRowIndexMap[rowId];
+    const itemIndex = _.findIndex(this.rowItemMap[rowId], i => i.key == index);
+    const item = this.rowItemMap[rowId][itemIndex];
 
-    return {index, rowNo, itemIndex, item};
+    return {index, rowNo, itemIndex, item, rowId};
   }
 
   /**
@@ -1101,10 +1105,12 @@ export default class Timeline extends React.Component {
    * @param {number} newRow The item's new row index
    */
   changeGroup(item, curRow, newRow) {
-    item.row = newRow;
-    this.itemRowMap[item.key] = newRow;
-    this.rowItemMap[curRow] = this.rowItemMap[curRow].filter(i => i.key !== item.key);
-    this.rowItemMap[newRow].push(item);
+    curRowId = this.state.groups[curRow].id;
+    newRowId = this.state.groups[newRow].id;
+    item.row = newRowId;
+    this.itemRowMap[item.key] = newRowId;
+    this.rowItemMap[curRowId] = this.rowItemMap[curRowId].filter(i => i.key !== item.key);
+    this.rowItemMap[newRowId].push(item);
   }
 
   /**
@@ -1300,8 +1306,9 @@ export default class Timeline extends React.Component {
       // Get items in these ranges
       let selectedItems = [];
       for (let r = Math.min(topRowNumber, bottomRow); r <= Math.max(topRowNumber, bottomRow); r++) {
+        let rowId = this.state.groups[r].id;
         selectedItems.push(
-          ..._.filter(this.rowItemMap[r], i => {
+          ..._.filter(this.rowItemMap[rowId], i => {
             return this.getStartFromItem(i).isBefore(endTime) && this.getEndFromItem(i).isAfter(startTime);
           })
         );
@@ -1467,9 +1474,14 @@ export default class Timeline extends React.Component {
             this.setStartToItem(item, newStart);
             this.setEndToItem(item, newEnd);
             if (rowChangeDelta < 0) {
-              item.row = Math.max(0, item.row + rowChangeDelta);
+              let newRowIndex = Math.max(0, this.rowIdToRowIndexMap[item.row] + rowChangeDelta);
+              item.row = this.props.groups[newRowIndex].id;
             } else if (rowChangeDelta > 0) {
-              item.row = Math.min(this.props.groups.length - 1, item.row + rowChangeDelta);
+              let newRowIndex = Math.min(
+                this.props.groups.length - 1,
+                this.rowIdToRowIndexMap[item.row] + rowChangeDelta
+              );
+              item.row = this.props.groups[newRowIndex].id;
             }
 
             items.push(item);
@@ -1559,7 +1571,7 @@ export default class Timeline extends React.Component {
           // Calculate the default item positions
           _.forEach(animatedItems, domItem => {
             let startPixelOffset = pixToInt(domItem.style.left) + dx;
-            const {item, rowNo} = this.itemFromElement(domItem);
+            const {item, rowNo, rowId} = this.itemFromElement(domItem);
 
             minRowNo = Math.min(minRowNo, rowNo);
 
@@ -1589,14 +1601,14 @@ export default class Timeline extends React.Component {
 
             // Check row height doesn't need changing
             let new_row_height = getMaxOverlappingItems(
-              this.rowItemMap[rowNo],
+              this.rowItemMap[rowId],
               this.getStartFromItem,
               this.getEndFromItem,
               this.props.displayItemOnSeparateRowIfOverlap,
               rowNo
             );
-            if (new_row_height !== this.rowHeightCache[rowNo]) {
-              this.rowHeightCache[rowNo] = new_row_height;
+            if (new_row_height !== this.rowHeightCache[rowId]) {
+              this.rowHeightCache[rowId] = new_row_height;
             }
 
             //Reset styles
@@ -1721,14 +1733,15 @@ export default class Timeline extends React.Component {
     const {timelineMode, onItemHover, onItemLeave} = this.props;
     const canSelect = Timeline.isBitSet(Timeline.TIMELINE_MODES.SELECT, timelineMode);
     return ({key, parent, rowIndex, style}) => {
-      let itemsInRow = this.rowItemMap[rowIndex];
+      let rowId = this.state.groups[rowIndex].id;
+      let itemsInRow = this.rowItemMap[rowId];
       // Previously, `rowLayers` constant was instatiated outside the arrow function. However, I have discovered that when
       // the rowLayers were updated, the `rowLayers` constant had the previous value,
       // but this.props.rowLayers has the new value.
       const layersInRow = this.props.rowLayers.filter(r => r.rowNumber === rowIndex);
       let rowHeight = this.props.itemHeight;
-      if (this.rowHeightCache[rowIndex]) {
-        rowHeight = rowHeight * this.rowHeightCache[rowIndex];
+      if (this.rowHeightCache[rowId]) {
+        rowHeight = rowHeight * this.rowHeightCache[rowId];
       }
       var props = this.props;
       return (
@@ -1794,13 +1807,13 @@ export default class Timeline extends React.Component {
    * Helper for react virtualized to get the row height given a row index.
    */
   rowHeight({index}) {
-    let group = _.find(this.state.groups, g => g.id == index);
+    let group = this.state.groups[index];
     // only for empty rows (EMPTY_GROUP_KEY), if the group has a custom row height,
     // we will return that height
     if (group.rowHeight && group.key.startsWith(EMPTY_GROUP_KEY)) {
       return group.rowHeight;
     }
-    let rh = this.rowHeightCache[index] ? this.rowHeightCache[index] : 1;
+    let rh = this.rowHeightCache[group.id] ? this.rowHeightCache[group.id] : 1;
     return rh * this.props.itemHeight;
   }
 
@@ -1820,7 +1833,7 @@ export default class Timeline extends React.Component {
       return 0;
     }
     var tableRowHeight = this.rowHeight({index});
-    let group = _.find(this.state.groups, g => g.id == index);
+    let group = this.state.groups[index];
     if (group.rowHeight && group.key.startsWith(EMPTY_GROUP_KEY)) {
       tableRowHeight = Math.round(tableRowHeight) + (this.state.hasHorizontalScrollbar ? SCROLLBAR_SIZE : 0) - 2;
     }
@@ -2256,7 +2269,16 @@ export default class Timeline extends React.Component {
           }}>
           {({measureRef}) => {
             return (
-              <div ref={measureRef} className={divCssClass}>
+              <div
+                ref={measureRef}
+                className={divCssClass}
+                onContextMenu={e => {
+                  if (this._selectBox.isStart()) {
+                    e.preventDefault();
+                    this.setState({dragCancel: true});
+                    this._selectBox.end();
+                  }
+                }}>
                 <div
                   className="parent-div"
                   onMouseDown={this.mouseDownFunc}
