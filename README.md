@@ -134,7 +134,6 @@ See http://react-timeline-9000.s3-website-ap-southeast-2.amazonaws.com/docs/ for
 | timelineMode       |             |                                                                                                                                                          |
 | timebarFormat      |             |                                                                                                                                                          |
 | itemRenderer       |             |                                                                                                                                                          |
-| itemStyle          | | Style applied to all items      |
 | itemClassName      | | Class name applied to all items |
 | groupRenderer      |             |                                                                                                                                                          |
 | shallowUpdateCheck | False       | If true timeline will try to minimize re-renders . Set to false if items don't show up/update on prop change                                             |

@@ -59,7 +59,7 @@ export default defineConfig({
       "@crispico/foundation-react": "/../../foundation-jhipster-gwt/foundation-react/src/foundation-react"
     }
   },
-  // JSX in .js files, part 1
+  // JSX in .js files, part 2
   optimizeDeps: {
     force: true,
     esbuildOptions: {

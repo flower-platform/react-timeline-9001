@@ -1,6 +1,6 @@
 {
   "name": "@crispico/react-timeline-10000",
-  "version": "v2.5.0",
+  "version": "v2.7.4",
   "description": "Performance focused timeline for react",
   "private": false,
   "types": "./types/index.d.ts",
@@ -65,7 +65,7 @@
     "typescript": "~4.6.0"
   },
   "dependencies": {
-    "@famiprog-foundation/tests-are-demo": "^0.11.0",
+    "@famiprog-foundation/tests-are-demo": "^1.0.1",
     "color": "^4.2.3",
     "core-js": "^2.4.0",
     "fixed-data-table-2": "^1.2.17",

@@ -47,7 +47,7 @@ import {SelectionHolder} from './utils/SelectionHolder';
 import {IGanttAction} from './types';
 import {ContextMenu} from './components/ContextMenu/ContextMenu';
 import moment from 'moment';
-import {SCROLLBAR_SIZE, Scrollbar} from './components/Scrollbar';
+import {Direction, SCROLLBAR_SIZE, Scrollbar} from './components/Scrollbar';
 
 const testids = createTestids('Timeline', {
   menuButton: '',
@@ -60,7 +60,9 @@ const testids = createTestids('Timeline', {
   selector: '',
   table: '',
   ganttBody: '',
-  splitPaneResizer: ''
+  splitPaneResizer: '',
+  fadeEffect: '',
+  timeBar: ''
 });
 export const timelineTestids = testids;
 
@@ -79,6 +81,11 @@ export const DEFAULT_ROW_ODD_CLASS = '';
 export const DRAG_TO_CREATE_POPUP_CLOSE_TIME = 5000;
 export const DRAG_TO_CREATE_POPUP_LABEL_2 = 'Popup will close in a few moments.';
 
+const FADE_OPACITY_OFFSET = 0.1;
+const FADE_TIMER_INTERVAR = 100;
+export const ZOOM_PERCENT = 0.2;
+export const MIN_DISPLAY_TIME = 60000;
+
 export const PARENT_ELEMENT = componentId => document.querySelector(`.rct9k-id-${componentId} .parent-div`);
 
 const TableWithStyle = ({table}) => {
@@ -96,6 +103,8 @@ const TableWithStyle = ({table}) => {
 };
 
 export const DRAG_TO_CREATE_ACTION_LABEL = 'Drag to create';
+export const ZOOM_IN_ACTION_LABEL = 'Zoom in';
+export const ZOOM_OUT_ACTION_LABEL = 'Zoom out';
 /**
  * Timeline class
  * @extends React.Component<Timeline.propTypes>
@@ -460,9 +469,36 @@ export default class Timeline extends React.Component {
      * If this handler is provided, it will be called when the table is resized
      * by dragging the split bar between the table and the gantt.
      *
-     * @type {(tableWidth: number) => void}
+     * @type {(splitSize: number) => void}
      */
-    onTableResize: PropTypes.func
+    onSplitChange: PropTypes.func,
+
+    /**
+     * This property controls if one segment (item) whose period overlaps another segment (item)'s period
+     * is displayed on a separate subrow or it displayes on the same subrow, overlapping the other segment
+     *
+     * In case of overlapping segments displayed on separate subrows, the main row expands its height to include all the subrows
+     *
+     * @default true
+     * @type { boolean | (item: Item, rowIndex: number) => boolean }
+     */
+    displayItemOnSeparateRowIfOverlap: PropTypes.oneOfType([PropTypes.bool, PropTypes.func]),
+
+    /**
+     * The segments with bigger index are staying in front of the ones with smaller index.
+     * To not show the segment in front of the now marker, cursor time
+     * please do not return a number greater than 998 @see rct9k-marker style
+     *
+     * @type {(item: Item) => number}
+     */
+    zIndexFunction: PropTypes.func,
+
+    /**
+     * If this property is provided with true, then in context menu displays the shortcut for zoom in and zoom out.
+     *
+     * @type { undefined | boolean}
+     */
+    showZommShortcuts: PropTypes.bool
   };
 
   static defaultProps = {
@@ -481,7 +517,6 @@ export default class Timeline extends React.Component {
     onItemHover() {},
     onItemLeave() {},
     interactOptions: {},
-    itemStyle: {},
     rowClassName: DEFAULT_ROW_CLASS,
     rowEvenClassName: DEFAULT_ROW_EVEN_CLASS,
     rowOddClassName: DEFAULT_ROW_ODD_CLASS,
@@ -491,7 +526,7 @@ export default class Timeline extends React.Component {
     minDate: undefined,
     maxDate: undefined,
     selectedItems: undefined,
-    snap: undefined,
+    snap: 1,
     timebarFormat: undefined,
     bottomResolution: undefined,
     topResolution: undefined,
@@ -509,7 +544,12 @@ export default class Timeline extends React.Component {
     onDragToCreateEnded: undefined,
     onContextMenuShow: undefined,
     onSelectionChange() {},
-    onTableResize: undefined
+    onSplitChange: undefined,
+    displayItemOnSeparateRowIfOverlap: true,
+    zIndexFunction() {
+      return 3;
+    },
+    showZommShortcuts: false
   };
 
   /**
@@ -539,6 +579,11 @@ export default class Timeline extends React.Component {
    */
   static no_op = () => {};
 
+  /**
+   * Fade timer
+   */
+  fadeTimer = undefined;
+
   getInitialTableWidth(props) {
     props = props ? props : this.props;
     return (props.table ? props.table.props.width : 0) + TABLE_OFFSET;
@@ -547,7 +592,6 @@ export default class Timeline extends React.Component {
   constructor(props) {
     super(props);
     this.selecting = false;
-    this.getInitialTableWidth = this.getInitialTableWidth.bind(this);
     this.state = {
       selection: [],
       cursorTime: null,
@@ -555,7 +599,7 @@ export default class Timeline extends React.Component {
       verticalGridLines: [],
       screenHeight: 0,
       gridWidth: 0,
-      tableWidth: this.getInitialTableWidth(),
+      splitSize: props.table ? props.table.props.width : 0,
       dragToCreateMode: false,
       dragToCreatePopupClosed: false,
       openMenu: false,
@@ -568,7 +612,10 @@ export default class Timeline extends React.Component {
       startDate: this.props.startDate,
       endDate: this.props.endDate,
       hasHorizontalScrollbar: false,
-      touchPositionX: undefined
+      touchPositionX: undefined,
+      fadeEffectOpen: false,
+      fadeEffectContent: undefined,
+      fadeEffectOpacity: 0
     };
 
     // These functions need to be bound because they are passed as parameters.
@@ -611,8 +658,11 @@ export default class Timeline extends React.Component {
     this.setVerticalGridLines = this.setVerticalGridLines.bind(this);
     this.handleScrollTable = this.handleScrollTable.bind(this);
     this.handleScrollGantt = this.handleScrollGantt.bind(this);
-    this.handleDrag = this.handleDrag.bind(this);
+    this.onSplitChange = this.onSplitChange.bind(this);
     this.selectionChangedHandler = this.selectionChangedHandler.bind(this);
+    this.getRowClassName = this.getRowClassName.bind(this);
+    this.wheelHandler = this.wheelHandler.bind(this);
+    this.startFadeOutEffect = this.startFadeOutEffect.bind(this);
 
     const canSelect = Timeline.isBitSet(Timeline.TIMELINE_MODES.SELECT, this.props.timelineMode);
     const canDrag = Timeline.isBitSet(Timeline.TIMELINE_MODES.DRAG, this.props.timelineMode);
@@ -622,6 +672,7 @@ export default class Timeline extends React.Component {
 
   componentDidMount() {
     window.addEventListener('resize', this.updateDimensions);
+    window.addEventListener('wheel', this.wheelHandler, {passive: false});
   }
 
   componentWillReceiveProps(nextProps) {
@@ -644,18 +695,20 @@ export default class Timeline extends React.Component {
       }
     }
 
-    if (this.getInitialTableWidth(nextProps) !== this.getInitialTableWidth(this.props)) {
-      this.setState({tableWidth: this.getInitialTableWidth(nextProps)});
-    }
-
-    if (this.props.startDate != nextProps.startDate || this.props.endDate != nextProps.endDate) {
+    if (
+      convertDateToMoment(this.props.startDate, this.props.useMoment).valueOf() !=
+        convertDateToMoment(nextProps.startDate, nextProps.useMoment).valueOf() ||
+      convertDateToMoment(this.props.endDate, this.props.useMoment).valueOf() !=
+        convertDateToMoment(nextProps.endDate, nextProps.useMoment).valueOf()
+    ) {
       this.setState({startDate: nextProps.startDate, endDate: nextProps.endDate});
     } else {
       this.setTimeMap(
         nextProps.items,
         convertDateToMoment(nextProps.startDate, nextProps.useMoment),
         convertDateToMoment(nextProps.endDate, nextProps.useMoment),
-        nextProps.useMoment
+        nextProps.useMoment,
+        nextProps.displayItemOnSeparateRowIfOverlap
       );
     }
     this.fillInTimelineWithEmptyRows(nextProps.groups);
@@ -671,6 +724,7 @@ export default class Timeline extends React.Component {
     if (this._selectRectangleInteractable) this._selectRectangleInteractable.unset();
 
     window.removeEventListener('resize', this.updateDimensions);
+    window.removeEventListener('wheel', this.wheelHandler);
   }
 
   componentDidUpdate(prevProps, prevState) {
@@ -685,7 +739,12 @@ export default class Timeline extends React.Component {
       this.setUpDragging(canSelect, canDrag, canResize);
     }
 
-    if (prevState.startDate != this.state.startDate || prevState.endDate != this.state.endDate) {
+    if (
+      convertDateToMoment(prevState.startDate, prevProps.useMoment).valueOf() !=
+        convertDateToMoment(this.state.startDate, this.props.useMoment).valueOf() ||
+      convertDateToMoment(prevState.endDate, prevProps.useMoment).valueOf() !=
+        convertDateToMoment(this.state.endDate, this.props.useMoment).valueOf()
+    ) {
       this.setTimeMap(
         this.props.items,
         convertDateToMoment(this.state.startDate, this.props.useMoment),
@@ -693,6 +752,47 @@ export default class Timeline extends React.Component {
         this.props.useMoment
       );
       this.refreshGrid();
+    }
+
+    if (prevState.hasHorizontalScrollbar != this.state.hasHorizontalScrollbar) {
+      this.fillInTimelineWithEmptyRows(this.props.groups);
+      this.refreshGrid();
+    }
+  }
+
+  wheelHandler(e) {
+    if (e.ctrlKey) {
+      let target = e.target;
+      while (target) {
+        if (target.className.includes(`rct9k-grid rct9k-grid-id-${this.props.componentId}`)) {
+          break;
+        }
+        target = target.parentElement;
+      }
+      if (!target) {
+        return;
+      }
+      e.preventDefault();
+      e.stopPropagation();
+
+      const interval = this.getEndDate().valueOf() - this.getStartDate().valueOf();
+      const delta = (e.clientX - this.getGanttLeftOffset()) / this._grid.props.width;
+      let deltaInterval = interval * ZOOM_PERCENT;
+      if (e.deltaY > 0) {
+        deltaInterval *= -1;
+      }
+
+      const startDate = Math.max(this.getStartDate().valueOf() + delta * deltaInterval, this.getMinDate().valueOf());
+      const endDate = Math.min(this.getEndDate().valueOf() - (1 - delta) * deltaInterval, this.getMaxDate().valueOf());
+      if (endDate - startDate < MIN_DISPLAY_TIME) {
+        return;
+      }
+
+      this.setState({
+        startDate: this.props.useMoment ? moment(startDate) : startDate,
+        endDate: this.props.useMoment ? moment(endDate) : endDate
+      });
+      this.throttledMouseMoveFunc(e);
     }
   }
 
@@ -733,7 +833,7 @@ export default class Timeline extends React.Component {
     if (this.props.minDate) {
       return convertDateToMoment(this.props.minDate, this.props.useMoment);
     } else {
-      return this.getStartDate();
+      return convertDateToMoment(this.props.startDate, this.props.useMoment);
     }
   }
 
@@ -746,7 +846,7 @@ export default class Timeline extends React.Component {
     if (this.props.maxDate) {
       return convertDateToMoment(this.props.maxDate, this.props.useMoment);
     } else {
-      return this.getEndDate();
+      return convertDateToMoment(this.props.endDate, this.props.useMoment);
     }
   }
 
@@ -841,6 +941,20 @@ export default class Timeline extends React.Component {
   }
 
   /**
+   * Before the gantt leftOffset was considered to be: PARENT_ELEMENT.getBoundingClientRect().left
+   * But there was a bug found in tests: The segments are in fact positioned (in the html page) relative to the interior of the react virtualized grid
+   * that is smaller than the .parent-div with 1px (Because of a 1px left border of the grid)
+   *
+   * So the left offset of the gantt (needed when converting the position in pixels in time) should take in consideration
+   * that 1px left border of the gantt grid
+   *
+   * @return {number}
+   */
+  getGanttLeftOffset() {
+    return PARENT_ELEMENT(this.props.componentId).getBoundingClientRect().left + 1;
+  }
+
+  /**
    * Re-renders the grid when the window or container is resized
    */
   updateDimensions() {
@@ -859,11 +973,17 @@ export default class Timeline extends React.Component {
    * @param {boolean} useMoment This parameter is necessary because this method is also called when
    * the component receives new props.
    */
-  setTimeMap(items, startDate, endDate, useMoment) {
+  setTimeMap(items, startDate, endDate, useMoment, displayItemOnSeparateRowIfOverlap) {
     if (!startDate || !endDate) {
       startDate = this.getStartDate();
       endDate = this.getEndDate();
     }
+
+    displayItemOnSeparateRowIfOverlap =
+      displayItemOnSeparateRowIfOverlap == undefined
+        ? this.props.displayItemOnSeparateRowIfOverlap
+        : displayItemOnSeparateRowIfOverlap;
+
     this.itemRowMap = {}; // timeline elements (key) => (rowId).
     this.rowItemMap = {}; // (rowId) => timeline elements
     this.rowHeightCache = {}; // (rowId) => max number of stacked items
@@ -892,7 +1012,9 @@ export default class Timeline extends React.Component {
         maxVisibleItems,
         this.getStartFromItem,
         this.getEndFromItem,
-        useMoment
+        useMoment,
+        displayItemOnSeparateRowIfOverlap,
+        rowInt
       );
     });
   }
@@ -1029,6 +1151,12 @@ export default class Timeline extends React.Component {
       return this.props.snapMinutes * 60 * 1000;
     }
     return 1;
+  }
+
+  getRowClassName(rowIndex) {
+    return (
+      this.props.rowClassName + ' ' + (rowIndex % 2 == 0 ? this.props.rowOddClassName : this.props.rowEvenClassName)
+    );
   }
 
   /**
@@ -1202,10 +1330,9 @@ export default class Timeline extends React.Component {
       if (event.button == 2) {
         this.setState({openedContextMenuCoordinates: {x: event.clientX, y: event.clientY}});
         this.setState({openedContextMenuRow: bottomRow});
-        const leftOffset = PARENT_ELEMENT(this.props.componentId).getBoundingClientRect().left;
         this.setState({
           openedContextMenuTime: getTimeAtPixel(
-            event.clientX - leftOffset,
+            event.clientX - this.getGanttLeftOffset(),
             this.getStartDate(),
             this.getEndDate(),
             this.getTimelineWidth(),
@@ -1476,7 +1603,9 @@ export default class Timeline extends React.Component {
             let new_row_height = getMaxOverlappingItems(
               this.rowItemMap[rowId],
               this.getStartFromItem,
-              this.getEndFromItem
+              this.getEndFromItem,
+              this.props.displayItemOnSeparateRowIfOverlap,
+              rowNo
             );
             if (new_row_height !== this.rowHeightCache[rowId]) {
               this.rowHeightCache[rowId] = new_row_height;
@@ -1552,9 +1681,8 @@ export default class Timeline extends React.Component {
       }
     } else {
       row = e.target.getAttribute('data-row-index');
-      const leftOffset = PARENT_ELEMENT(this.props.componentId).getBoundingClientRect().left;
       let clickedTime = getTimeAtPixel(
-        e.clientX - leftOffset,
+        e.clientX - this.getGanttLeftOffset(),
         this.getStartDate(),
         this.getEndDate(),
         this.getTimelineWidth()
@@ -1572,10 +1700,9 @@ export default class Timeline extends React.Component {
       // right click => open CM
       this.setState({openedContextMenuCoordinates: {x: e.clientX, y: e.clientY}});
       this.setState({openedContextMenuRow: Number(row)});
-      const leftOffset = PARENT_ELEMENT(this.props.componentId).getBoundingClientRect().left;
       this.setState({
         openedContextMenuTime: getTimeAtPixel(
-          e.clientX - leftOffset,
+          e.clientX - this.getGanttLeftOffset(),
           this.getStartDate(),
           this.getEndDate(),
           this.getTimelineWidth(),
@@ -1619,15 +1746,11 @@ export default class Timeline extends React.Component {
       var props = this.props;
       return (
         <div
-          data-testid={testids.row + '_' + rowIndex}
+          data-testid={this.props.componentId + '_' + testids.row + '_' + rowIndex}
           key={key}
           style={style}
           data-row-index={rowIndex}
-          className={
-            this.props.rowClassName +
-            ' ' +
-            (rowIndex % 2 == 0 ? this.props.rowOddClassName : this.props.rowEvenClassName)
-          }
+          className={this.getRowClassName(rowIndex)}
           onClick={e => this._handleItemRowEvent(e, Timeline.no_op, this.props.onRowClick)}
           onMouseDown={e => {
             this.selecting = false;
@@ -1655,7 +1778,10 @@ export default class Timeline extends React.Component {
             this.props.itemRendererDefaultProps,
             this.getStartFromItem,
             this.getEndFromItem,
-            timelineTestids
+            timelineTestids,
+            this.props.displayItemOnSeparateRowIfOverlap,
+            this.props.zIndexFunction,
+            rowIndex
           )}
           {rowLayerRenderer(
             layersInRow,
@@ -1768,9 +1894,8 @@ export default class Timeline extends React.Component {
    * Only calls back if a new snap time is reached
    */
   throttledMouseMoveFunc(e) {
-    const leftOffset = PARENT_ELEMENT(this.props.componentId).getBoundingClientRect().left;
     const cursorSnappedTime = getTimeAtPixel(
-      e.clientX - leftOffset + 2,
+      e.clientX - this.getGanttLeftOffset(),
       this.getStartDate(),
       this.getEndDate(),
       this.getTimelineWidth(),
@@ -1902,10 +2027,11 @@ export default class Timeline extends React.Component {
     return true;
   };
 
-  handleDrag(width) {
-    this.setState({tableWidth: width});
-    if (this.props.onTableResize) {
-      this.props.onTableResize(width);
+  onSplitChange(width) {
+    if (this.props.onSplitChange) {
+      this.props.onSplitChange(width);
+    } else {
+      this.setState({splitSize: width});
     }
     return true;
   }
@@ -1929,13 +2055,13 @@ export default class Timeline extends React.Component {
   renderMenuButton() {
     return (
       <Popup
-        data-testid={testids.dragToCreatePopup}
+        data-testid={this.props.componentId + '_' + testids.dragToCreatePopup}
         position="top right"
         open={this.state.dragToCreateMode && !this.state.dragToCreatePopupClosed}
         wide="very"
         trigger={
           <Button
-            data-testid={testids.menuButton}
+            data-testid={this.props.componentId + '_' + testids.menuButton}
             size="mini"
             circular
             primary
@@ -1959,12 +2085,12 @@ export default class Timeline extends React.Component {
             ref={this.menuButton_ref_callback}></Button>
         }>
         <div>
-          <div data-testid={testids.dragToCreatePopupLabel + '_1'}>
+          <div data-testid={this.props.componentId + '_' + testids.dragToCreatePopupLabel + '_1'}>
             <b>Click and drag</b> to create a new segment
           </div>
           <div className="rct9k-drag-to-create-popup-buttons-div">
             <Button
-              data-testid={testids.dragToCreatePopupCancelButton}
+              data-testid={this.props.componentId + '_' + testids.dragToCreatePopupCancelButton}
               content="Cancel 'drag to create' mode"
               icon="cancel"
               negative
@@ -1972,10 +2098,14 @@ export default class Timeline extends React.Component {
               onClick={() => this.setDragToCreateMode(false)}
             />
           </div>
-          <div data-testid={testids.dragToCreatePopupLabel + '_2'} className="rct9k-drag-to-create-popup-hint-div">
+          <div
+            data-testid={this.props.componentId + '_' + testids.dragToCreatePopupLabel + '_2'}
+            className="rct9k-drag-to-create-popup-hint-div">
             {DRAG_TO_CREATE_POPUP_LABEL_2}
           </div>
-          <div data-testid={testids.dragToCreatePopupLabel + '_3'} className="rct9k-drag-to-create-popup-hint-div">
+          <div
+            data-testid={this.props.componentId + '_' + testids.dragToCreatePopupLabel + '_3'}
+            className="rct9k-drag-to-create-popup-hint-div">
             To <b>cancel</b> you can also click on gantt
           </div>
         </div>
@@ -2005,6 +2135,41 @@ export default class Timeline extends React.Component {
         }
       });
     }
+    if (this.props.showZommShortcuts) {
+      let that = this;
+      actions.push({
+        label: ZOOM_IN_ACTION_LABEL,
+        icon: 'zoom-in',
+        run: param => {
+          let event = new MouseEvent('wheel', {
+            ctrlKey: true,
+            clientX: that._gridDomNode.getBoundingClientRect().x + that._grid.props.width / 2,
+            bubbles: true,
+            cancelable: true
+          });
+          event.deltaY = -1;
+          that._gridDomNode.dispatchEvent(event);
+          param.closeContextMenu();
+          that.startFadeOutEffect('Zommed in');
+        }
+      });
+      actions.push({
+        label: ZOOM_OUT_ACTION_LABEL,
+        icon: 'zoom-out',
+        run: param => {
+          let event = new MouseEvent('wheel', {
+            ctrlKey: true,
+            clientX: that._gridDomNode.getBoundingClientRect().x + that._grid.props.width / 2,
+            bubbles: true,
+            cancelable: true
+          });
+          event.deltaY = 1;
+          that._gridDomNode.dispatchEvent(event);
+          param.closeContextMenu();
+          that.startFadeOutEffect('Zommed out');
+        }
+      });
+    }
 
     return (
       <ContextMenu
@@ -2015,10 +2180,40 @@ export default class Timeline extends React.Component {
     );
   }
 
+  /**
+   * Show a popup with fadeEffectContent, and start the fadeOut
+   * @param { string | JSX.Element } fadeEffectContent
+   */
+  startFadeOutEffect(fadeEffectContent) {
+    this.setState({fadeEffectOpen: true, fadeEffectContent, fadeEffectOpacity: 1});
+    let that = this;
+    this.fadeTimer = setInterval(function() {
+      if (that.state.fadeEffectOpacity > 0) {
+        that.setState({fadeEffectOpacity: that.state.fadeEffectOpacity - FADE_OPACITY_OFFSET});
+      } else {
+        clearInterval(that.fadeTimer);
+      }
+    }, FADE_TIMER_INTERVAR);
+  }
+
+  /**
+   * @returns { JSX.Element }
+   */
+  renderFadeEffect() {
+    return (
+      <Popup
+        data-testid={this.props.componentId + '_' + testids.fadeEffect}
+        open={this.state.fadeEffectOpen}
+        style={{opacity: this.state.fadeEffectOpacity}}>
+        {this.state.fadeEffectContent}
+      </Popup>
+    );
+  }
+
   onHorizontalScroll(scrollPosition) {
     const displayIntervalInMiliseconds = this.getEndDate().diff(this.getStartDate(), 'milliseconds');
-    this.setState({startDate: this.props.useMoment ? moment(scrollPosition) : scrollPosition});
     this.setState({
+      startDate: this.props.useMoment ? moment(scrollPosition) : scrollPosition,
       endDate: this.props.useMoment
         ? moment(scrollPosition + displayIntervalInMiliseconds)
         : scrollPosition + displayIntervalInMiliseconds
@@ -2105,6 +2300,7 @@ export default class Timeline extends React.Component {
                     className={this.getDragToCreateMode() ? 'rct9k-selector-outer-add' : ''}
                   />
                   <Timebar
+                    componentId={this.props.componentId}
                     cursorTime={this.getCursor()}
                     start={this.getStartDate()}
                     end={this.getEndDate()}
@@ -2128,6 +2324,7 @@ export default class Timeline extends React.Component {
                     />
                   ))}
                   <TimelineBody
+                    componentId={this.props.componentId}
                     width={this.state.gridWidth}
                     columnWidth={() => this.state.gridWidth}
                     height={bodyHeight - (this.state.hasHorizontalScrollbar ? SCROLLBAR_SIZE : 0)}
@@ -2153,6 +2350,7 @@ export default class Timeline extends React.Component {
                       this.setState({hasHorizontalScrollbar: isScrollbarVisible})
                     }
                     ref={node => (this._scrollbar = node)}></Scrollbar>
+                  {this.renderFadeEffect()}
                   {this.renderContextMenu()}
                   {backgroundLayer &&
                     React.cloneElement(backgroundLayer, {
@@ -2226,13 +2424,13 @@ export default class Timeline extends React.Component {
     return (
       // Can not use empty <> instead of <Fragment> because it fails the documentation generation
       <Fragment>
-        <TestsAreDemoCheat objectToPublish={this} />
+        <TestsAreDemoCheat objectToPublish={this} dataTestIdSuffix={this.props.componentId} />
         <SelectionHolder
           selectionChangedHandler={this.selectionChangedHandler}
           ref={this.selectionHolder_ref_callback}
           selectedItems={this.props.selectedItems}
         />
-        {this._table && <TestsAreDemoCheat objectToPublish={this._table} />}
+        {this._table && <TestsAreDemoCheat objectToPublish={this._table} dataTestIdSuffix={this.props.componentId} />}
         {
           // Instead of <Measure .../>, in the past <AutoSizer ... /> was used. However it would round with/height, which generated and endless
           // scrollbar appear/disappear, depending on the parent, depending on the resolution.
@@ -2259,8 +2457,8 @@ export default class Timeline extends React.Component {
                   <SplitPane
                     split="vertical"
                     style={{height: this.state.screenHeight, position: 'relative'}}
-                    size={this.state.tableWidth}
-                    onChange={this.handleDrag}
+                    size={this.props.onSplitChange ? this.props.table.props.width : this.state.splitSize}
+                    onChange={this.onSplitChange}
                     ref={this.splitPane_ref_callback}>
                     <TableWithStyle
                       table={React.cloneElement(this.props.table, {
@@ -2273,14 +2471,21 @@ export default class Timeline extends React.Component {
                         scrollTop: this.state.scrollTop,
                         headerHeight: timebarHeight,
                         height: this.state.screenHeight,
-                        width: this.state.tableWidth,
-                        rowClassNameGetter: rowIndex =>
-                          this.props.rowClassName +
-                          ' ' +
-                          (rowIndex % 2 == 0 ? this.props.rowOddClassName : this.props.rowEvenClassName),
+                        rowClassNameGetter: rowIndex => {
+                          let classNameDefinedByUser =
+                            this.props.table !== undefined &&
+                            this.props.table.props.rowClassNameGetter !== undefined &&
+                            this.props.table.props.rowClassNameGetter(rowIndex);
+                          if (classNameDefinedByUser) {
+                            return classNameDefinedByUser;
+                          } else {
+                            return this.getRowClassName(rowIndex);
+                          }
+                        },
                         // Because the content of the empty rows are now significant
                         // avoid showing vertical scrollbar in case horizontal scrollbar is needed when shrinking the table
-                        showScrollbarY: !hasEmptyRows
+                        showScrollbarY: !hasEmptyRows,
+                        ...(this.props.onSplitChange ? {} : {width: this.state.splitSize})
                       })}
                     />
                     {this.renderGanttPart({bodyHeight, timebarHeight})}
@@ -2307,9 +2512,8 @@ export default class Timeline extends React.Component {
   ////////////////////////////////////////////////////////////////////////////////////////
 
   setCursorTime(x) {
-    const leftOffset = PARENT_ELEMENT(this.props.componentId).getBoundingClientRect().left;
     const cursorTime = getTimeAtPixel(
-      x - leftOffset,
+      x - this.getGanttLeftOffset(),
       this.getStartDate(),
       this.getEndDate(),
       this.getTimelineWidth(),

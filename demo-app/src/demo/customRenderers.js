@@ -1,5 +1,5 @@
 import React from 'react';
-import ItemRenderer from '../../../src/components/ItemRenderer';
+import { ItemRenderer } from '@famiprog-foundation/react-gantt';
 
 export class CustomItemRenderer extends ItemRenderer {
   getBackgroundGradient() {

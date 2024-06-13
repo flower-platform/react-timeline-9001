@@ -11,11 +11,19 @@
   position: relative;
 }
 
+.rct9k-background-layer-wrapper {
+  position: absolute;
+  top: 0px;
+  /* We need this 1px left in order for the background layer to perfectly overlap the ganttBody that has a 1px border left*/
+  left: 1px;
+}
+
 /**
 * We need this {pointerEvents: "none"} because the background layer is in front of the TimelineBody
 */
 .rct9k-background-layer {
   pointer-events: none;
+  position: relative;
 }
 
 .rct9k-background-layer-highlight-weekends {
@@ -200,6 +208,13 @@
 }
 
 .rct9k-marker {
+  /*
+   * in some case the marker is displayed under item, layers
+   * for show on the top of it we set this value to z-index.
+   * why 999? in semantic-ui have some elements with z-index = 1000
+   * the elements what use a dimer https://github.com/Semantic-Org/Semantic-UI-CSS/blob/master/semantic.css#L30941 (e.g. Modal)
+   */
+  z-index: 999;
   position: absolute;
   margin: 0;
   background: #a9a9e6;
@@ -208,7 +223,6 @@
 }
 
 .rct9k-marker-overlay {
-  z-index: 4;
   height: 475px;
   position: absolute;
   width: 2px;

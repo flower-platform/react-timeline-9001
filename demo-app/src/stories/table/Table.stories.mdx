@@ -1,6 +1,5 @@
 import { Meta, ArgsTable } from '@storybook/addon-docs';
-import Timeline from '../../../../src/timeline';
-import Column from '../../../../src/timeline';
+import { Timeline } from '@famiprog-foundation/react-gantt';
 import { encodeApiDocURIForSubpath, parametersDocPage } from '../StorybookUtils';
 
 <Meta title="Features/Table/Doc"  />
@@ -16,14 +15,14 @@ It is mandatory to have set a <code>width</code> for this table
 
 <ArgsTable of={Timeline} sort="none" include={["table"]}/>
 
-##  `onTableResize`
+##  `onSplitChange`
 
 The Gantt component is splitted between the table and the actual gantt diagram. 
-By default the table's actual width is the `Table.props.width`.
+Initialy the size of the split equals to the table width.
 
-This can be changed by dragging the split bar between the table and the gantt.
+The split works in two modes:
+1. Controlled: `onSplitChange` is provided by the user in order to manage the width of the table by itself.
+2. Uncontrolled: no `onSplitChange` is provided by the user. Gantt internally changes the width of the table when the split changes
 
-Those subsequent size changes can be listen by setting the `onTableResize` property
-
-<ArgsTable of={Timeline} sort="none" include={["onTableResize"]}/>
+<ArgsTable of={Timeline} sort="none" include={["onSplitChange"]}/>
 

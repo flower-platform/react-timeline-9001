@@ -14,12 +14,15 @@ export * from './types';
 
 // components
 export {default as Timebar} from './components/timebar';
+export * from './components/timebar';
 export {default as TimelineBody} from './components/body';
 export {default as ItemRenderer} from './components/ItemRenderer';
 export {Marker} from './components/Marker';
 export {default as Selectbox} from './components/selector';
 export {BackgroundLayer} from './components/BackgroundLayer';
-export * from './components/HighlightedInterval';
+export {HighlightedInterval} from './components/HighlightedInterval';
+export {Scrollbar, Direction} from './components/Scrollbar';
+export {ContextMenu} from './components/ContextMenu/ContextMenu';
 
 // consts
 export {timebarFormat} from './consts/timebarConsts';
@@ -28,3 +31,6 @@ export {timebarFormat} from './consts/timebarConsts';
 export * from './utils/commonUtils';
 export * from './utils/itemUtils';
 export * from './utils/timeUtils';
+
+//testids
+export {contextMenuTestIds} from './components/ContextMenu/ContextMenu';
