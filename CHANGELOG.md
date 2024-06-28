@@ -1,5 +1,7 @@
 ## Unreleased
 
+## v2.7.5
+
 * [Allow group.id to be any number (remove the "consecutive numbers starting from 0" restriction)](https://github.com/flower-platform/react-timeline-10000/pull/74/files)
 
 ## v2.7.4
