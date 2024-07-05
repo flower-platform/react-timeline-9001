@@ -2280,7 +2280,6 @@ export default class Timeline extends React.Component {
                   }
                 }}>
                 <div
-                  style={{willChange: 'unset !important'}}
                   className="parent-div"
                   onMouseDown={this.mouseDownFunc}
                   onMouseMove={this.mouseMoveFunc}
