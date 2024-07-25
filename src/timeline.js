@@ -584,6 +584,10 @@ export default class Timeline extends React.Component {
    */
   fadeTimer = undefined;
 
+  loongPressTimer = undefined;
+
+  isLongPress = false;
+
   getInitialTableWidth(props) {
     props = props ? props : this.props;
     return (props.table ? props.table.props.width : 0) + TABLE_OFFSET;
@@ -672,7 +676,7 @@ export default class Timeline extends React.Component {
 
   componentDidMount() {
     window.addEventListener('resize', this.updateDimensions);
-    window.addEventListener('wheel', this.wheelHandler, {passive: false});
+    window.addEventListener('wheel', this.wheelHandler, {passive: true});
   }
 
   componentWillReceiveProps(nextProps) {
@@ -758,6 +762,10 @@ export default class Timeline extends React.Component {
       this.fillInTimelineWithEmptyRows(this.props.groups);
       this.refreshGrid();
     }
+  }
+
+  isTouchDevice() {
+    return 'ontouchstart' in window || navigator.maxTouchPoints > 0 || navigator.msMaxTouchPoints > 0;
   }
 
   wheelHandler(e) {
@@ -1674,8 +1682,7 @@ export default class Timeline extends React.Component {
       let itemKey = target.getAttribute('data-item-index');
       itemKey = isNaN(Number(itemKey)) ? itemKey : Number(itemKey);
       itemCallback && itemCallback(e, itemKey);
-      // window.ontouchstart added to checks is we are on mobile
-      if (e.type == 'mousedown' || (window.ontouchstart && e.type == 'tap')) {
+      if (e.type == 'mousedown' || (this.isTouchDevice() && e.type == 'tap')) {
         // Calculate new selection by delegating to selection component
         this._selectionHolder.addRemoveItems([itemKey], e);
       }
@@ -1691,18 +1698,19 @@ export default class Timeline extends React.Component {
       let snappedClickedTime = timeSnap(clickedTime, this.getTimelineSnap() * 60);
       rowCallback && rowCallback(e, row, clickedTime, snappedClickedTime);
 
-      if (e.type == 'mousedown' || (window.ontouchstart && e.type == 'tap')) {
+      if (e.type == 'mousedown' || (this.isTouchDevice() && e.type == 'tap')) {
         this._selectionHolder.addRemoveItems([], e);
       }
     }
 
-    if (e.type == 'contextmenu') {
-      // right click => open CM
-      this.setState({openedContextMenuCoordinates: {x: e.clientX, y: e.clientY}});
+    if (e.type == 'contextmenu' || (this.isTouchDevice() && e.type == 'touchend')) {
+      // right click or long press => open CM
+      const {clientX, clientY} = this.isTouchDevice() ? e.changedTouches[0] : e;
+      this.setState({openedContextMenuCoordinates: {x: clientX, y: clientY}});
       this.setState({openedContextMenuRow: Number(row)});
       this.setState({
         openedContextMenuTime: getTimeAtPixel(
-          e.clientX - this.getGanttLeftOffset(),
+          clientX - this.getGanttLeftOffset(),
           this.getStartDate(),
           this.getEndDate(),
           this.getTimelineWidth(),
@@ -1714,7 +1722,7 @@ export default class Timeline extends React.Component {
         // If a drag in progress, right click only cancels the current drag but keeps the drag to create mode
         this.setDragToCreateMode(false);
       }
-    } else if (e.type == 'click' || (window.ontouchstart && e.type == 'tap')) {
+    } else if (e.type == 'click' || (this.isTouchDevice() && e.type == 'tap')) {
       this.setState({openedContextMenuCoordinates: undefined});
       this.setDragToCreateMode(false);
     }
@@ -1761,7 +1769,7 @@ export default class Timeline extends React.Component {
             this.selecting = false;
             return this._handleItemRowEvent(e, onItemHover, null);
           }}
-          onMouseLeave={e => {
+          onMouseOut={e => {
             this.selecting = false;
             return this._handleItemRowEvent(e, onItemLeave, null);
           }}
@@ -1980,7 +1988,7 @@ export default class Timeline extends React.Component {
     ) {
       return;
     }
-
+    this.loongPressTimer = setTimeout(() => (this.isLongPress = true), 500);
     const touch = e.touches[0];
     this.setState({touchPositionX: touch.clientX});
   }
@@ -2005,8 +2013,11 @@ export default class Timeline extends React.Component {
    * Toghether with `onTouchStart` and `onTouchMove` implements the horizontal scroll by dragging the gantt diagram on mobile devices
    *
    */
-  onTouchEnd() {
+  onTouchEnd(e) {
     this.setState({touchPositionX: undefined});
+    clearTimeout(this.loongPressTimer);
+    this.isLongPress && this._handleItemRowEvent(e, Timeline.no_op, Timeline.no_op);
+    this.isLongPress = false;
   }
 
   /**
