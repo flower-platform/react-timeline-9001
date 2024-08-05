@@ -1,5 +1,7 @@
 ## Unreleased
 
+* [Update comment for rct9k-items-inner style class](https://github.com/flower-platform/react-timeline-10000/pull/88/files)
+
 ## v2.7.5
 
 * [Allow group.id to be any number (remove the "consecutive numbers starting from 0" restriction)](https://github.com/flower-platform/react-timeline-10000/pull/74/files)
