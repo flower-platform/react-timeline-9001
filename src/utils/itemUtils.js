@@ -64,7 +64,7 @@ export function rowItemsRenderer(
     // itemHeight is also used to calculate the row height; the row height is the maximum number of overlapping items
     // in a row multiplied with itemHeight.
     // If the max overlapping items is 1, then itemHeight = row height,
-    // but we need to subtract 10 because of the margin (see rct9k-items-inner class in style.css)
+    // we need to subtract 10 (5 top + 5 bottom) because of the margin (see rct9k-items-inner class in style.css)
     const adjustedItemHeight = itemHeight - 10;
     let item_offset_mins = getStartFromItem(i).diff(vis_start, 'milliseconds');
     let item_duration_mins = getEndFromItem(i).diff(getStartFromItem(i), 'milliseconds');
