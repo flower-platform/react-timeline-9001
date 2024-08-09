@@ -584,10 +584,6 @@ export default class Timeline extends React.Component {
    */
   fadeTimer = undefined;
 
-  loongPressTimer = undefined;
-
-  isLongPress = false;
-
   getInitialTableWidth(props) {
     props = props ? props : this.props;
     return (props.table ? props.table.props.width : 0) + TABLE_OFFSET;
@@ -1331,7 +1327,12 @@ export default class Timeline extends React.Component {
       if (this.getDragToCreateMode() && this.props.onDragToCreateEnded) {
         // get avaible itemIndex and call the onDragToCreateEnded
         const itemIndex = Math.max(...Object.keys(this.itemRowMap)) + 1;
-        this.props.onDragToCreateEnded({groupIndex: topRowNumber, itemIndex, itemStart: startTime, itemEnd: endTime});
+        this.props.onDragToCreateEnded({
+          groupIndex: topRowNumber,
+          itemIndex,
+          itemStart: startTime,
+          itemEnd: endTime
+        });
         this.setDragToCreateMode(false);
       }
 
@@ -1661,7 +1662,7 @@ export default class Timeline extends React.Component {
     // That's why I suspect that it targets only the contextMenu events in order to prevent the browser default context menu to open
     // But because this is a legacy code and we don't understand why the exact scope of this preventDefault(),
     // We removed it only for the case that we are interested in i.e. 'mouseDown'
-    if (e.type != 'mousedown') {
+    if (e.type != 'mousedown' && e.type == 'touchstart') {
       e.preventDefault();
     }
 
@@ -1682,7 +1683,7 @@ export default class Timeline extends React.Component {
       let itemKey = target.getAttribute('data-item-index');
       itemKey = isNaN(Number(itemKey)) ? itemKey : Number(itemKey);
       itemCallback && itemCallback(e, itemKey);
-      if (e.type == 'mousedown' || (this.isTouchDevice() && e.type == 'tap')) {
+      if (e.type == 'mousedown' || (this.isTouchDevice() && e.type == 'touchstart')) {
         // Calculate new selection by delegating to selection component
         this._selectionHolder.addRemoveItems([itemKey], e);
       }
@@ -1703,9 +1704,9 @@ export default class Timeline extends React.Component {
       }
     }
 
-    if (e.type == 'contextmenu' || (this.isTouchDevice() && e.type == 'touchend')) {
+    if (e.type == 'contextmenu') {
       // right click or long press => open CM
-      const {clientX, clientY} = this.isTouchDevice() ? e.changedTouches[0] : e;
+      const {clientX, clientY} = e;
       this.setState({openedContextMenuCoordinates: {x: clientX, y: clientY}});
       this.setState({openedContextMenuRow: Number(row)});
       this.setState({
@@ -1773,8 +1774,14 @@ export default class Timeline extends React.Component {
             this.selecting = false;
             return this._handleItemRowEvent(e, onItemLeave, null);
           }}
-          onContextMenu={e => this._handleItemRowEvent(e, this.props.onItemContextClick, this.props.onRowContextClick)}
-          onDoubleClick={e => this._handleItemRowEvent(e, this.props.onItemDoubleClick, this.props.onRowDoubleClick)}>
+          onContextMenu={e => {
+            this.selecting = false;
+            this._handleItemRowEvent(e, this.props.onItemContextClick, this.props.onRowContextClick);
+          }}
+          onDoubleClick={e => {
+            this.selecting = false;
+            this._handleItemRowEvent(e, this.props.onItemDoubleClick, this.props.onRowDoubleClick);
+          }}>
           {rowItemsRenderer(
             itemsInRow,
             this.getStartDate(),
@@ -1983,12 +1990,12 @@ export default class Timeline extends React.Component {
     // directly on these components was not possible easily (It needed to extend this Grid adding by adding a wrapper div on which to add the touch handlers)
     // so we added the handler on the parent component and check inside of it to exclude other children like the scrollbar, or the timebar
     if (
+      !this.state.hasHorizontalScrollbar ||
       e.target.classList.contains('rct9k-horizontal-scrollbar-outter') ||
       e.target.classList.contains('rct9k-timebar-item')
     ) {
       return;
     }
-    this.loongPressTimer = setTimeout(() => (this.isLongPress = true), 500);
     const touch = e.touches[0];
     this.setState({touchPositionX: touch.clientX});
   }
@@ -1999,7 +2006,7 @@ export default class Timeline extends React.Component {
    * @param {*} e
    */
   onTouchMove(e) {
-    if (this.state.touchPositionX != undefined) {
+    if (this.state.touchPositionX != undefined && this._scrollbar != undefined) {
       const touch = e.touches[0];
       const deltaX = touch.clientX - this.state.touchPositionX;
       this.setState({touchPositionX: touch.clientX});
@@ -2014,10 +2021,7 @@ export default class Timeline extends React.Component {
    *
    */
   onTouchEnd(e) {
-    this.setState({touchPositionX: undefined});
-    clearTimeout(this.loongPressTimer);
-    this.isLongPress && this._handleItemRowEvent(e, Timeline.no_op, Timeline.no_op);
-    this.isLongPress = false;
+    this.state.touchPositionX && this.setState({touchPositionX: undefined});
   }
 
   /**
