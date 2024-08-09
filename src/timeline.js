@@ -672,7 +672,7 @@ export default class Timeline extends React.Component {
 
   componentDidMount() {
     window.addEventListener('resize', this.updateDimensions);
-    window.addEventListener('wheel', this.wheelHandler, {passive: true});
+    window.addEventListener('wheel', this.wheelHandler, {passive: false});
   }
 
   componentWillReceiveProps(nextProps) {
@@ -1662,7 +1662,7 @@ export default class Timeline extends React.Component {
     // That's why I suspect that it targets only the contextMenu events in order to prevent the browser default context menu to open
     // But because this is a legacy code and we don't understand why the exact scope of this preventDefault(),
     // We removed it only for the case that we are interested in i.e. 'mouseDown'
-    if (e.type != 'mousedown' && e.type == 'touchstart') {
+    if (e.type != 'mousedown') {
       e.preventDefault();
     }
 
@@ -1705,7 +1705,7 @@ export default class Timeline extends React.Component {
     }
 
     if (e.type == 'contextmenu') {
-      // right click or long press => open CM
+      // right click => open CM
       const {clientX, clientY} = e;
       this.setState({openedContextMenuCoordinates: {x: clientX, y: clientY}});
       this.setState({openedContextMenuRow: Number(row)});
