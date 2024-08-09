@@ -1683,7 +1683,7 @@ export default class Timeline extends React.Component {
       let itemKey = target.getAttribute('data-item-index');
       itemKey = isNaN(Number(itemKey)) ? itemKey : Number(itemKey);
       itemCallback && itemCallback(e, itemKey);
-      if (e.type == 'mousedown' || (this.isTouchDevice() && e.type == 'touchstart')) {
+      if (e.type == 'mousedown' || (this.isTouchDevice() && e.type == 'tap')) {
         // Calculate new selection by delegating to selection component
         this._selectionHolder.addRemoveItems([itemKey], e);
       }
