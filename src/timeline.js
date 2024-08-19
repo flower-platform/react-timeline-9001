@@ -760,6 +760,10 @@ export default class Timeline extends React.Component {
     }
   }
 
+  isTouchDevice() {
+    return 'ontouchstart' in window || navigator.maxTouchPoints > 0 || navigator.msMaxTouchPoints > 0;
+  }
+
   wheelHandler(e) {
     if (e.ctrlKey) {
       let target = e.target;
@@ -1323,7 +1327,12 @@ export default class Timeline extends React.Component {
       if (this.getDragToCreateMode() && this.props.onDragToCreateEnded) {
         // get avaible itemIndex and call the onDragToCreateEnded
         const itemIndex = Math.max(...Object.keys(this.itemRowMap)) + 1;
-        this.props.onDragToCreateEnded({groupIndex: topRowNumber, itemIndex, itemStart: startTime, itemEnd: endTime});
+        this.props.onDragToCreateEnded({
+          groupIndex: topRowNumber,
+          itemIndex,
+          itemStart: startTime,
+          itemEnd: endTime
+        });
         this.setDragToCreateMode(false);
       }
 
@@ -1674,8 +1683,7 @@ export default class Timeline extends React.Component {
       let itemKey = target.getAttribute('data-item-index');
       itemKey = isNaN(Number(itemKey)) ? itemKey : Number(itemKey);
       itemCallback && itemCallback(e, itemKey);
-      // window.ontouchstart added to checks is we are on mobile
-      if (e.type == 'mousedown' || (window.ontouchstart && e.type == 'tap')) {
+      if (e.type == 'mousedown' || (this.isTouchDevice() && e.type == 'tap')) {
         // Calculate new selection by delegating to selection component
         this._selectionHolder.addRemoveItems([itemKey], e);
       }
@@ -1691,18 +1699,19 @@ export default class Timeline extends React.Component {
       let snappedClickedTime = timeSnap(clickedTime, this.getTimelineSnap() * 60);
       rowCallback && rowCallback(e, row, clickedTime, snappedClickedTime);
 
-      if (e.type == 'mousedown' || (window.ontouchstart && e.type == 'tap')) {
+      if (e.type == 'mousedown' || (this.isTouchDevice() && e.type == 'tap')) {
         this._selectionHolder.addRemoveItems([], e);
       }
     }
 
     if (e.type == 'contextmenu') {
       // right click => open CM
-      this.setState({openedContextMenuCoordinates: {x: e.clientX, y: e.clientY}});
+      const {clientX, clientY} = e;
+      this.setState({openedContextMenuCoordinates: {x: clientX, y: clientY}});
       this.setState({openedContextMenuRow: Number(row)});
       this.setState({
         openedContextMenuTime: getTimeAtPixel(
-          e.clientX - this.getGanttLeftOffset(),
+          clientX - this.getGanttLeftOffset(),
           this.getStartDate(),
           this.getEndDate(),
           this.getTimelineWidth(),
@@ -1714,7 +1723,7 @@ export default class Timeline extends React.Component {
         // If a drag in progress, right click only cancels the current drag but keeps the drag to create mode
         this.setDragToCreateMode(false);
       }
-    } else if (e.type == 'click' || (window.ontouchstart && e.type == 'tap')) {
+    } else if (e.type == 'click' || (this.isTouchDevice() && e.type == 'tap')) {
       this.setState({openedContextMenuCoordinates: undefined});
       this.setDragToCreateMode(false);
     }
@@ -1761,12 +1770,18 @@ export default class Timeline extends React.Component {
             this.selecting = false;
             return this._handleItemRowEvent(e, onItemHover, null);
           }}
-          onMouseLeave={e => {
+          onMouseOut={e => {
             this.selecting = false;
             return this._handleItemRowEvent(e, onItemLeave, null);
           }}
-          onContextMenu={e => this._handleItemRowEvent(e, this.props.onItemContextClick, this.props.onRowContextClick)}
-          onDoubleClick={e => this._handleItemRowEvent(e, this.props.onItemDoubleClick, this.props.onRowDoubleClick)}>
+          onContextMenu={e => {
+            this.selecting = false;
+            this._handleItemRowEvent(e, this.props.onItemContextClick, this.props.onRowContextClick);
+          }}
+          onDoubleClick={e => {
+            this.selecting = false;
+            this._handleItemRowEvent(e, this.props.onItemDoubleClick, this.props.onRowDoubleClick);
+          }}>
           {rowItemsRenderer(
             itemsInRow,
             this.getStartDate(),
@@ -1975,12 +1990,12 @@ export default class Timeline extends React.Component {
     // directly on these components was not possible easily (It needed to extend this Grid adding by adding a wrapper div on which to add the touch handlers)
     // so we added the handler on the parent component and check inside of it to exclude other children like the scrollbar, or the timebar
     if (
+      !this.state.hasHorizontalScrollbar ||
       e.target.classList.contains('rct9k-horizontal-scrollbar-outter') ||
       e.target.classList.contains('rct9k-timebar-item')
     ) {
       return;
     }
-
     const touch = e.touches[0];
     this.setState({touchPositionX: touch.clientX});
   }
@@ -1991,7 +2006,7 @@ export default class Timeline extends React.Component {
    * @param {*} e
    */
   onTouchMove(e) {
-    if (this.state.touchPositionX != undefined) {
+    if (this.state.touchPositionX != undefined && this._scrollbar != undefined) {
       const touch = e.touches[0];
       const deltaX = touch.clientX - this.state.touchPositionX;
       this.setState({touchPositionX: touch.clientX});
@@ -2005,8 +2020,8 @@ export default class Timeline extends React.Component {
    * Toghether with `onTouchStart` and `onTouchMove` implements the horizontal scroll by dragging the gantt diagram on mobile devices
    *
    */
-  onTouchEnd() {
-    this.setState({touchPositionX: undefined});
+  onTouchEnd(e) {
+    this.state.touchPositionX && this.setState({touchPositionX: undefined});
   }
 
   /**
