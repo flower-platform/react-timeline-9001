@@ -52,7 +52,8 @@ export default class DemoTimeline extends Component {
       message: '',
       timelineMode: TIMELINE_MODES.SELECT | TIMELINE_MODES.DRAG | TIMELINE_MODES.RESIZE,
       useTable: true,
-      useMoment: true
+      useMoment: true,
+      allowVerticalDrag: false
     };
     this.reRender = this.reRender.bind(this);
     this.zoomIn = this.zoomIn.bind(this);
@@ -63,6 +64,7 @@ export default class DemoTimeline extends Component {
     this.toggleResizable = this.toggleResizable.bind(this);
     this.toggleUseMoment = this.toggleUseMoment.bind(this);
     this.toggleUseTable = this.toggleUseTable.bind(this);
+    this.toggleVerticalDrag = this.toggleVerticalDrag.bind(this);
   }
 
   componentWillMount() {
@@ -164,6 +166,11 @@ export default class DemoTimeline extends Component {
   toggleUseTable() {
     const {useTable} = this.state;
     this.setState({useTable: !useTable});
+  }
+
+  toggleVerticalDrag() {
+    const {allowVerticalDrag} = this.state;
+    this.setState({allowVerticalDrag: !allowVerticalDrag});
   }
 
   handleItemClick = (e, key) => {
@@ -288,7 +295,8 @@ export default class DemoTimeline extends Component {
       useCustomRenderers,
       timelineMode,
       useMoment,
-      useTable
+      useTable,
+      allowVerticalDrag
     } = this.state;
     const rangeValue = [startDate, endDate];
     const minMaxRangeValue = [minDate, maxDate];
@@ -402,6 +410,11 @@ export default class DemoTimeline extends Component {
                 Use table
               </Checkbox>
             </Form.Item>
+            <Form.Item>
+              <Checkbox onChange={this.toggleVerticalDrag} checked={allowVerticalDrag}>
+                Alow vertical drag
+              </Checkbox>
+            </Form.Item>
           </Form>
           <div>
             <span>Debug: </span>
@@ -466,6 +479,7 @@ export default class DemoTimeline extends Component {
           onRowContextClick={this.handleRowContextClick}
           onRowDoubleClick={this.handleRowDoubleClick}
           itemRenderer={useCustomRenderers ? CustomItemRenderer : ItemRenderer}
+          allowSegmentVerticalDragFunction={(_) => allowVerticalDrag}
         />
       </div>
     );

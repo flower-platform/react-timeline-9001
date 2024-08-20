@@ -498,7 +498,12 @@ export default class Timeline extends React.Component {
      *
      * @type { undefined | boolean}
      */
-    showZommShortcuts: PropTypes.bool
+    showZommShortcuts: PropTypes.bool,
+
+    /**
+     * @type {undefined | (selectedItems: (number | string)[]) => boolean}
+     */
+    allowSegmentVerticalDragFunction: PropTypes.func
   };
 
   static defaultProps = {
@@ -1410,6 +1415,7 @@ export default class Timeline extends React.Component {
           let animatedItems = this._gridDomNode.querySelectorAll("span[isDragging='True'") || [];
 
           let dx = (parseFloat(target.getAttribute('drag-x')) || 0) + e.dx;
+          // this is location for calculate the new dy using allowSegmentVerticalDragFunction function
           let dy = (parseFloat(target.getAttribute('drag-y')) || 0) + e.dy;
           let selections = [];
 
