@@ -1518,6 +1518,7 @@ export default class Timeline extends React.Component {
         .resizable({
           allowFrom: selectedItemSelector,
           edges: {left: true, right: true, bottom: false, top: false},
+          margin: 2,
           ...this.props.interactOptions.draggable
         })
         .on('resizestart', e => {
