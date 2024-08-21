@@ -1639,7 +1639,6 @@ export default class Timeline extends React.Component {
           e.target.setAttribute('delta-x', 0);
           this._grid.recomputeGridSize({rowIndex: minRowNo});
         });
-      console.log(this._itemInteractable);
     }
     if (canSelect) {
       this._selectRectangleInteractable
