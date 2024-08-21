@@ -1518,6 +1518,8 @@ export default class Timeline extends React.Component {
         .resizable({
           allowFrom: selectedItemSelector,
           edges: {left: true, right: true, bottom: false, top: false},
+          // the default from lib was 20 but when we have a small item we cannot move it,
+          // because the size of resize cursor is to big and the move cursor doesn't appear
           margin: 2,
           ...this.props.interactOptions.draggable
         })
@@ -1637,6 +1639,7 @@ export default class Timeline extends React.Component {
           e.target.setAttribute('delta-x', 0);
           this._grid.recomputeGridSize({rowIndex: minRowNo});
         });
+      console.log(this._itemInteractable);
     }
     if (canSelect) {
       this._selectRectangleInteractable
