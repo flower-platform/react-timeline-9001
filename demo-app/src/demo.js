@@ -52,6 +52,7 @@ export default class DemoTimeline extends Component {
       message: '',
       timelineMode: TIMELINE_MODES.SELECT | TIMELINE_MODES.DRAG | TIMELINE_MODES.RESIZE,
       useTable: true,
+      zoomEnabled: true,
       useMoment: true
     };
     this.reRender = this.reRender.bind(this);
@@ -63,6 +64,7 @@ export default class DemoTimeline extends Component {
     this.toggleResizable = this.toggleResizable.bind(this);
     this.toggleUseMoment = this.toggleUseMoment.bind(this);
     this.toggleUseTable = this.toggleUseTable.bind(this);
+    this.toggleZoomEnabled = this.toggleZoomEnabled.bind(this);
   }
 
   componentWillMount() {
@@ -164,6 +166,17 @@ export default class DemoTimeline extends Component {
   toggleUseTable() {
     const {useTable} = this.state;
     this.setState({useTable: !useTable});
+  }
+
+  toggleZoomEnabled() {
+    const {zoomEnabled} = this.state;
+    if (!zoomEnabled) {
+      // Here, we could directly set the `zoomEnabled` to `true`. 
+      // We set it to a function only to demonstration purposes.
+      this.setState({zoomEnabled: () => true});  
+    } else {
+      this.setState({zoomEnabled: false});
+    }
   }
 
   handleItemClick = (e, key) => {
@@ -288,7 +301,8 @@ export default class DemoTimeline extends Component {
       useCustomRenderers,
       timelineMode,
       useMoment,
-      useTable
+      useTable,
+      zoomEnabled
     } = this.state;
     const rangeValue = [startDate, endDate];
     const minMaxRangeValue = [minDate, maxDate];
@@ -402,6 +416,11 @@ export default class DemoTimeline extends Component {
                 Use table
               </Checkbox>
             </Form.Item>
+            <Form.Item>
+              <Checkbox onChange={this.toggleZoomEnabled} checked={zoomEnabled}>
+                Zoom enabled
+              </Checkbox>
+            </Form.Item>
           </Form>
           <div>
             <span>Debug: </span>
@@ -413,6 +432,7 @@ export default class DemoTimeline extends Component {
           items={items}
           groups={groups}
           useMoment={useMoment}
+          zoomEnabled={zoomEnabled}
           startDate={useMoment ? startDate : startDate.valueOf()}
           endDate={useMoment ? endDate : endDate.valueOf()}
           minDate={useMoment ? minDate : minDate.valueOf()}
