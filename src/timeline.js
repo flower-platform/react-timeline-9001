@@ -498,7 +498,13 @@ export default class Timeline extends React.Component {
      *
      * @type { undefined | boolean}
      */
-    showZommShortcuts: PropTypes.bool
+    showZoomShortcuts: PropTypes.bool,
+
+    /**
+     *
+     * @type {boolean | () => boolean}
+     */
+    zoomEnabled: PropTypes.oneOfType([PropTypes.bool, PropTypes.func])
   };
 
   static defaultProps = {
@@ -549,7 +555,8 @@ export default class Timeline extends React.Component {
     zIndexFunction() {
       return 3;
     },
-    showZommShortcuts: false
+    showZoomShortcuts: false,
+    zoomEnabled: true
   };
 
   /**
@@ -765,7 +772,9 @@ export default class Timeline extends React.Component {
   }
 
   wheelHandler(e) {
-    if (e.ctrlKey) {
+    let zoomEnabled =
+      (typeof this.props.zoomEnabled === `function` && this.props.zoomEnabled()) || this.props.zoomEnabled;
+    if (e.ctrlKey && zoomEnabled) {
       let target = e.target;
       while (target) {
         if (target.className.includes(`rct9k-grid rct9k-grid-id-${this.props.componentId}`)) {
@@ -2150,7 +2159,7 @@ export default class Timeline extends React.Component {
         }
       });
     }
-    if (this.props.showZommShortcuts) {
+    if (this.props.showZoomShortcuts) {
       let that = this;
       actions.push({
         label: ZOOM_IN_ACTION_LABEL,
