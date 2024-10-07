@@ -502,7 +502,7 @@ export default class Timeline extends React.Component {
 
     /**
      *
-     * @type {boolean | () => boolean}
+     * @type {boolean | (() => boolean)}
      */
     zoomEnabled: PropTypes.oneOfType([PropTypes.bool, PropTypes.func])
   };
