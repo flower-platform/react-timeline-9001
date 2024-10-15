@@ -1,5 +1,7 @@
 ## Unreleased
 
+* [Small fix for resize cursor size](https://github.com/flower-platform/react-timeline-10000/pull/89/files)
+
 ## v2.8.0, v2.8.1
 
 * [Add `zoomEnabled` flag](https://github.com/flower-platform/react-timeline-10000/pull/90/files)

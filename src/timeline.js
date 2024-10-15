@@ -1527,6 +1527,9 @@ export default class Timeline extends React.Component {
         .resizable({
           allowFrom: selectedItemSelector,
           edges: {left: true, right: true, bottom: false, top: false},
+          // the default from lib was 20 but when we have a small item we cannot move it,
+          // because the size of resize cursor is to big and the move cursor doesn't appear
+          margin: 2,
           ...this.props.interactOptions.draggable
         })
         .on('resizestart', e => {
