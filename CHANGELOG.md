@@ -1,5 +1,14 @@
 ## Unreleased
+
 * [Small fix for selection box](https://github.com/flower-platform/react-timeline-10000/pull/84/files)
+* [Small fix for resize cursor size](https://github.com/flower-platform/react-timeline-10000/pull/89/files)
+
+## v2.8.0, v2.8.1
+
+* [Add `zoomEnabled` flag](https://github.com/flower-platform/react-timeline-10000/pull/90/files)
+* [Small fix for context menu on mobile and item leave event](https://github.com/flower-platform/react-timeline-10000/pull/86/files)
+* [Update comment for rct9k-items-inner style class](https://github.com/flower-platform/react-timeline-10000/pull/88/files)
+
 ## v2.7.5
 
 * [Allow group.id to be any number (remove the "consecutive numbers starting from 0" restriction)](https://github.com/flower-platform/react-timeline-10000/pull/74/files)
