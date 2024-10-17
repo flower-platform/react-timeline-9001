@@ -1,5 +1,6 @@
 ## Unreleased
 
+* [Small fix for selection box](https://github.com/flower-platform/react-timeline-10000/pull/84/files)
 * [Small fix for resize cursor size](https://github.com/flower-platform/react-timeline-10000/pull/89/files)
 
 ## v2.8.0, v2.8.1
