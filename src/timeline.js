@@ -2144,12 +2144,13 @@ export default class Timeline extends React.Component {
    * @returns { JSX.Element }
    */
   renderContextMenu() {
+    let actions = this.props.onContextMenuShow ? this.props.onContextMenuShow({actionParam}) : [];
     const actionParam = {
       selection: this._selectionHolder ? this._selectionHolder.state.selectedItems : [],
       row: this.state.openedContextMenuRow,
-      time: this.state.openedContextMenuTime
+      time: this.state.openedContextMenuTime,
+      positionToOpen: actions.length > 0 ? this.state.openedContextMenuCoordinates : undefined
     };
-    let actions = this.props.onContextMenuShow ? this.props.onContextMenuShow({actionParam}) : [];
     if (this.props.onDragToCreateEnded && this.props.forceDragToCreateMode == undefined) {
       // If the user doesn't forces the enter/exit from dragToCreateMode =>
       // a default mechanism is implemented via an action that enters the drag to create mode
@@ -2198,13 +2199,7 @@ export default class Timeline extends React.Component {
       });
     }
 
-    return (
-      <ContextMenu
-        paramsForAction={actionParam}
-        positionToOpen={actions.length > 0 ? this.state.openedContextMenuCoordinates : undefined}
-        actions={actions}
-      />
-    );
+    return <ContextMenu actionParam={actionParam} actions={actions} />;
   }
 
   /**
