@@ -9,21 +9,25 @@ type Position = StrictPopupProps["position"];
 
 type IParamsForAction = {
   selection: any[];
+  isOpened: boolean;
+  /**
+   * Position for the popover.
+   */
   position?: Position;
   /**
-   * if undefined => the menu is closed else {x, y} position where the menu should open
+   * The coordinates {x, y} of position where the menu should be rendered when it's opened
    */
   positionToOpen?: Point;
+  /**
+   * Callback for extra actions when the menu is closed
+   */
+  onClose?: () => void;
   [key: string]: any;
 }
 interface ContextMenuProps {
   actions: IAction[];
 
   actionParam: IParamsForAction;
-  /**
-   * Callback for extra actions when the menu is closed
-   */
-  onClose?: () => void;
 }
 
 const testids = createTestids('ContextMenu', {
@@ -40,7 +44,7 @@ export class ContextMenu extends React.Component<ContextMenuProps> {
   }
 
   close() {
-    this.props.onClose && this.props.onClose();
+    this.props.actionParam.onClose && this.props.actionParam.onClose();
   }
 
   getPopupContext(): HTMLElement {
@@ -70,7 +74,7 @@ export class ContextMenu extends React.Component<ContextMenuProps> {
         position={this.props.actionParam.position}
         onClose={() => {
           this.close();
-        }} open={(this.props.actionParam.positionToOpen && visibleActions.length > 0)}>
+        }} open={(this.props.actionParam.isOpened && visibleActions.length > 0)}>
         <Menu className="rct9k-context-menu" secondary vertical>
           {visibleActions.map((action: IAction) => {
             const key = visibleActions.indexOf(action);

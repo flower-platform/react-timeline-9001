@@ -2145,11 +2145,13 @@ export default class Timeline extends React.Component {
    */
   renderContextMenu() {
     let actions = this.props.onContextMenuShow ? this.props.onContextMenuShow({actionParam}) : [];
+    let positionToOpen = actions.length > 0 ? this.state.openedContextMenuCoordinates : undefined;
     const actionParam = {
       selection: this._selectionHolder ? this._selectionHolder.state.selectedItems : [],
       row: this.state.openedContextMenuRow,
       time: this.state.openedContextMenuTime,
-      positionToOpen: actions.length > 0 ? this.state.openedContextMenuCoordinates : undefined
+      positionToOpen,
+      isOpened: positionToOpen ? true : false
     };
     if (this.props.onDragToCreateEnded && this.props.forceDragToCreateMode == undefined) {
       // If the user doesn't forces the enter/exit from dragToCreateMode =>
