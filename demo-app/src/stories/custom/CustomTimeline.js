@@ -1,5 +1,5 @@
 import PropTypes from 'prop-types';
-import Timeline from '../../../../src/timeline';
+import { Timeline } from '@famiprog-foundation/react-gantt';
 import ReactDOM from 'react-dom';
 
 export class CustomTimeline extends Timeline {

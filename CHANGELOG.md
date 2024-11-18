@@ -1,7 +1,48 @@
 ## Unreleased
 
+* [Fix to allow variable row heigths + programmatic scroll](https://github.com/flower-platform/react-timeline-10000/pull/69) 
+* [Small fix for resize cursor size](https://github.com/flower-platform/react-timeline-10000/pull/89/files)
+
+## v2.8.0, v2.8.1
+
+* [Add `zoomEnabled` flag](https://github.com/flower-platform/react-timeline-10000/pull/90/files)
+* [Small fix for context menu on mobile and item leave event](https://github.com/flower-platform/react-timeline-10000/pull/86/files)
+* [Update comment for rct9k-items-inner style class](https://github.com/flower-platform/react-timeline-10000/pull/88/files)
+
+## v2.7.5
+
+* [Allow group.id to be any number (remove the "consecutive numbers starting from 0" restriction)](https://github.com/flower-platform/react-timeline-10000/pull/74/files)
+
+## v2.7.4
+
+* Updated `@famiprog-foundation/tests-are-demo` @ v1.0.1.
+
+## v2.7.3
+
+* [Improved API for Context Menu](https://github.com/flower-platform/react-timeline-10000/pull/79)
+* [Add z-index to now marker to show on top of items, layers](https://github.com/flower-platform/react-timeline-10000/pull/82)
+* [Small fix for zoom when have multiple instances, catch the event only if mouse is on our instance body](https://github.com/flower-platform/react-timeline-10000/pull/81)
+* [Small issue at update when useMoment props is true](https://github.com/flower-platform/react-timeline-10000/pull/83)
+
+## v2.7.1
+
+* Updated `@famiprog-foundation/scriptable-ui` @ v1.0.0.
+
+## v2.7.0
+
+* [Zoom](https://github.com/flower-platform/react-timeline-10000/pull/58) and [small fix for Firefox](https://github.com/flower-platform/react-timeline-10000/pull/80)
+
+## v2.6.1
+
+* [Error when moving the mouse and the grid inside the gantt in not yet rendered](https://github.com/flower-platform/react-timeline-10000/pull/77)
+
+## v2.6.0
+
 * Internal: for `demo-app`, upgraded storybook version to v7.5. It also uses vite now.
 * Small issue: on props changed, the width of the table was reset to the original value.
+* [Highlighted interval positioned at the beginning of the gantt was not displayed](https://github.com/flower-platform/react-timeline-10000/pull/70)
+* [Controlled/uncontrolled split + rename `onTableResize` into `onSplitChange`](https://github.com/flower-platform/react-timeline-10000/pull/75)
+* [Add `displayItemOnSeparateRowIfOverlap` property](https://github.com/flower-platform/react-timeline-10000/pull/72/files)
 
 ## v2.5.0
 

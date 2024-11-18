@@ -59,7 +59,7 @@ export default defineConfig({
       "@crispico/foundation-react": "/../../foundation-jhipster-gwt/foundation-react/src/foundation-react"
     }
   },
-  // JSX in .js files, part 1
+  // JSX in .js files, part 2
   optimizeDeps: {
     // This exclude was needed because working with fixed-data-table-2 as a yarn link (for development purpose) was not working.
     // Because of some caching the modifications made in fixed-data-table-2, were not seen when starting the storybook script

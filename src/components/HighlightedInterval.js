@@ -1,6 +1,13 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import {convertDateToMoment} from '../utils/timeUtils';
+import {createTestids} from '@famiprog-foundation/tests-are-demo';
+
+const testIds = createTestids('HighlightedInterval', {
+  interval: ''
+});
+
+export const highlightedIntervalTestIds = testIds;
 
 /**
  * @extends React.Component<HighlightedInterval.propTypes>
@@ -51,6 +58,13 @@ export class HighlightedInterval extends React.Component {
     top: PropTypes.number,
 
     /**
+     * Internal (passed by parent). `HighlightedInterval` uses this to set data-testid of the underlying element
+     *
+     * @type { number }
+     */
+    id: PropTypes.number,
+
+    /**
      * Internal (passed by parent). This function allows the conversion of `start`/`end` (time) properties to pixels.
      *
      * @type { Function }
@@ -70,6 +84,7 @@ export class HighlightedInterval extends React.Component {
     style: {},
     height: undefined,
     top: undefined,
+    id: undefined,
     calculateHorizontalPosition: () => {},
     shouldUpdate: false
   };
@@ -98,7 +113,7 @@ export class HighlightedInterval extends React.Component {
       width,
       top: this.props.top,
       height: this.props.height,
-      display: left && width ? 'block' : 'none'
+      display: left != undefined && width ? 'block' : 'none'
     };
   }
 
@@ -110,6 +125,12 @@ export class HighlightedInterval extends React.Component {
   }
 
   render() {
-    return <div className={this.getClassName()} style={this.getStyle()} />;
+    return (
+      <div
+        data-testid={'r9k1_' + testIds.interval + '_' + this.props.id}
+        className={this.getClassName()}
+        style={this.getStyle()}
+      />
+    );
   }
 }

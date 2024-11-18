@@ -1,7 +1,7 @@
 import { ComponentStory } from "@storybook/react";
 import { Fragment, useState } from "react";
 import { Checkbox, Icon } from "semantic-ui-react";
-import Timeline from '../../../../src/timeline';
+import { Timeline } from '@famiprog-foundation/react-gantt';
 import { d, manyHumanResources, someTasks } from "../sampleData";
 
 import { Column, DataCell, Table } from "fixed-data-table-2";
@@ -41,7 +41,7 @@ export const ProvidingCustomTable: ComponentStory<typeof Timeline> = () => {
         <Fragment>
             <Alert message={<span> Table width: {tableWidth} </span>}/>
             <Timeline startDate={d('2018-09-20')} endDate={d('2018-09-21')} groups={manyHumanResources} items={someTasks}
-                onTableResize={(size) => setTableWidth(size)}
+                onSplitChange={ size => setTableWidth(size)}
                 table={<Table 
                             rowHeight={50}
                             width={tableWidth}

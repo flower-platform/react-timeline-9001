@@ -3,8 +3,7 @@ import { Alert } from 'antd';
 import moment from 'moment';
 import { useState } from 'react';
 import { Button, Icon, Menu } from 'semantic-ui-react';
-import Timeline from '../../../../src/timeline';
-import { IGanttAction, IGanttOnContextMenuShowParam, Item } from '../../../../src/types';
+import { Timeline, IGanttAction, IGanttOnContextMenuShowParam, Item } from '@famiprog-foundation/react-gantt';
 import { d, someHumanResources, someTasks } from '../sampleData';
 import { contextMenuScenarios, selectionScenarios } from './ContextMenuAndSelectionScenarios';
 import { Table, Column, DataCell } from 'fixed-data-table-2';
@@ -78,7 +77,7 @@ export const ContextMenu = () => {
                                         let end = moment(param.time); 
                                         end.hours(end.hours() + 3);
                                         const maxKey = tasks.reduce((maxKey, task) => maxKey > (task.key as number) ?  maxKey : (task.key as number), 0);
-                                        setTasks([...tasks, { key: maxKey + 1, row: param.row, title: 'NEW TASK', start: param.time, end: end}]);
+                                        setTasks([...tasks, { key: maxKey + 1, row: someHumanResources[param.row].id, title: 'NEW TASK', start: param.time, end: end}]);
                                     }
                                 });
                             } else {
