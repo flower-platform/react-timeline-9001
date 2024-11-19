@@ -1,6 +1,8 @@
 ## Unreleased
 
-* [Fix to allow variable row heigths + programmatic scroll](https://github.com/flower-platform/react-timeline-10000/pull/69/files) 
+## v2.9.0 - not yet done
+
+* [Fix to allow variable row heights + programmatic scroll](https://github.com/flower-platform/react-timeline-10000/pull/69/files) 
 * [Small fix for resize cursor size](https://github.com/flower-platform/react-timeline-10000/pull/89/files)
 
 ## v2.8.0, v2.8.1
