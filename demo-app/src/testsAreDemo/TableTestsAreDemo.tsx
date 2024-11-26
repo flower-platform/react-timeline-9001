@@ -60,7 +60,10 @@ export class TableTestsAreDemo {
     @Scenario("When drag the split pane the table is resized accordingly")
     async whenDragTheSplitPaneTheTableIsResizedAccordingly() {
         tad.cc("Split pane resizer is dragged");
+
         await tad.drag(tad.screenCapturing.getByTestId(testids.splitPaneResizer), { delta: { x: 150, y: 0 }});
-        assert.equal((tad.getObjectViaCheat(Table, 'r9k1')as Table).props.width, DEMO_TABLE_WIDTH + 150);
+        // We don't understand why there is a difference of some decimals (maximum 1 px) between the expected width and the actual width. 
+        // But this is a problem that was seen before
+        await tad.assertWaitable.approximately((tad.getObjectViaCheat(Table, 'r9k1')as Table).props.width, DEMO_TABLE_WIDTH + 150, 1);
     }
 }

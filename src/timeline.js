@@ -274,6 +274,13 @@ export default class Timeline extends React.Component {
      */
     maxDate: PropTypes.oneOfType([PropTypes.number, PropTypes.object]),
 
+    /**
+     * Can be used to programatically change the vertical scroll position of the diagram
+     *
+     * @type { number }
+     */
+    verticalScrollPosition: PropTypes.number,
+
     /** If `false`, then when you "talk" dates/times to the Timeline, then you use
      * plain timestamps (i.e. number of millis, e.g. `new Date().valueOf()`). And this everywhere where
      * a date/time is needed (e.g. for an item, for global start/end, etc.). This is the **recommended** (and the default) way to go, especially if you use Redux.
@@ -531,6 +538,7 @@ export default class Timeline extends React.Component {
     useMoment: false,
     minDate: undefined,
     maxDate: undefined,
+    verticalScrollPosition: 0,
     selectedItems: undefined,
     snap: 1,
     timebarFormat: undefined,
@@ -612,7 +620,11 @@ export default class Timeline extends React.Component {
       openMenu: false,
       dragCancel: false,
       rightClickDraggingState: undefined,
-      scrollTop: 0,
+      tableScrollTop: 0,
+      // We didn't find a way to set the scroll position of the gantt/table that avoids calling back the scroll handlers.
+      // That's why we mark those cases in order to skip the logic from the scroll handlers
+      avoidCallingTableScrollHandlers: false,
+      avoidCallingGanttScrollHandlers: false,
       openedContextMenuCoordinates: undefined,
       openedContextMenuRow: undefined,
       openedContextMenuTime: undefined,
@@ -683,23 +695,17 @@ export default class Timeline extends React.Component {
   }
 
   componentWillReceiveProps(nextProps) {
-    if (!_.isEqual(nextProps.groups, this.props.groups)) {
-      // If the table had the groups scrolled before it will internally try to keep the scroll position when the rows are reseted.
-      // But because it aproximates the height of the rows this scrollPosition will be inexact and a desynchronization with the gantt will happen
-      // That's why we choose to reset the scroll to 0.
-      // We need to wait a bit because else our reset will be overriten by the above described internal mechanism
-      if (this.state.scrollTop != 0) {
-        setTimeout(() => {
-          this.setState({scrollTop: 0});
-        }, 10);
-      } else {
-        // This is needed because the scrollTop is only an initial value for the table so it doesn't change when scrolling the table, only when scrolling the gantt.
-        // So reseting it to 0 will not trigger a table rerender in case was already 0.
-        this.setState({scrollTop: 1});
-        setTimeout(() => {
-          this.setState({scrollTop: 0});
-        }, 10);
-      }
+    const tableWidth = this.getInitialTableWidth(nextProps);
+
+    // VERTICAL SCROLL POSITION change
+    if (this.props.verticalScrollPosition != nextProps.verticalScrollPosition) {
+      // Programatically scroll table
+      this.setState({tableScrollTop: nextProps.verticalScrollPosition});
+      this.setState({avoidCallingTableScrollHandlers: true});
+
+      // // Programatically scroll gantt
+      this._gridDomNode.scrollTop = nextProps.verticalScrollPosition;
+      this.setState({avoidCallingGanttScrollHandlers: true});
     }
 
     if (
@@ -1030,6 +1036,10 @@ export default class Timeline extends React.Component {
         rowInt
       );
     });
+
+    if (this._table) {
+      this._table.getApi().updateRowHeights();
+    }
   }
 
   /**
@@ -2045,12 +2055,22 @@ export default class Timeline extends React.Component {
   }
 
   handleScrollTable = scrollPos => {
+    if (this.state.avoidCallingTableScrollHandlers) {
+      this.setState({avoidCallingTableScrollHandlers: false});
+      return;
+    }
     this._gridDomNode.scrollTop = scrollPos;
+    this.setState({avoidCallingGanttScrollHandlers: true});
     return true;
   };
 
   handleScrollGantt = ({scrollTop}) => {
-    this.setState({scrollTop: scrollTop});
+    if (this.state.avoidCallingGanttScrollHandlers) {
+      this.setState({avoidCallingGanttScrollHandlers: false});
+      return;
+    }
+    this.setState({tableScrollTop: scrollTop});
+    this.setState({avoidCallingTableScrollHandlers: true});
     return true;
   };
 
@@ -2495,7 +2515,8 @@ export default class Timeline extends React.Component {
                         ref: this.table_ref_callback,
                         touchScrollEnabled: true,
                         onVerticalScroll: this.handleScrollTable,
-                        scrollTop: this.state.scrollTop,
+                        isVerticalScrollExact: true,
+                        scrollTop: this.state.tableScrollTop,
                         headerHeight: timebarHeight,
                         height: this.state.screenHeight,
                         rowClassNameGetter: rowIndex => {
