@@ -2144,12 +2144,15 @@ export default class Timeline extends React.Component {
    * @returns { JSX.Element }
    */
   renderContextMenu() {
-    let actions = this.props.onContextMenuShow ? this.props.onContextMenuShow({actionParam}) : [];
-    let positionToOpen = actions.length > 0 ? this.state.openedContextMenuCoordinates : undefined;
-    const actionParam = {
+    let actionParam = {
       selection: this._selectionHolder ? this._selectionHolder.state.selectedItems : [],
       row: this.state.openedContextMenuRow,
-      time: this.state.openedContextMenuTime,
+      time: this.state.openedContextMenuTime
+    };
+    let actions = this.props.onContextMenuShow ? this.props.onContextMenuShow({actionParam}) : [];
+    let positionToOpen = actions.length > 0 ? this.state.openedContextMenuCoordinates : undefined;
+    actionParam = {
+      ...actionParam,
       positionToOpen,
       isOpened: positionToOpen ? true : false
     };
