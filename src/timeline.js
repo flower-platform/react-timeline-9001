@@ -1037,7 +1037,7 @@ export default class Timeline extends React.Component {
       );
     });
 
-    if (this._table) {
+    if (this._table && this._table.getApi().updateRowHeights) {
       this._table.getApi().updateRowHeights();
     }
   }
@@ -2174,7 +2174,8 @@ export default class Timeline extends React.Component {
     actionParam = {
       ...actionParam,
       positionToOpen,
-      isOpened: positionToOpen ? true : false
+      isOpened: positionToOpen ? true : false,
+      onClose: () => this.setState({openedContextMenuCoordinates: undefined})
     };
     if (this.props.onDragToCreateEnded && this.props.forceDragToCreateMode == undefined) {
       // If the user doesn't forces the enter/exit from dragToCreateMode =>
